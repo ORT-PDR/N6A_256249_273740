@@ -1,0 +1,45 @@
+﻿using System.Net;
+using System.Net.Sockets;
+using Communication;
+
+namespace Client
+{
+    public class ProgramClient
+    {
+        static readonly SettingsManager settingsMngr = new SettingsManager();
+        public static void Main(string[] args)
+        {
+            Console.WriteLine("Starting client...");
+
+            var socketCliente = new Socket(
+            AddressFamily.InterNetwork,
+                SocketType.Stream,
+                    ProtocolType.Tcp);
+
+            string ipServer = settingsMngr.ReadSettings(ClientConfig.serverIPconfigkey);
+            string ipClient = settingsMngr.ReadSettings(ClientConfig.clientIPconfigkey);
+            int serverPort = int.Parse(settingsMngr.ReadSettings(ClientConfig.serverPortconfigkey));
+
+            var localEndPoint = new IPEndPoint(IPAddress.Parse(ipClient), 0);
+            socketCliente.Bind(localEndPoint);
+            var serverEndpoint = new IPEndPoint(IPAddress.Parse(ipServer), serverPort);
+            socketCliente.Connect(serverEndpoint);
+            Console.WriteLine("You're connected to the server!");
+
+            bool exit = false;
+            while (!exit)
+            {
+                //manejo cliente bla bla bla
+
+                string line = Console.ReadLine();
+                if (line == "exit") { exit = true; }
+            }
+
+            Console.WriteLine("Closing client...");
+
+            socketCliente.Shutdown(SocketShutdown.Both);
+            socketCliente.Close();
+
+        }
+    }
+}
