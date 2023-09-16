@@ -34,7 +34,7 @@ namespace Server
                 {
                     var socketClient = socketServer.Accept();
                     Console.WriteLine("New connection!");
-                    new Thread(() => ManejarCliente(socketClient)).Start();
+                    new Thread(() => HandleClient(socketClient)).Start();
 
                     string line = Console.ReadLine();
                     if (line == "exit") { exit = true; }
@@ -60,7 +60,7 @@ namespace Server
             }
         }
 
-        static void ManejarCliente(Socket socketCliente)
+        static void HandleClient(Socket socketCliente)
         {
             try
             {
@@ -68,13 +68,13 @@ namespace Server
                 bool clienteConectado = true;
                 while (clienteConectado)
                 {
-                    // TODO: la lógica de comunicación con el cliente
+                    Login();
                 }
-                Console.WriteLine("Cliente Desconectado");
+                Console.WriteLine("Client disconnected");
             }
             catch (SocketException)
             {
-                Console.WriteLine("Cliente Desconectado!");
+                Console.WriteLine("Client disconnected");
             }
             catch (ServerException ex)
             {
@@ -88,6 +88,32 @@ namespace Server
             {
                 socketCliente.Close();
             }
+        }
+
+        static void Login()
+        {
+            try
+            {
+                Console.WriteLine("Authenticating...");
+                //TODO logica inicio de sesion. Si inicia sesion bien, va a otro method q maneja al cliente ahi
+            }
+            catch (SocketException)
+            {
+                Console.WriteLine("Client disconnected");
+            }
+            catch (ServerException ex)
+            {
+                throw new ServerException("Server Exception: " + ex.Message);
+            }
+            catch (Exception ex)
+            {
+                throw new ServerException("Unexpected Exception: " + ex.Message);
+            }
+        }
+
+        static void MainMenu()
+        {
+
         }
     }
 }
