@@ -12,6 +12,7 @@ namespace Models
 		public double price;
 		public string imagePath;
 		public Guid creator;
+		public List<Review> reviews;
 	}
 }
 

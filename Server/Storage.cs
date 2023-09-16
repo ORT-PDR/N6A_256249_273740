@@ -20,7 +20,16 @@ namespace Server
 			products.Add(product);
 		}
 
-		private void ValidatePassword(string pass)
+        public void AddReview(Product product, Review review)
+        {
+            if (review.score < 1 || review.score > 10)
+            {
+				throw new ServerException("Score must be between 1 and 10");
+            }
+			product.reviews.Add(review);
+        }
+
+        private void ValidatePassword(string pass)
 		{
 			if (pass.Length < 8)
 			{
