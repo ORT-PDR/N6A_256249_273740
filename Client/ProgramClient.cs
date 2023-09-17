@@ -11,35 +11,44 @@ namespace Client
         {
             Console.WriteLine("Starting client...");
 
-            var socketCliente = new Socket(
-            AddressFamily.InterNetwork,
-                SocketType.Stream,
+            try
+            {
+                var socketCliente = new Socket(
+                    AddressFamily.InterNetwork,
+                    SocketType.Stream,
                     ProtocolType.Tcp);
 
-            string ipServer = settingsMngr.ReadSettings(ClientConfig.serverIPconfigkey);
-            string ipClient = settingsMngr.ReadSettings(ClientConfig.clientIPconfigkey);
-            int serverPort = int.Parse(settingsMngr.ReadSettings(ClientConfig.serverPortconfigkey));
+                string ipServer = settingsMngr.ReadSettings(ClientConfig.serverIPconfigkey);
+                string ipClient = settingsMngr.ReadSettings(ClientConfig.clientIPconfigkey);
+                int serverPort = int.Parse(settingsMngr.ReadSettings(ClientConfig.serverPortconfigkey));
 
-            var localEndPoint = new IPEndPoint(IPAddress.Parse(ipClient), 0);
-            socketCliente.Bind(localEndPoint);
-            var serverEndpoint = new IPEndPoint(IPAddress.Parse(ipServer), serverPort);
-            socketCliente.Connect(serverEndpoint);
-            Console.WriteLine("You're connected to the server!");
+                var localEndPoint = new IPEndPoint(IPAddress.Parse(ipClient), 0);
+                socketCliente.Bind(localEndPoint);
+                var serverEndpoint = new IPEndPoint(IPAddress.Parse(ipServer), serverPort);
+                socketCliente.Connect(serverEndpoint);
+                Console.WriteLine("You're connected to the server!");
 
-            bool exit = false;
-            while (!exit)
-            {
-                //manejo cliente bla bla bla
+                bool exit = false;
+                while (!exit)
+                {
+                    //manejo cliente bla bla bla
 
-                string line = Console.ReadLine();
-                if (line == "exit") { exit = true; }
+                    string line = Console.ReadLine();
+                    if (line == "exit") { exit = true; }
+                }
+
+                Console.WriteLine("Closing client...");
+
+                Protocol.Disconnect();
             }
-
-            Console.WriteLine("Closing client...");
-
-            socketCliente.Shutdown(SocketShutdown.Both);
-            socketCliente.Close();
-
+            catch (SocketException ex)
+            {
+                Console.WriteLine("SocketException: " + ex.Message);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Unexpected Exception: " + ex.Message);
+            }
         }
     }
 }
