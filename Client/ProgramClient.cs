@@ -13,19 +13,11 @@ namespace Client
 
             try
             {
-                var socketCliente = new Socket(
-                    AddressFamily.InterNetwork,
-                    SocketType.Stream,
-                    ProtocolType.Tcp);
-
                 string ipServer = settingsMngr.ReadSettings(ClientConfig.serverIPconfigkey);
-                string ipClient = settingsMngr.ReadSettings(ClientConfig.clientIPconfigkey);
                 int serverPort = int.Parse(settingsMngr.ReadSettings(ClientConfig.serverPortconfigkey));
 
-                var localEndPoint = new IPEndPoint(IPAddress.Parse(ipClient), 0);
-                socketCliente.Bind(localEndPoint);
-                var serverEndpoint = new IPEndPoint(IPAddress.Parse(ipServer), serverPort);
-                socketCliente.Connect(serverEndpoint);
+                Protocol.Connect(ipServer, serverPort); 
+
                 Console.WriteLine("You're connected to the server!");
 
                 bool exit = false;
