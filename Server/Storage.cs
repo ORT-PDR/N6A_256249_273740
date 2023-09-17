@@ -31,9 +31,9 @@ namespace Server
 
         private void ValidatePassword(string pass)
 		{
-			if (pass.Length < 8)
+			if (pass.Length < 8 && !pass.Any(char.IsUpper))
 			{
-				throw new ServerException("Password must be at least 8 characters long");
+				throw new ServerException("Password must be at least 8 characters long and must have an UpperCase");
 			}
 		}
 
