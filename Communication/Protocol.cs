@@ -83,13 +83,13 @@ namespace Communication
                         return data;
                     }
                 }
+                
+                throw new ProtocolException("Received an invalid response.");
             }
             catch (Exception ex)
             {
                 throw new ProtocolException("Error receiving response: " + ex.Message);
             }
-
-            return null;
         }
     }
 }
