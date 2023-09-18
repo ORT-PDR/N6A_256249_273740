@@ -44,6 +44,30 @@ namespace Server
                 throw new ServerException("Username must be unique");
             }
         }
+		
+		public List<Product> GetAllProducts()
+		{
+			return products;
+		}
+
+		public Product GetProductById(Guid productId)
+		{
+			return products.FirstOrDefault(p => p.id == productId);
+		}
+		
+		public void DeleteProduct(Guid productId)
+		{
+			Product productToRemove = products.FirstOrDefault(p => p.id == productId);
+
+			if (productToRemove != null)
+			{
+				products.Remove(productToRemove);
+			}
+			else
+			{
+				throw new ServerException("Product not found.");
+			}
+		}
     }
 }
 
