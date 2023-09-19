@@ -68,12 +68,21 @@ namespace Server.BusinessLogic
             storage.DeleteProduct(productId);
         }
         
-        public List<Product> GetUserProductsByName(string userName, string productName)
+        public List<Product> GetProductsByUser(string userName)
         {
             return storage.GetAllProducts()
-                .Where(product => product.creator.username.Equals(userName, StringComparison.OrdinalIgnoreCase)
-                                  && product.name.Equals(productName, StringComparison.OrdinalIgnoreCase))
+                .Where(product => product.creator.username.Equals(userName, StringComparison.OrdinalIgnoreCase))
                 .ToList();
+        }
+        
+        public string ProductToString(Product product)
+        {
+            if (product == null)
+            {
+                return "Product is null";
+            }
+
+            return $"Name: {product.name} | Description: {product.description} | Stock: {product.stock} | Price: {product.price} | Image Path: {product.imagePath}";
         }
 
         private void ValidateProduct(Product product)
