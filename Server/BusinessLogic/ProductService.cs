@@ -21,9 +21,16 @@ namespace Server.BusinessLogic
             storage.AddProduct(product);
         }
 
-        public List<Product> GetAllProducts()
+        public List<Product> GetProducts(string productNameFilter = null)
         {
-            return storage.GetAllProducts();
+            var query = storage.GetAllProducts().AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(productNameFilter))
+            {
+                query = query.Where(product => product.name.Contains(productNameFilter, StringComparison.OrdinalIgnoreCase));
+            }
+
+            return query.ToList();
         }
 
         public Product GetProductById(Guid productId)
