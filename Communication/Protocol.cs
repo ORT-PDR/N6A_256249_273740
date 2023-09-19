@@ -1,95 +1,43 @@
-using System;
-using System.IO;
-using System.Net.Sockets;
-using System.Text;
+﻿using System.Text;
 
 namespace Communication
 {
     public static class Protocol
     {
-        private static TcpClient client;
-        private static NetworkStream stream;
+        public static readonly int FixedDataSize = 4;
 
-        static Protocol()
+        public const int FixedFileSize = 8;
+        public const int MaxPacketSize = 32768;
+        
+        public static class ProtocolCommands
         {
-            client = new TcpClient();
+            public const string Authenticate = "AUTH";
+            public const string PublishProduct = "PUBLISH";
+            public const string BuyProduct = "BUY";
+            public const string UpdateProduct = "UPDATE";
+            public const string DeleteProduct = "DELETE";
+            public const string SearchProducts = "SEARCH";
+            public const string GetProductDetails = "DETAILS";
+            public const string RateProduct = "RATE";
         }
-
-        public static void Connect(string ipAddress, int port)
+        
+        [Serializable]
+        public class ProtocolMessage
         {
-            try
-            {
-                client.Connect(ipAddress, port);
-                stream = client.GetStream();
-            }
-            catch (Exception ex)
-            {
-                throw new ProtocolException("Connection error: " + ex.Message);
-            }
-        }
+            public string Command { get; set; }
+            public string Data { get; set; }
 
-        public static void Disconnect()
-        {
-            try
+            public ProtocolMessage(string command, string data)
             {
-                stream.Close();
-                client.Close();
-            }
-            catch (Exception ex)
-            {
-                throw new ProtocolException("Disconnection error: " + ex.Message);
+                Command = command;
+                Data = data;
             }
         }
-
-        public static void SendRequest(string header, string command, string data)
+        
+        public static long CalculateFileParts(long fileSize)
         {
-            try
-            {
-                string message = $"{header}:{command}:{data.Length}:{data}";
-                byte[] messageBytes = Encoding.ASCII.GetBytes(message);
-
-                stream.Write(BitConverter.GetBytes(messageBytes.Length), 0, 4);
-                stream.Write(messageBytes, 0, messageBytes.Length);
-            }
-            catch (Exception ex)
-            {
-                throw new ProtocolException("Error sending request: " + ex.Message);
-            }
-        }
-
-        public static string ReceiveResponse()
-        {
-            try
-            {
-                byte[] lengthBuffer = new byte[4];
-                stream.Read(lengthBuffer, 0, 4);
-                int messageLength = BitConverter.ToInt32(lengthBuffer, 0);
-
-                byte[] messageBytes = new byte[messageLength];
-                stream.Read(messageBytes, 0, messageLength);
-
-                string message = Encoding.ASCII.GetString(messageBytes);
-
-                string[] parts = message.Split(':');
-                if (parts.Length == 4)
-                {
-                    string header = parts[0];
-                    string command = parts[1];
-                    int dataLength = int.Parse(parts[2]);
-                    string data = parts[3];
-
-                    if (data.Length == dataLength)
-                    {
-                        return data;
-                    }
-                }
-                
-                throw new ProtocolException("Received an invalid response.");
-            }
-            catch (Exception ex)
-            {
-                throw new ProtocolException("Error receiving response: " + ex.Message);
-            }
+            var fileParts = fileSize / MaxPacketSize;
+            return fileParts * MaxPacketSize == fileSize ? fileParts : fileParts + 1;
         }
     }
 }

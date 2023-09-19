@@ -15,4 +15,3 @@ namespace Models
 		public List<Review> reviews;
 	}
 }
-

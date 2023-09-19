@@ -5,19 +5,43 @@ namespace Server
 {
 	public class Storage
 	{
+		private static Storage instance = null;
+		private static readonly object lockObject = new object();
+		
 		public List<User> users;
 		public List<Product> products;
+		
+		public static Storage Instance
+		{
+			get
+			{
+				lock (lockObject)
+				{
+					if (instance == null)
+					{
+						instance = new Storage();
+					}
+					return instance;
+				}
+			}
+		}
 
 		public void AddUser(User user)
 		{
-			ValidatePassword(user.password);
-			ValidateUsername(user.username);
-			users.Add(user);
+			lock (lockObject)
+			{
+				ValidatePassword(user.password);
+				ValidateUsername(user.username);
+				users.Add(user);
+			}
         }
 
 		public void AddProduct(Product product)
 		{
-			products.Add(product);
+			lock (lockObject)
+			{
+				products.Add(product);
+			}
 		}
 
         public void AddReview(Product product, Review review)
@@ -26,7 +50,11 @@ namespace Server
             {
 				throw new ServerException("Score must be between 1 and 10");
             }
-			product.reviews.Add(review);
+
+            lock (lockObject)
+            {
+	            product.reviews.Add(review);
+            }
         }
 
         private void ValidatePassword(string pass)
@@ -47,25 +75,34 @@ namespace Server
 		
 		public List<Product> GetAllProducts()
 		{
-			return products;
+			lock (lockObject)
+			{
+				return products;
+			}
 		}
 
 		public Product GetProductById(Guid productId)
 		{
-			return products.FirstOrDefault(p => p.id == productId);
+			lock (lockObject)
+			{
+				return products.FirstOrDefault(p => p.id == productId);
+			}
 		}
 		
 		public void DeleteProduct(Guid productId)
 		{
-			Product productToRemove = products.FirstOrDefault(p => p.id == productId);
+			lock (lockObject)
+			{
+				Product productToRemove = products.FirstOrDefault(p => p.id == productId);
 
-			if (productToRemove != null)
-			{
-				products.Remove(productToRemove);
-			}
-			else
-			{
-				throw new ServerException("Product not found.");
+				if (productToRemove != null)
+				{
+					products.Remove(productToRemove);
+				}
+				else
+				{
+					throw new ServerException("Product not found.");
+				}
 			}
 		}
     }
