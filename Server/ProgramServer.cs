@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Net;
 using System.Net.Sockets;
+using System.Text;
 using System.Threading;
 using Communication;
 
@@ -91,7 +92,11 @@ namespace Server
                         bool authenticationResult = true; //Authenticate(username, password);
                         
                         string response = authenticationResult ? "Authentication successful" : "Authentication failed";
-                        byte[] responseBytes = conversionHandler.ConvertStringToBytes(response);
+                        byte[] responseBytes = Encoding.UTF8.GetBytes(response);
+                        int responseLength = responseBytes.Length;
+                        
+                        byte[] lBytes = BitConverter.GetBytes(responseLength);
+                        socketHelper.Send(lBytes);
                         socketHelper.Send(responseBytes);
                         
                         if (authenticationResult)
@@ -126,27 +131,6 @@ namespace Server
             finally
             {
                 socketCliente.Close();
-            }
-        }
-
-        static void Login()
-        {
-            try
-            {
-                Console.WriteLine("Authenticating...");
-                //TODO logica inicio de sesion. Si inicia sesion bien, va a otro method q maneja al cliente ahi
-            }
-            catch (SocketException)
-            {
-                Console.WriteLine("Client disconnected");
-            }
-            catch (ServerException ex)
-            {
-                throw new ServerException("Server Exception: " + ex.Message);
-            }
-            catch (Exception ex)
-            {
-                throw new ServerException("Unexpected Exception: " + ex.Message);
             }
         }
 

@@ -12,8 +12,4 @@
     <ProjectReference Include="..\Models\Models.csproj" />
     <ProjectReference Include="..\Server\Server.csproj" />
   </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="UI\" />
-  </ItemGroup>
 </Project>

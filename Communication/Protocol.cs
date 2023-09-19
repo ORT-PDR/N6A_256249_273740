@@ -21,19 +21,6 @@ namespace Communication
             public const string RateProduct = "RATE";
         }
         
-        [Serializable]
-        public class ProtocolMessage
-        {
-            public string Command { get; set; }
-            public string Data { get; set; }
-
-            public ProtocolMessage(string command, string data)
-            {
-                Command = command;
-                Data = data;
-            }
-        }
-        
         public static long CalculateFileParts(long fileSize)
         {
             var fileParts = fileSize / MaxPacketSize;
