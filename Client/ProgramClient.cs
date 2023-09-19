@@ -69,7 +69,12 @@ namespace Client
                 string password = Console.ReadLine();
                 
                 string credentials = $"{username}:{password}";
-                socketHelper.Send(Encoding.UTF8.GetBytes(credentials));
+                byte[] credentialsData = Encoding.UTF8.GetBytes(credentials);
+
+                byte[] lengthBytes = BitConverter.GetBytes(credentialsData.Length);
+                socketHelper.Send(lengthBytes);
+                
+                socketHelper.Send(credentialsData);
                 
                 byte[] responseBytes = socketHelper.Receive(Protocol.MaxPacketSize);
                 string response = Encoding.UTF8.GetString(responseBytes);

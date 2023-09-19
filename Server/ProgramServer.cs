@@ -77,7 +77,9 @@ namespace Server
                 {
                     Console.WriteLine("Authentication requested by client.");
                     
-                    byte[] credentialsBytes = socketHelper.Receive(Protocol.MaxPacketSize);
+                    byte[] lengthBytes = socketHelper.Receive(Protocol.FixedDataSize);
+                    int dataLength = BitConverter.ToInt32(lengthBytes, 0);
+                    byte[] credentialsBytes = socketHelper.Receive(dataLength);
                     string credentials = conversionHandler.ConvertBytesToString(credentialsBytes);
                     string[] credentialsParts = credentials.Split(':');
 
@@ -126,7 +128,6 @@ namespace Server
                 socketCliente.Close();
             }
         }
-
 
         static void Login()
         {
