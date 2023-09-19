@@ -21,8 +21,8 @@ namespace Server
 					{
 						instance = new Storage();
 					}
-					return instance;
 				}
+				return instance;
 			}
 		}
 
