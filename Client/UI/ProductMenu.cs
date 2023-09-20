@@ -2,22 +2,24 @@ using System;
 using System.Linq;
 using Server.BusinessLogic;
 using Models;
+using Communication;
+using System.Net;
+using System.Net.Sockets;
 
 namespace Server.UI
 {
     public class ProductMenu
     {
-        private readonly ProductService productService;
+        private Socket socketClient;
+        private string user;
 
-        public ProductMenu(ProductService productService)
-        {
-            this.productService = productService;
-        }
-
-        public void ShowMainMenu(User user)
+        public void ShowMainMenu(string _user, Socket _socketClient)
         {
             while (true)
             {
+                socketClient = _socketClient;
+                user = _user;
+
                 Console.Clear();
                 Console.WriteLine("Product Menu:");
                 Console.WriteLine("1. Publish Product");
@@ -54,22 +56,64 @@ namespace Server.UI
         private void PublishProduct()
         {
             Console.WriteLine("Enter product details:");
+
             Console.WriteLine("Name: ");
-            string name = Console.ReadLine();
+            string? name = Console.ReadLine();
+            Console.WriteLine("Description: ");
+            string? description = Console.ReadLine();
+            Console.WriteLine("Price: ");
+            string? price = Console.ReadLine();
+            Console.WriteLine("Stock available: ");
+            string ? stock = Console.ReadLine();
 
-            Product newProduct = new Product
+            try
             {
-                name = name,
-            };
+                var conversionHandler = new ConversionHandler();
+                var socketHelper = new SocketHelper(socketClient);
 
-            productService.PublishProduct(newProduct);
-            Console.WriteLine("Product published successfully.");
-            Console.ReadKey();
+                socketHelper.Send(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.PublishProduct));
+
+                string data = $"{name}:{description}:{price}:{stock}:{user}";
+
+                byte[] dataBytes = conversionHandler.ConvertStringToBytes(data);
+                byte[] lengthBytes = conversionHandler.ConvertIntToBytes(dataBytes.Length);
+                socketHelper.Send(lengthBytes);
+                socketHelper.Send(dataBytes);
+
+                byte[] lBytes = socketHelper.Receive(Protocol.FixedDataSize);
+                int dataLength = conversionHandler.ConvertBytesToInt(lBytes);
+                byte[] responseBytes = socketHelper.Receive(dataLength);
+                string response = conversionHandler.ConvertBytesToString(responseBytes);
+
+                if (response == "Success")
+                {
+                    Console.WriteLine("Product published successfully.");
+                    Console.ReadKey();
+                    System.Console.WriteLine("Press any key to continue");
+                    System.Console.ReadKey();
+                }
+                else
+                {
+                    PublishProduct();
+                }
+            }
+            catch (SocketException)
+            {
+                Console.WriteLine("Server disconnected");
+            }
+            catch (ServerException e)
+            {
+                Console.Write(e.Message);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Unexpected Exception: " + ex.Message);
+            }
         }
 
-        private void UpdateProduct(User user)
+        private void UpdateProduct(String user)
         {
-            string currentUser = user.username; 
+            string currentUser = user; 
             var userProducts = productService.GetProductsByUser(currentUser);
 
             if (userProducts.Count > 0)
@@ -171,9 +215,9 @@ namespace Server.UI
             }
         }
 
-        private void DeleteProduct(User user)
+        private void DeleteProduct(String user)
         {
-            string currentUser = user.username;
+            string currentUser = user;
             var userProducts = productService.GetProductsByUser(currentUser);
 
             if (userProducts.Count > 0)

@@ -50,6 +50,19 @@ namespace Server.BusinessLogic
             return false; 
         }
 
+        public User GetUser(string username)
+        {
+            try
+            {
+                User usr = storage.users.FirstOrDefault(u => u.username == username);
+                return usr;
+            }
+            catch (ArgumentNullException)
+            {
+                throw new ServerException("There was an error and the user could not be retrieved.");
+            }
+        }
+
         private void ValidatePassword(string password)
         {
             if (string.IsNullOrWhiteSpace(password) || password.Length < 8)

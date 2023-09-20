@@ -11,7 +11,7 @@ namespace Models
 		public int stock;
 		public double price;
 		public string imagePath;
-		public User creator;
+		public string creator;
 		public List<Review> reviews;
 	}
 }

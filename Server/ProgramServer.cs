@@ -4,6 +4,9 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using Communication;
+using Models;
+using Server.BusinessLogic;
+using Server.UIHandler;
 
 namespace Server
 {
@@ -11,6 +14,8 @@ namespace Server
     {
         static readonly SettingsManager settingsMngr = new SettingsManager();
         static readonly Storage storage = Storage.Instance;
+        static readonly UserService userService = new UserService(storage);
+        static readonly ProductService productService = new ProductService(storage);
 
         public static void Main(string[] args)
         {
@@ -70,46 +75,19 @@ namespace Server
 
                 var socketHelper = new SocketHelper(socketCliente);
                 var conversionHandler = new ConversionHandler();
-                
+
                 byte[] commandBytes = socketHelper.Receive(Protocol.FixedDataSize);
                 string command = conversionHandler.ConvertBytesToString(commandBytes);
 
                 if (command == Protocol.ProtocolCommands.Authenticate)
                 {
-                    Console.WriteLine("Authentication requested by client.");
-                    
-                    byte[] lengthBytes = socketHelper.Receive(Protocol.FixedDataSize);
-                    int dataLength = BitConverter.ToInt32(lengthBytes, 0);
-                    byte[] credentialsBytes = socketHelper.Receive(dataLength);
-                    string credentials = conversionHandler.ConvertBytesToString(credentialsBytes);
-                    string[] credentialsParts = credentials.Split(':');
+                    UserAuthorization userAuthorization = new UserAuthorization(socketHelper, conversionHandler, userService);
+                    userAuthorization.Authenticate();
+                }
+                if(command == Protocol.ProtocolCommands.PublishProduct)
+                {
+                    ProductHandler productHandler = new ProductHandler(socketHelper, conversionHandler, productService);
 
-                    if (credentialsParts.Length == 2)
-                    {
-                        string username = credentialsParts[0];
-                        string password = credentialsParts[1];
-                        
-                        bool authenticationResult = true; //Authenticate(username, password);
-                        
-                        string response = authenticationResult ? "Authentication successful" : "Authentication failed";
-                        byte[] responseBytes = Encoding.UTF8.GetBytes(response);
-                        int responseLength = responseBytes.Length;
-                        
-                        byte[] lBytes = BitConverter.GetBytes(responseLength);
-                        socketHelper.Send(lBytes);
-                        socketHelper.Send(responseBytes);
-                        
-                        if (authenticationResult)
-                        {
-                            MainMenu();
-                        }
-                    }
-                    else
-                    {
-                        Console.WriteLine("Invalid credentials format.");
-                        byte[] responseBytes = conversionHandler.ConvertStringToBytes("Invalid credentials format");
-                        socketHelper.Send(responseBytes);
-                    }
                 }
                 else
                 {
