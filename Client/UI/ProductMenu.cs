@@ -5,6 +5,8 @@ using Models;
 using Communication;
 using System.Net;
 using System.Net.Sockets;
+using System.Diagnostics;
+using System.Xml.Linq;
 
 namespace Server.UI
 {
@@ -36,7 +38,7 @@ namespace Server.UI
                         PublishProduct();
                         break;
                     case "2":
-                        UpdateProduct(user);
+                        UpdateProduct();
                         break;
                     case "3":
                         DeleteProduct(user);
@@ -105,26 +107,30 @@ namespace Server.UI
             {
                 Console.Write(e.Message);
             }
+            catch(FormatException formatEx)
+            {
+                Console.WriteLine("Format exception. Stock and price must be integer.");
+            }
             catch (Exception ex)
             {
                 Console.WriteLine("Unexpected Exception: " + ex.Message);
             }
         }
 
-        private void UpdateProduct(String user)
+        private void UpdateProduct()
         {
-            string currentUser = user; 
-            var userProducts = productService.GetProductsByUser(currentUser);
+            string currentUser = user;
+            var userProducts = RetrieveAllUserProducts();
 
-            if (userProducts.Count > 0)
+            if (userProducts.Length > 0)
             {
                 Console.WriteLine("Select a product to update:");
-                for (int i = 0; i < userProducts.Count; i++)
+                for (int i = 0; i < userProducts.Length; i++)
                 {
-                    Console.WriteLine($"{i + 1}. {productService.ProductToString(userProducts[i])}");
+                    Console.WriteLine($"{i + 1}. {userProducts[i]}");
                 }
 
-                if (int.TryParse(Console.ReadLine(), out int selectedIndex) && selectedIndex >= 1 && selectedIndex <= userProducts.Count)
+                if (int.TryParse(Console.ReadLine(), out int selectedIndex) && selectedIndex >= 1 && selectedIndex <= userProducts.Length)
                 {
                     ModifyProductMenu(userProducts[selectedIndex - 1]);
                 }
@@ -141,7 +147,36 @@ namespace Server.UI
             Console.ReadKey();
         }
 
-        private void ModifyProductMenu(Product selectedProduct)
+        private string[] RetrieveAllUserProducts()
+        {
+            try
+            {
+                var conversionHandler = new ConversionHandler();
+                var socketHelper = new SocketHelper(socketClient);
+
+                socketHelper.Send(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.GetAllUserProducts));
+                string data = $"{user}";
+
+                byte[] dataBytes = conversionHandler.ConvertStringToBytes(data);
+                byte[] lengthBytes = conversionHandler.ConvertIntToBytes(dataBytes.Length);
+                socketHelper.Send(lengthBytes);
+                socketHelper.Send(dataBytes);
+
+                byte[] lBytes = socketHelper.Receive(Protocol.FixedDataSize);
+                int dataLength = conversionHandler.ConvertBytesToInt(lBytes);
+                byte[] listBytes = socketHelper.Receive(dataLength);
+                string list = conversionHandler.ConvertBytesToString(listBytes);
+                string[] products = list.Split(":");
+                return products;
+            }
+            catch(Exception e)
+            {
+                Console.WriteLine(e.Message);
+            }
+            return new string[0];
+        }
+
+        private void ModifyProductMenu(string selectedProduct)
         {
             Console.Clear();
             Console.WriteLine("Select an attribute to update:");

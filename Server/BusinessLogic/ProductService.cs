@@ -71,7 +71,7 @@ namespace Server.BusinessLogic
         public List<Product> GetProductsByUser(string userName)
         {
             return storage.GetAllProducts()
-                .Where(product => product.creator.username.Equals(userName, StringComparison.OrdinalIgnoreCase))
+                .Where(product => product.creator.Equals(userName, StringComparison.OrdinalIgnoreCase))
                 .ToList();
         }
         

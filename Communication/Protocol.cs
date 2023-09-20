@@ -19,6 +19,8 @@ namespace Communication
             public const string SearchProducts = "SEARCH";
             public const string GetProductDetails = "DETAILS";
             public const string RateProduct = "RATE";
+            public const string GetAllProducts = "GETALL";
+            public const string GetAllUserProducts = "GETALLBYUSER";
         }
         
         public static long CalculateFileParts(long fileSize)

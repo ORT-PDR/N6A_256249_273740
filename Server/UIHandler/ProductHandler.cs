@@ -52,6 +52,59 @@ namespace Server.UIHandler
             SendResponse(responseBytes);
         }
 
+        public void UpdateProduct()
+        {
+            string currentUser = user;
+            var userProducts = productService.GetProductsByUser(currentUser);
+
+            if (userProducts.Count > 0)
+            {
+                Console.WriteLine("Select a product to update:");
+                for (int i = 0; i < userProducts.Count; i++)
+                {
+                    Console.WriteLine($"{i + 1}. {productService.ProductToString(userProducts[i])}");
+                }
+
+                if (int.TryParse(Console.ReadLine(), out int selectedIndex) && selectedIndex >= 1 && selectedIndex <= userProducts.Count)
+                {
+                    ModifyProductMenu(userProducts[selectedIndex - 1]);
+                }
+                else
+                {
+                    Console.WriteLine("Invalid selection.");
+                }
+            }
+            else
+            {
+                Console.WriteLine("You have no products to update.");
+            }
+        }
+
+        public void SendAllUserProducts()
+        {
+            byte[] lengthBytes = socketHelper.Receive(Protocol.FixedDataSize);
+            int dataLength = conversionHandler.ConvertBytesToInt(lengthBytes);
+            byte[] dataBytes = socketHelper.Receive(dataLength);
+            string username = conversionHandler.ConvertBytesToString(dataBytes);
+
+            List<Product> products = productService.GetProductsByUser(username);
+            string productNames = "";
+
+            for(int i = 0; i < products.Count; i++)
+            {
+                productNames = productService.ProductToString(products[i]) + ":";
+            }
+            if (!string.IsNullOrEmpty(productNames))
+            {
+                productNames = productNames.TrimEnd(':');
+            }
+
+            byte[] listBytes = conversionHandler.ConvertStringToBytes(productNames);
+            byte[] lengthListBytes = conversionHandler.ConvertIntToBytes(dataBytes.Length);
+            socketHelper.Send(lengthListBytes);
+            socketHelper.Send(listBytes);
+        }
+
         private void SendResponse(byte[] responseBytes)
         {
             int responseLength = responseBytes.Length;

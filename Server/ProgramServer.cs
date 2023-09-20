@@ -87,7 +87,12 @@ namespace Server
                 if(command == Protocol.ProtocolCommands.PublishProduct)
                 {
                     ProductHandler productHandler = new ProductHandler(socketHelper, conversionHandler, productService);
-
+                    productHandler.PublishProduct();
+                }
+                if(command == Protocol.ProtocolCommands.GetAllUserProducts)
+                {
+                    ProductHandler productHandler = new ProductHandler(socketHelper, conversionHandler, productService);
+                    productHandler.SendAllUserProducts();
                 }
                 else
                 {
