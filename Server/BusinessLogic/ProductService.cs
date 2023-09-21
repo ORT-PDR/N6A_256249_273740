@@ -38,12 +38,19 @@ namespace Server.BusinessLogic
             return storage.GetProductById(productId);
         }
 
+        public Product GetProductByName(string name)
+        {
+            return storage.GetProductByName(name);
+        }
+
         public Product UpdateProduct(Product updatedProduct)
         {
+            string aux = updatedProduct.name;
             updatedProduct.name = "Updated Product";
             ValidateProduct(updatedProduct);
+            updatedProduct.name = aux;
 
-            Product existingProduct = storage.GetProductById(updatedProduct.id);
+            Product existingProduct = storage.GetProductByName(updatedProduct.name);
             if (existingProduct == null)
             {
                 throw new ServerException("Product not found.");
@@ -82,7 +89,7 @@ namespace Server.BusinessLogic
                 return "Product is null";
             }
 
-            return $"Name: {product.name} | Description: {product.description} | Stock: {product.stock} | Price: {product.price} | Image Path: {product.imagePath}";
+            return $"{product.name}:{product.description}:{product.stock}:{product.price}:{product.imagePath}";
         }
 
         private void ValidateProduct(Product product)

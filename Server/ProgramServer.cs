@@ -94,6 +94,11 @@ namespace Server
                     ProductHandler productHandler = new ProductHandler(socketHelper, conversionHandler, productService);
                     productHandler.SendAllUserProducts();
                 }
+                if (command == Protocol.ProtocolCommands.UpdateProduct)
+                {
+                    ProductHandler productHandler = new ProductHandler(socketHelper, conversionHandler, productService);
+                    productHandler.UpdateProduct();
+                }
                 else
                 {
                     Console.WriteLine("Unknown authentication command from client.");

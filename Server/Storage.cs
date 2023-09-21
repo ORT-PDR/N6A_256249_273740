@@ -40,7 +40,8 @@ namespace Server
 		{
 			lock (lockObject)
 			{
-				products.Add(product);
+                ValidateProduct(product.name);
+                products.Add(product);
 			}
 		}
 
@@ -72,8 +73,16 @@ namespace Server
                 throw new ServerException("Username must be unique");
             }
         }
-		
-		public List<Product> GetAllProducts()
+
+        private void ValidateProduct(string name)
+        {
+            if (products.Any(u => u.name == name))
+            {
+                throw new ServerException("Product name must be unique");
+            }
+        }
+
+        public List<Product> GetAllProducts()
 		{
 			lock (lockObject)
 			{
@@ -88,8 +97,16 @@ namespace Server
 				return products.FirstOrDefault(p => p.id == productId);
 			}
 		}
-		
-		public void DeleteProduct(Guid productId)
+
+        public Product GetProductByName(string productName)
+        {
+            lock (lockObject)
+            {
+                return products.FirstOrDefault(p => p.name == productName);
+            }
+        }
+
+        public void DeleteProduct(Guid productId)
 		{
 			lock (lockObject)
 			{

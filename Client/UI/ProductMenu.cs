@@ -13,7 +13,15 @@ namespace Server.UI
     public class ProductMenu
     {
         private Socket socketClient;
+        private ConversionHandler conversionHandler;
+        private SocketHelper socketHelper;
         private string user;
+
+        public ProductMenu()
+        {
+            conversionHandler = new ConversionHandler();
+            socketHelper = new SocketHelper(socketClient);
+        }
 
         public void ShowMainMenu(string _user, Socket _socketClient)
         {
@@ -70,17 +78,10 @@ namespace Server.UI
 
             try
             {
-                var conversionHandler = new ConversionHandler();
-                var socketHelper = new SocketHelper(socketClient);
-
                 socketHelper.Send(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.PublishProduct));
 
                 string data = $"{name}:{description}:{price}:{stock}:{user}";
-
-                byte[] dataBytes = conversionHandler.ConvertStringToBytes(data);
-                byte[] lengthBytes = conversionHandler.ConvertIntToBytes(dataBytes.Length);
-                socketHelper.Send(lengthBytes);
-                socketHelper.Send(dataBytes);
+                Send(data);
 
                 byte[] lBytes = socketHelper.Receive(Protocol.FixedDataSize);
                 int dataLength = conversionHandler.ConvertBytesToInt(lBytes);
@@ -127,7 +128,8 @@ namespace Server.UI
                 Console.WriteLine("Select a product to update:");
                 for (int i = 0; i < userProducts.Length; i++)
                 {
-                    Console.WriteLine($"{i + 1}. {userProducts[i]}");
+                    string[] data = userProducts[i].Split(":");
+                    Console.WriteLine($"{i + 1}. Name: {data[0]} | Description: {data[1]} | Stock: {data[2]} | Price: {data[3]}");
                 }
 
                 if (int.TryParse(Console.ReadLine(), out int selectedIndex) && selectedIndex >= 1 && selectedIndex <= userProducts.Length)
@@ -151,22 +153,16 @@ namespace Server.UI
         {
             try
             {
-                var conversionHandler = new ConversionHandler();
-                var socketHelper = new SocketHelper(socketClient);
-
                 socketHelper.Send(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.GetAllUserProducts));
                 string data = $"{user}";
 
-                byte[] dataBytes = conversionHandler.ConvertStringToBytes(data);
-                byte[] lengthBytes = conversionHandler.ConvertIntToBytes(dataBytes.Length);
-                socketHelper.Send(lengthBytes);
-                socketHelper.Send(dataBytes);
+                Send(data);
 
                 byte[] lBytes = socketHelper.Receive(Protocol.FixedDataSize);
                 int dataLength = conversionHandler.ConvertBytesToInt(lBytes);
                 byte[] listBytes = socketHelper.Receive(dataLength);
                 string list = conversionHandler.ConvertBytesToString(listBytes);
-                string[] products = list.Split(":");
+                string[] products = list.Split(";");
                 return products;
             }
             catch(Exception e)
@@ -184,17 +180,19 @@ namespace Server.UI
             Console.WriteLine("2. Stock Available");
             Console.WriteLine("3. Price");
             Console.WriteLine("4. Image Path");
-            Console.WriteLine("5. Done (Exit)");
+            Console.WriteLine("5. Done (Back)");
 
-            bool exit = false;
+            bool back = false;
 
-            while (!exit)
+            string[] product = selectedProduct.Split(":");
+
+            while (!back)
             {
                 string userInput = Console.ReadLine();
 
-                if (userInput.Equals("exit", StringComparison.OrdinalIgnoreCase))
+                if (userInput.Equals("back", StringComparison.OrdinalIgnoreCase))
                 {
-                    exit = true;
+                    back = true;
                     break;
                 }
 
@@ -205,15 +203,16 @@ namespace Server.UI
                     switch (attributeChoice)
                     {
                         case 1:
-                            Console.WriteLine($"Description (current: {selectedProduct.description}): ");
+                            Console.WriteLine($"Description (current: {product[1]}): ");
+                            Console.WriteLine("Enter new description or BACK to go back");
                             newValue = Console.ReadLine();
-                            selectedProduct.description = !string.IsNullOrWhiteSpace(newValue) ? newValue : selectedProduct.description;
+                            SendModifiedValue(product[0], "description", newValue);
                             break;
                         case 2:
-                            Console.WriteLine($"Stock Available (current: {selectedProduct.stock}): ");
+                            Console.WriteLine($"Stock Available (current: {product[2]}): ");
                             if (int.TryParse(Console.ReadLine(), out int newStock) && newStock >= 0)
                             {
-                                selectedProduct.stock = newStock;
+                                SendModifiedValue(product[0], "stock", newStock.ToString());
                             }
                             else
                             {
@@ -221,10 +220,10 @@ namespace Server.UI
                             }
                             break;
                         case 3:
-                            Console.WriteLine($"Price (current: {selectedProduct.price}): ");
+                            Console.WriteLine($"Price (current: {product[3]}): ");
                             if (double.TryParse(Console.ReadLine(), out double newPrice) && newPrice > 0)
                             {
-                                selectedProduct.price = newPrice;
+                                SendModifiedValue(product[0], "price", newPrice.ToString());
                             }
                             else
                             {
@@ -232,21 +231,75 @@ namespace Server.UI
                             }
                             break;
                         case 4:
-                            Console.WriteLine($"Image Path (current: {selectedProduct.imagePath}): ");
+                            Console.WriteLine($"Image Path (current: {product[4]}): ");
                             newValue = Console.ReadLine();
-                            selectedProduct.imagePath = !string.IsNullOrWhiteSpace(newValue) ? newValue : selectedProduct.imagePath;
+                            product[4] = !string.IsNullOrWhiteSpace(newValue) ? newValue : product[4];
+                            SendModifiedValue(product[0], "image", newValue);
                             break;
                         case 5:
-                            productService.UpdateProduct(selectedProduct);
-                            Console.WriteLine("Product updated successfully.");
-                            exit = true; // Salir del bucle cuando el usuario elige "Done"
+                            byte[] lengthBytes = socketHelper.Receive(Protocol.FixedDataSize);
+                            int dataLength = conversionHandler.ConvertBytesToInt(lengthBytes);
+                            byte[] dataBytes = socketHelper.Receive(dataLength);
+                            string response = conversionHandler.ConvertBytesToString(dataBytes);
+
+                            if (response == "Success")
+                            {
+                                Console.WriteLine("Product updated successfully.");
+                            }
+                            back = true; // Salir del bucle cuando el usuario elige "Done"
                             break;
                     }
                 }
                 else
                 {
-                    Console.WriteLine("Invalid attribute selection. Please select a valid option (1-5) or type 'exit' to quit.");
+                    Console.WriteLine("Invalid attribute selection. Please select a valid option (1-5) or type 'back' to quit.");
                 }
+            }
+        }
+
+        private void SendModifiedValue(string productName, string attribute, string newValue)
+        {
+            try
+            {
+                var conversionHandler = new ConversionHandler();
+                var socketHelper = new SocketHelper(socketClient);
+
+                socketHelper.Send(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.UpdateProduct));
+
+                string data = $"{productName}:{attribute}:{newValue}";
+
+                byte[] dataBytes = conversionHandler.ConvertStringToBytes(data);
+                byte[] lengthBytes = conversionHandler.ConvertIntToBytes(dataBytes.Length);
+                socketHelper.Send(lengthBytes);
+                socketHelper.Send(dataBytes);
+
+                byte[] lBytes = socketHelper.Receive(Protocol.FixedDataSize);
+                int dataLength = conversionHandler.ConvertBytesToInt(lBytes);
+                byte[] responseBytes = socketHelper.Receive(dataLength);
+                string response = conversionHandler.ConvertBytesToString(responseBytes);
+
+                if (response == "Success")
+                {
+                    Console.WriteLine("Product updated successfully.");
+                    Console.WriteLine("Press any key to continue");
+                    Console.ReadKey();
+                }
+            }
+            catch (SocketException)
+            {
+                Console.WriteLine("Server disconnected");
+            }
+            catch (ServerException e)
+            {
+                Console.Write(e.Message);
+            }
+            catch (FormatException formatEx)
+            {
+                Console.WriteLine("Format exception. Stock and price must be integer.");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Unexpected Exception: " + ex.Message);
             }
         }
 
@@ -327,6 +380,16 @@ namespace Server.UI
             }
 
             Console.ReadKey();
+        }
+
+        private void Send(string response)
+        {
+            byte[] responseBytes = conversionHandler.ConvertStringToBytes(response);
+            int responseLength = responseBytes.Length;
+
+            byte[] lengthBytes = conversionHandler.ConvertIntToBytes(responseLength);
+            socketHelper.Send(lengthBytes);
+            socketHelper.Send(responseBytes);
         }
     }
 }

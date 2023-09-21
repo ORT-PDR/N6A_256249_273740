@@ -54,29 +54,48 @@ namespace Server.UIHandler
 
         public void UpdateProduct()
         {
-            string currentUser = user;
-            var userProducts = productService.GetProductsByUser(currentUser);
-
-            if (userProducts.Count > 0)
+            try
             {
-                Console.WriteLine("Select a product to update:");
-                for (int i = 0; i < userProducts.Count; i++)
+                byte[] lengthBytes = socketHelper.Receive(Protocol.FixedDataSize);
+                int dataLength = conversionHandler.ConvertBytesToInt(lengthBytes);
+                byte[] dataBytes = socketHelper.Receive(dataLength);
+                string data = conversionHandler.ConvertBytesToString(dataBytes);
+
+                string[] dataArray = data.Split(":");
+                string productName = dataArray[0];
+                string attribute = dataArray[1];
+                string newValue = dataArray[2];
+
+                Product p = productService.GetProductByName(productName);
+                switch (attribute)
                 {
-                    Console.WriteLine($"{i + 1}. {productService.ProductToString(userProducts[i])}");
+                    case "description":
+                        p.description = newValue;
+                        break;
+
+                    case "stock":
+                        p.stock = int.Parse(newValue);
+                        break;
+
+                    case "price":
+                        p.price = int.Parse(newValue);
+                        break;
+
+                    case "image":
+                        p.imagePath = newValue;
+                        break;
                 }
 
-                if (int.TryParse(Console.ReadLine(), out int selectedIndex) && selectedIndex >= 1 && selectedIndex <= userProducts.Count)
-                {
-                    ModifyProductMenu(userProducts[selectedIndex - 1]);
-                }
-                else
-                {
-                    Console.WriteLine("Invalid selection.");
-                }
+                productService.UpdateProduct(p);
+                string response = "Success";
+                byte[] responseBytes = conversionHandler.ConvertStringToBytes(response);
+                SendResponse(responseBytes);
             }
-            else
+            catch(Exception e)
             {
-                Console.WriteLine("You have no products to update.");
+                string response = e.Message;
+                byte[] responseBytes = conversionHandler.ConvertStringToBytes(response);
+                SendResponse(responseBytes);
             }
         }
 
@@ -92,17 +111,24 @@ namespace Server.UIHandler
 
             for(int i = 0; i < products.Count; i++)
             {
-                productNames = productService.ProductToString(products[i]) + ":";
+                productNames = productService.ProductToString(products[i]) + ";";
             }
             if (!string.IsNullOrEmpty(productNames))
             {
-                productNames = productNames.TrimEnd(':');
+                productNames = productNames.TrimEnd(';');
             }
 
-            byte[] listBytes = conversionHandler.ConvertStringToBytes(productNames);
-            byte[] lengthListBytes = conversionHandler.ConvertIntToBytes(dataBytes.Length);
-            socketHelper.Send(lengthListBytes);
-            socketHelper.Send(listBytes);
+            Send(productNames);
+        }
+
+        private void Send(string response)
+        {
+            byte[] responseBytes = conversionHandler.ConvertStringToBytes(response);
+            int responseLength = responseBytes.Length;
+
+            byte[] lengthBytes = conversionHandler.ConvertIntToBytes(responseLength);
+            socketHelper.Send(lengthBytes);
+            socketHelper.Send(responseBytes);
         }
 
         private void SendResponse(byte[] responseBytes)
