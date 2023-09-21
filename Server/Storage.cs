@@ -7,9 +7,9 @@ namespace Server
 	{
 		private static Storage instance = null;
 		private static readonly object lockObject = new object();
-		
-		public List<User> users;
-		public List<Product> products;
+
+		public List<User> users = new List<User>();
+		public List<Product> products = new List<Product>();
 		
 		public static Storage Instance
 		{
