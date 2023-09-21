@@ -6,7 +6,7 @@ namespace Server
 {
     public class TestData
     {
-        public static List<Product> GetProductTestData()
+        public List<Product> GetProducts()
         {
             var products = new List<Product>
             {
@@ -126,7 +126,7 @@ namespace Server
             return products;
         }
 
-        public static List<User> GetUserTestData()
+        public List<User> GetUsers()
         {
             var users = new List<User>
             {
