@@ -14,7 +14,7 @@ namespace Server
                 {
                     id = Guid.NewGuid(),
                     name = "Soccer Ball",
-                    description = "Official soccer ball for matches",
+                    description = "Official Balon D'or for matches BOBO",
                     stock = 100,
                     price = 29.99,
                     imagePath = "soccer_ball.jpg",
@@ -51,7 +51,7 @@ namespace Server
                 {
                     id = Guid.NewGuid(),
                     name = "Soccer Jersey",
-                    description = "Special edition soccer jersey",
+                    description = "Special edition soccer jersey SIUUU",
                     stock = 50,
                     price = 49.99,
                     imagePath = "soccer_jersey.jpg",
