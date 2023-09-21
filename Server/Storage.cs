@@ -106,11 +106,11 @@ namespace Server
             }
         }
 
-        public void DeleteProduct(Guid productId)
+        public void DeleteProduct(string productName)
 		{
 			lock (lockObject)
 			{
-				Product productToRemove = products.FirstOrDefault(p => p.id == productId);
+				Product productToRemove = products.FirstOrDefault(p => p.name == productName);
 
 				if (productToRemove != null)
 				{

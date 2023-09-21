@@ -121,6 +121,41 @@ namespace Server.UIHandler
             Send(productNames);
         }
 
+        public void DeleteProduct()
+        {
+            byte[] lengthBytes = socketHelper.Receive(Protocol.FixedDataSize);
+            int dataLength = conversionHandler.ConvertBytesToInt(lengthBytes);
+            byte[] dataBytes = socketHelper.Receive(dataLength);
+            string productName = conversionHandler.ConvertBytesToString(dataBytes);
+
+            productService.DeleteProduct(productName);
+
+            string response = "Success";
+            byte[] responseBytes = conversionHandler.ConvertStringToBytes(response);
+            SendResponse(responseBytes);
+        }
+
+        public void SearchProducts()
+        {
+            byte[] lengthBytes = socketHelper.Receive(Protocol.FixedDataSize);
+            int dataLength = conversionHandler.ConvertBytesToInt(lengthBytes);
+            byte[] dataBytes = socketHelper.Receive(dataLength);
+            string name = conversionHandler.ConvertBytesToString(dataBytes);
+
+            List<Product> products = productService.GetProducts(name);
+            string productNames = "";
+
+            for (int i = 0; i < products.Count; i++)
+            {
+                productNames = productService.ProductToString(products[i]) + ";";
+            }
+            if (!string.IsNullOrEmpty(productNames))
+            {
+                productNames = productNames.TrimEnd(';');
+            }
+            Send(productNames);
+        }
+
         private void Send(string response)
         {
             byte[] responseBytes = conversionHandler.ConvertStringToBytes(response);

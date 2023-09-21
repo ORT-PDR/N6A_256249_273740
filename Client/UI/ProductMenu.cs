@@ -7,6 +7,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Diagnostics;
 using System.Xml.Linq;
+using System.Runtime.InteropServices;
 
 namespace Server.UI
 {
@@ -49,7 +50,7 @@ namespace Server.UI
                         UpdateProduct();
                         break;
                     case "3":
-                        DeleteProduct(user);
+                        DeleteProduct();
                         break;
                     case "4":
                         SearchProducts();
@@ -65,6 +66,7 @@ namespace Server.UI
 
         private void PublishProduct()
         {
+            Console.Clear();
             Console.WriteLine("Enter product details:");
 
             Console.WriteLine("Name: ");
@@ -120,7 +122,7 @@ namespace Server.UI
 
         private void UpdateProduct()
         {
-            string currentUser = user;
+            Console.Clear();
             var userProducts = RetrieveAllUserProducts();
 
             if (userProducts.Length > 0)
@@ -237,14 +239,20 @@ namespace Server.UI
                             SendModifiedValue(product[0], "image", newValue);
                             break;
                         case 5:
-                            byte[] lengthBytes = socketHelper.Receive(Protocol.FixedDataSize);
-                            int dataLength = conversionHandler.ConvertBytesToInt(lengthBytes);
-                            byte[] dataBytes = socketHelper.Receive(dataLength);
-                            string response = conversionHandler.ConvertBytesToString(dataBytes);
-
-                            if (response == "Success")
+                            try
                             {
-                                Console.WriteLine("Product updated successfully.");
+                                byte[] lengthBytes = socketHelper.Receive(Protocol.FixedDataSize);
+                                int dataLength = conversionHandler.ConvertBytesToInt(lengthBytes);
+                                byte[] dataBytes = socketHelper.Receive(dataLength);
+                                string response = conversionHandler.ConvertBytesToString(dataBytes);
+                                if (response == "Success")
+                                {
+                                    Console.WriteLine("Product updated successfully.");
+                                }
+                            }
+                            catch(Exception e)
+                            {
+                                Console.WriteLine(e.Message);
                             }
                             back = true; // Salir del bucle cuando el usuario elige "Done"
                             break;
@@ -261,17 +269,11 @@ namespace Server.UI
         {
             try
             {
-                var conversionHandler = new ConversionHandler();
-                var socketHelper = new SocketHelper(socketClient);
-
                 socketHelper.Send(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.UpdateProduct));
 
                 string data = $"{productName}:{attribute}:{newValue}";
 
-                byte[] dataBytes = conversionHandler.ConvertStringToBytes(data);
-                byte[] lengthBytes = conversionHandler.ConvertIntToBytes(dataBytes.Length);
-                socketHelper.Send(lengthBytes);
-                socketHelper.Send(dataBytes);
+                Send(data);
 
                 byte[] lBytes = socketHelper.Receive(Protocol.FixedDataSize);
                 int dataLength = conversionHandler.ConvertBytesToInt(lBytes);
@@ -303,83 +305,114 @@ namespace Server.UI
             }
         }
 
-        private void DeleteProduct(String user)
+        private void DeleteProduct()
         {
-            string currentUser = user;
-            var userProducts = productService.GetProductsByUser(currentUser);
-
-            if (userProducts.Count > 0)
+            Console.Clear();
+            try
             {
-                Console.WriteLine("Select a product to delete:");
-                for (int i = 0; i < userProducts.Count; i++)
+                var userProducts = RetrieveAllUserProducts();
+
+                if (userProducts.Length > 0)
                 {
-                    Console.WriteLine($"{i + 1}. {productService.ProductToString(userProducts[i])}");
-                }
-
-                bool exit = false;
-
-                while (!exit)
-                {
-                    string userInput = Console.ReadLine();
-
-                    if (userInput.Equals("exit", StringComparison.OrdinalIgnoreCase))
+                    Console.WriteLine("Select a product to delete:");
+                    for (int i = 0; i < userProducts.Length; i++)
                     {
-                        exit = true;
-                        break;
+                        string[] data = userProducts[i].Split(":");
+                        Console.WriteLine($"{i + 1}. Name: {data[0]} | Description: {data[1]} | Stock: {data[2]} | Price: {data[3]}");
                     }
 
-                    if (int.TryParse(userInput, out int selectedIndex) && selectedIndex >= 1 && selectedIndex <= userProducts.Count)
+                    if (int.TryParse(Console.ReadLine(), out int selectedIndex) && selectedIndex >= 1 && selectedIndex <= userProducts.Length)
                     {
-                        Product selectedProduct = userProducts[selectedIndex - 1];
-                        Console.WriteLine($"Are you sure you want to delete this product? (yes/no)\n{productService.ProductToString(selectedProduct)}");
+                        Console.WriteLine($"Are you sure you want to delete this product? (yes/no)");
 
                         string confirmation = Console.ReadLine();
                         if (confirmation.Equals("yes", StringComparison.OrdinalIgnoreCase))
                         {
-                            productService.DeleteProduct(selectedProduct.id);
-                            Console.WriteLine("Product deleted successfully.");
+                            socketHelper.Send(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.DeleteProduct));
+
+                            byte[] lBytes = socketHelper.Receive(Protocol.FixedDataSize);
+                            int dataLength = conversionHandler.ConvertBytesToInt(lBytes);
+                            byte[] responseBytes = socketHelper.Receive(dataLength);
+                            string response = conversionHandler.ConvertBytesToString(responseBytes);
+
+                            if (response == "Success")
+                            {
+                                Console.WriteLine("Product deleted successfully.");
+                            }
                         }
                         else
                         {
                             Console.WriteLine("Product not deleted.");
                         }
-
-                        exit = true;
                     }
                     else
                     {
-                        Console.WriteLine("Invalid selection. Please select a valid product number or type 'exit' to quit.");
+                        Console.WriteLine("Invalid selection. Please select a valid product number or type 'back' to quit.");
                     }
                 }
+                else
+                {
+                    Console.WriteLine("You have no products to delete.");
+                }
             }
-            else
+            catch (SocketException)
             {
-                Console.WriteLine("You have no products to delete.");
+                Console.WriteLine("Server disconnected");
             }
-
-            Console.ReadKey();
+            catch (ServerException e)
+            {
+                Console.Write(e.Message);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Unexpected Exception: " + ex.Message);
+            }
         }
 
         private void SearchProducts()
         {
+            Console.Clear();
             Console.WriteLine("Enter product name to search:");
             string productName = Console.ReadLine();
 
-            var products = productService.GetProducts(productName);
-            if (products.Any())
+            try
             {
-                Console.WriteLine("Search results:");
-                foreach (var product in products)
+                socketHelper.Send(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.SearchProducts));
+                Send(productName);
+
+                byte[] lBytes = socketHelper.Receive(Protocol.FixedDataSize);
+                int dataLength = conversionHandler.ConvertBytesToInt(lBytes);
+                byte[] responseBytes = socketHelper.Receive(dataLength);
+                string response = conversionHandler.ConvertBytesToString(responseBytes);
+
+                string[] products = response.Split(";");
+
+                if (products.Length > 0)
                 {
-                    Console.WriteLine($"ID: {product.id}, Name: {product.name}, Description: {product.description}");
+                    Console.WriteLine("Select a product to delete:");
+                    for (int i = 0; i < products.Length; i++)
+                    {
+                        string[] data = products[i].Split(":");
+                        Console.WriteLine($"{i + 1}. Name: {data[0]} | Description: {data[1]} | Stock: {data[2]} | Price: {data[3]}");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("No products match your search");
                 }
             }
-            else
+            catch (SocketException)
             {
-                Console.WriteLine("No products found.");
+                Console.WriteLine("Server disconnected");
             }
-
-            Console.ReadKey();
+            catch (ServerException e)
+            {
+                Console.Write(e.Message);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Unexpected Exception: " + ex.Message);
+            }
         }
 
         private void Send(string response)

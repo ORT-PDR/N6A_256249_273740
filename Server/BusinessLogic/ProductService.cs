@@ -64,15 +64,14 @@ namespace Server.BusinessLogic
             return existingProduct;
         }
 
-        public void DeleteProduct(Guid productId)
+        public void DeleteProduct(string productName)
         {
-            Product existingProduct = storage.GetProductById(productId);
+            Product existingProduct = storage.GetProductByName(productName);
             if (existingProduct == null)
             {
                 throw new ServerException("Product not found.");
             }
-            
-            storage.DeleteProduct(productId);
+            storage.DeleteProduct(productName);
         }
         
         public List<Product> GetProductsByUser(string userName)

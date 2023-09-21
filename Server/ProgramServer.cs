@@ -99,6 +99,16 @@ namespace Server
                     ProductHandler productHandler = new ProductHandler(socketHelper, conversionHandler, productService);
                     productHandler.UpdateProduct();
                 }
+                if(command == Protocol.ProtocolCommands.DeleteProduct)
+                {
+                    ProductHandler productHandler = new ProductHandler(socketHelper, conversionHandler, productService);
+                    productHandler.DeleteProduct();
+                }
+                if(command == Protocol.ProtocolCommands.SearchProducts)
+                {
+                    ProductHandler productHandler = new ProductHandler(socketHelper, conversionHandler, productService);
+                    productHandler.SearchProducts();
+                }
                 else
                 {
                     Console.WriteLine("Unknown authentication command from client.");
