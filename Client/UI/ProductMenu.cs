@@ -13,22 +13,20 @@ namespace Server.UI
 {
     public class ProductMenu
     {
-        private Socket socketClient;
         private ConversionHandler conversionHandler;
         private SocketHelper socketHelper;
         private string user;
 
-        public ProductMenu()
+        public ProductMenu(Socket socketClient)
         {
             conversionHandler = new ConversionHandler();
             socketHelper = new SocketHelper(socketClient);
         }
 
-        public void ShowMainMenu(string _user, Socket _socketClient)
+        public void ShowMainMenu(string _user)
         {
             while (true)
             {
-                socketClient = _socketClient;
                 user = _user;
 
                 Console.Clear();
@@ -156,9 +154,7 @@ namespace Server.UI
             try
             {
                 socketHelper.Send(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.GetAllUserProducts));
-                string data = $"{user}";
-
-                Send(data);
+                Send(user);
 
                 byte[] lBytes = socketHelper.Receive(Protocol.FixedDataSize);
                 int dataLength = conversionHandler.ConvertBytesToInt(lBytes);

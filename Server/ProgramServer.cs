@@ -16,6 +16,7 @@ namespace Server
         static readonly Storage storage = Storage.Instance;
         static readonly UserService userService = new UserService(storage);
         static readonly ProductService productService = new ProductService(storage);
+        static readonly ConversionHandler conversionHandler = new ConversionHandler();
 
         public static void Main(string[] args)
         {
@@ -71,47 +72,55 @@ namespace Server
         {
             try
             {
-                Console.WriteLine("Client is connected");
-
                 var socketHelper = new SocketHelper(socketCliente);
-                var conversionHandler = new ConversionHandler();
+                bool exit = false;
 
-                byte[] commandBytes = socketHelper.Receive(Protocol.FixedDataSize);
-                string command = conversionHandler.ConvertBytesToString(commandBytes);
+                while (!exit)
+                {
+                    byte[] commandBytes = socketHelper.Receive(Protocol.FixedDataSize);
+                    string command = conversionHandler.ConvertBytesToString(commandBytes);
 
-                if (command == Protocol.ProtocolCommands.Authenticate)
-                {
-                    UserAuthorization userAuthorization = new UserAuthorization(socketHelper, conversionHandler, userService);
-                    userAuthorization.Authenticate();
-                }
-                if(command == Protocol.ProtocolCommands.PublishProduct)
-                {
-                    ProductHandler productHandler = new ProductHandler(socketHelper, conversionHandler, productService);
-                    productHandler.PublishProduct();
-                }
-                if(command == Protocol.ProtocolCommands.GetAllUserProducts)
-                {
-                    ProductHandler productHandler = new ProductHandler(socketHelper, conversionHandler, productService);
-                    productHandler.SendAllUserProducts();
-                }
-                if (command == Protocol.ProtocolCommands.UpdateProduct)
-                {
-                    ProductHandler productHandler = new ProductHandler(socketHelper, conversionHandler, productService);
-                    productHandler.UpdateProduct();
-                }
-                if(command == Protocol.ProtocolCommands.DeleteProduct)
-                {
-                    ProductHandler productHandler = new ProductHandler(socketHelper, conversionHandler, productService);
-                    productHandler.DeleteProduct();
-                }
-                if(command == Protocol.ProtocolCommands.SearchProducts)
-                {
-                    ProductHandler productHandler = new ProductHandler(socketHelper, conversionHandler, productService);
-                    productHandler.SearchProducts();
-                }
-                else
-                {
-                    Console.WriteLine("Unknown authentication command from client.");
+                    if (command == Protocol.ProtocolCommands.Authenticate)
+                    {
+                        Console.WriteLine("Authentication requested by client.");
+                        UserAuthorization userAuthorization = new UserAuthorization(socketHelper, conversionHandler, userService);
+                        userAuthorization.Authenticate();
+                    }
+                    if(command == Protocol.ProtocolCommands.PublishProduct)
+                    {
+                        Console.WriteLine("Product publish requested by client.");
+                        ProductHandler productHandler = new ProductHandler(socketHelper, conversionHandler, productService);
+                        productHandler.PublishProduct();
+                    }
+                    if(command == Protocol.ProtocolCommands.GetAllUserProducts)
+                    {
+                        Console.WriteLine("Products requested by client.");
+                        ProductHandler productHandler = new ProductHandler(socketHelper, conversionHandler, productService);
+                        productHandler.SendAllUserProducts();
+                    }
+                    if (command == Protocol.ProtocolCommands.UpdateProduct)
+                    {
+                        Console.WriteLine("Update product requested by client.");
+                        ProductHandler productHandler = new ProductHandler(socketHelper, conversionHandler, productService);
+                        productHandler.UpdateProduct();
+                    }
+                    if(command == Protocol.ProtocolCommands.DeleteProduct)
+                    {
+                        Console.WriteLine("Delete product requested by client.");
+                        ProductHandler productHandler = new ProductHandler(socketHelper, conversionHandler, productService);
+                        productHandler.DeleteProduct();
+                    }
+                    if(command == Protocol.ProtocolCommands.SearchProducts)
+                    {
+                        Console.WriteLine("Search products requested by client.");
+                        ProductHandler productHandler = new ProductHandler(socketHelper, conversionHandler, productService);
+                        productHandler.SearchProducts();
+                    }
+                    if(command == Protocol.ProtocolCommands.Exit)
+                    {
+                        Console.WriteLine("Exit requested by client.");
+                        exit = true;
+                    }
                 }
             }
             catch (SocketException)

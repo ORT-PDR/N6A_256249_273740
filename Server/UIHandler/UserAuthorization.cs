@@ -18,8 +18,6 @@ namespace Server.UIHandler
 
         public void Authenticate()
         {
-            Console.WriteLine("Authentication requested by client.");
-
             byte[] lengthBytes = socketHelper.Receive(Protocol.FixedDataSize);
             int dataLength = conversionHandler.ConvertBytesToInt(lengthBytes);
             byte[] credentialsBytes = socketHelper.Receive(dataLength);
@@ -36,11 +34,6 @@ namespace Server.UIHandler
                 string response = authenticationResult ? "Authentication successful" : "Authentication failed";
                 byte[] responseBytes = conversionHandler.ConvertStringToBytes(response);
                 SendResponse(responseBytes);
-
-                if (authenticationResult)
-                {
-                    // TODO MainMenu();
-                }
             }
             else
             {

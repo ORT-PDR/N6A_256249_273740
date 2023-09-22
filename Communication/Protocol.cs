@@ -12,15 +12,16 @@ namespace Communication
         public static class ProtocolCommands
         {
             public const string Authenticate = "AUTH";
-            public const string PublishProduct = "PUBLISH";
-            public const string BuyProduct = "BUY";
-            public const string UpdateProduct = "UPDATE";
-            public const string DeleteProduct = "DELETE";
-            public const string SearchProducts = "SEARCH";
-            public const string GetProductDetails = "DETAILS";
+            public const string PublishProduct = "PUBL";
+            public const string BuyProduct = "BUYP";
+            public const string UpdateProduct = "UPDT";
+            public const string DeleteProduct = "DELT";
+            public const string SearchProducts = "SRCH";
+            public const string GetProductDetails = "DETL";
             public const string RateProduct = "RATE";
-            public const string GetAllProducts = "GETALL";
-            public const string GetAllUserProducts = "GETALLBYUSER";
+            public const string GetAllProducts = "GALL";
+            public const string GetAllUserProducts = "GUPR";
+            public const string Exit = "EXIT";
         }
         
         public static long CalculateFileParts(long fileSize)

@@ -51,7 +51,7 @@ namespace Server
                 {
                     id = Guid.NewGuid(),
                     name = "Soccer Jersey",
-                    description = "Special edition soccer jersey SIUUU",
+                    description = "Special edition soccer jersey muito bonito SIUUU",
                     stock = 50,
                     price = 49.99,
                     imagePath = "soccer_jersey.jpg",
