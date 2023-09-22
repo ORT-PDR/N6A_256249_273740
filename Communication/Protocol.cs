@@ -12,6 +12,7 @@ namespace Communication
         public static class ProtocolCommands
         {
             public const string Authenticate = "AUTH";
+            public const string CreateUser = "CUSR";
             public const string PublishProduct = "PUBL";
             public const string BuyProduct = "BUYP";
             public const string UpdateProduct = "UPDT";

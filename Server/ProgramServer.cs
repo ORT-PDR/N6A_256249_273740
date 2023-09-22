@@ -116,6 +116,12 @@ namespace Server
                         ProductHandler productHandler = new ProductHandler(socketHelper, conversionHandler, productService);
                         productHandler.SearchProducts();
                     }
+                    if(command == Protocol.ProtocolCommands.CreateUser)
+                    {
+                        Console.WriteLine("Client reating a new user.");
+                        UserAuthorization userAuthorization = new UserAuthorization(socketHelper, conversionHandler, userService);
+                        userAuthorization.CreateUser();
+                    }
                     if(command == Protocol.ProtocolCommands.Exit)
                     {
                         Console.WriteLine("Exit requested by client.");

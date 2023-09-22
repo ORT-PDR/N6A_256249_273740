@@ -43,6 +43,41 @@ namespace Server.UIHandler
             }
         }
 
+        public void CreateUser()
+        {
+            byte[] lengthBytes = socketHelper.Receive(Protocol.FixedDataSize);
+            int dataLength = conversionHandler.ConvertBytesToInt(lengthBytes);
+            byte[] credentialsBytes = socketHelper.Receive(dataLength);
+            string credentials = conversionHandler.ConvertBytesToString(credentialsBytes);
+            string[] credentialsParts = credentials.Split(':');
+
+            if (credentialsParts.Length == 2)
+            {
+                try
+                {
+                    string username = credentialsParts[0];
+                    string password = credentialsParts[1];
+                    _userService.CreateUser(username, password);
+
+                    Console.WriteLine("User created successfully.");
+                    byte[] responseBytes = conversionHandler.ConvertStringToBytes("success");
+                    SendResponse(responseBytes);
+                }
+                catch(Exception e)
+                {
+                    Console.WriteLine("New user credentials were not valid.");
+                    byte[] responseBytes = conversionHandler.ConvertStringToBytes(e.Message);
+                    SendResponse(responseBytes);
+                }
+            }
+            else
+            {
+                Console.WriteLine("Invalid credentials format for new user.");
+                byte[] responseBytes = conversionHandler.ConvertStringToBytes("Invalid credentials format");
+                SendResponse(responseBytes);
+            }
+        }
+
         private void SendResponse(byte[] responseBytes)
         {
             int responseLength = responseBytes.Length;
