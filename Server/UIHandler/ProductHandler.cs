@@ -35,12 +35,13 @@ namespace Server.UIHandler
                 {
                     name = dataParts[0],
                     description = dataParts[1],
-                    price = int.Parse(dataParts[2]),
+                    price = double.Parse(dataParts[2]),
                     stock = int.Parse(dataParts[3]),
                     creator = dataParts[4]
                 };
 
                 productService.PublishProduct(product);
+                Console.WriteLine("Product published by client.");
             }
             else
             {
@@ -111,7 +112,7 @@ namespace Server.UIHandler
 
             for(int i = 0; i < products.Count; i++)
             {
-                productNames = productService.ProductToString(products[i]) + ";";
+                productNames += productService.ProductToString(products[i]) + ";";
             }
             if (!string.IsNullOrEmpty(productNames))
             {
@@ -126,9 +127,13 @@ namespace Server.UIHandler
             byte[] lengthBytes = socketHelper.Receive(Protocol.FixedDataSize);
             int dataLength = conversionHandler.ConvertBytesToInt(lengthBytes);
             byte[] dataBytes = socketHelper.Receive(dataLength);
-            string productName = conversionHandler.ConvertBytesToString(dataBytes);
+            string data = conversionHandler.ConvertBytesToString(dataBytes);
 
-            productService.DeleteProduct(productName);
+            string product = data.Split(":")[0];
+            string user = data.Split(":")[1];
+            
+            productService.DeleteProduct(product, user);
+            Console.WriteLine("Product deleted by client.");
 
             string response = "Success";
             byte[] responseBytes = conversionHandler.ConvertStringToBytes(response);

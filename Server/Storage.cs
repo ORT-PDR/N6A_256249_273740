@@ -41,7 +41,7 @@ namespace Server
 		{
 			lock (lockObject)
 			{
-                ValidateProduct(product.name);
+                ValidateProduct(product);
                 products.Add(product);
 			}
 		}
@@ -75,9 +75,9 @@ namespace Server
             }
         }
 
-        private void ValidateProduct(string name)
+        private void ValidateProduct(Product p)
         {
-            if (products.Any(u => u.name == name))
+            if (products.Any(u => u.name == p.name && u.creator == p.creator))
             {
                 throw new ServerException("Product name must be unique");
             }
@@ -106,12 +106,20 @@ namespace Server
                 return products.FirstOrDefault(p => p.name == productName);
             }
         }
+        
+        public Product GetUserProductByName(string productName, string user)
+        {
+	        lock (lockObject)
+	        {
+		        return products.FirstOrDefault(p => p.name == productName && p.creator == user);
+	        }
+        }
 
-        public void DeleteProduct(string productName)
+        public void DeleteProduct(Guid id)
 		{
 			lock (lockObject)
 			{
-				Product productToRemove = products.FirstOrDefault(p => p.name == productName);
+				Product productToRemove = products.FirstOrDefault(p => p.id == id);
 
 				if (productToRemove != null)
 				{

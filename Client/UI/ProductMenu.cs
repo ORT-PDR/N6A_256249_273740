@@ -25,11 +25,11 @@ namespace Server.UI
 
         public void ShowMainMenu(string _user)
         {
+            Console.Clear();
             while (true)
             {
                 user = _user;
-
-                Console.Clear();
+                
                 Console.WriteLine("Product Menu:");
                 Console.WriteLine("1. Publish Product");
                 Console.WriteLine("2. Update Product");
@@ -145,7 +145,6 @@ namespace Server.UI
             {
                 Console.WriteLine("You have no products to update.");
             }
-
             Console.ReadKey();
         }
 
@@ -173,19 +172,19 @@ namespace Server.UI
         private void ModifyProductMenu(string selectedProduct)
         {
             Console.Clear();
-            Console.WriteLine("Select an attribute to update:");
-            Console.WriteLine("1. Description");
-            Console.WriteLine("2. Stock Available");
-            Console.WriteLine("3. Price");
-            Console.WriteLine("4. Image Path");
-            Console.WriteLine("5. Done (Back)");
-
             bool back = false;
-
+            
             string[] product = selectedProduct.Split(":");
 
             while (!back)
             {
+                Console.WriteLine("Select an attribute to update:");
+                Console.WriteLine("1. Description");
+                Console.WriteLine("2. Stock Available");
+                Console.WriteLine("3. Price");
+                Console.WriteLine("4. Image Path");
+                Console.WriteLine("5. Done (Back)");
+                
                 string userInput = Console.ReadLine();
 
                 if (userInput.Equals("back", StringComparison.OrdinalIgnoreCase))
@@ -201,12 +200,14 @@ namespace Server.UI
                     switch (attributeChoice)
                     {
                         case 1:
+                            Console.Clear();
                             Console.WriteLine($"Description (current: {product[1]}): ");
                             Console.WriteLine("Enter new description or BACK to go back");
                             newValue = Console.ReadLine();
                             SendModifiedValue(product[0], "description", newValue);
                             break;
                         case 2:
+                            Console.Clear();
                             Console.WriteLine($"Stock Available (current: {product[2]}): ");
                             if (int.TryParse(Console.ReadLine(), out int newStock) && newStock >= 0)
                             {
@@ -218,6 +219,7 @@ namespace Server.UI
                             }
                             break;
                         case 3:
+                            Console.Clear();
                             Console.WriteLine($"Price (current: {product[3]}): ");
                             if (double.TryParse(Console.ReadLine(), out double newPrice) && newPrice > 0)
                             {
@@ -229,28 +231,14 @@ namespace Server.UI
                             }
                             break;
                         case 4:
+                            Console.Clear();
                             Console.WriteLine($"Image Path (current: {product[4]}): ");
                             newValue = Console.ReadLine();
                             product[4] = !string.IsNullOrWhiteSpace(newValue) ? newValue : product[4];
                             SendModifiedValue(product[0], "image", newValue);
                             break;
                         case 5:
-                            try
-                            {
-                                byte[] lengthBytes = socketHelper.Receive(Protocol.FixedDataSize);
-                                int dataLength = conversionHandler.ConvertBytesToInt(lengthBytes);
-                                byte[] dataBytes = socketHelper.Receive(dataLength);
-                                string response = conversionHandler.ConvertBytesToString(dataBytes);
-                                if (response == "Success")
-                                {
-                                    Console.WriteLine("Product updated successfully.");
-                                }
-                            }
-                            catch(Exception e)
-                            {
-                                Console.WriteLine(e.Message);
-                            }
-                            back = true; // Salir del bucle cuando el usuario elige "Done"
+                            back = true;
                             break;
                     }
                 }
@@ -282,6 +270,10 @@ namespace Server.UI
                     Console.WriteLine("Press any key to continue");
                     Console.ReadKey();
                 }
+                else
+                {
+                    Console.WriteLine("Product updated error.");
+                }
             }
             catch (SocketException)
             {
@@ -308,7 +300,7 @@ namespace Server.UI
             {
                 var userProducts = RetrieveAllUserProducts();
 
-                if (userProducts.Length > 0)
+                if (!userProducts.All(string.IsNullOrEmpty) && userProducts.Length > 0)
                 {
                     Console.WriteLine("Select a product to delete:");
                     for (int i = 0; i < userProducts.Length; i++)
@@ -316,8 +308,10 @@ namespace Server.UI
                         string[] data = userProducts[i].Split(":");
                         Console.WriteLine($"{i + 1}. Name: {data[0]} | Description: {data[1]} | Stock: {data[2]} | Price: {data[3]}");
                     }
+                    
+                    var selectedProduct = Console.ReadLine();
 
-                    if (int.TryParse(Console.ReadLine(), out int selectedIndex) && selectedIndex >= 1 && selectedIndex <= userProducts.Length)
+                    if (int.TryParse(selectedProduct, out int selectedIndex) && selectedIndex >= 1 && selectedIndex <= userProducts.Length)
                     {
                         Console.WriteLine($"Are you sure you want to delete this product? (yes/no)");
 
@@ -325,7 +319,8 @@ namespace Server.UI
                         if (confirmation.Equals("yes", StringComparison.OrdinalIgnoreCase))
                         {
                             socketHelper.Send(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.DeleteProduct));
-
+                            Send(userProducts[selectedIndex-1].Split(":")[0]+":"+user);
+                            
                             byte[] lBytes = socketHelper.Receive(Protocol.FixedDataSize);
                             int dataLength = conversionHandler.ConvertBytesToInt(lBytes);
                             byte[] responseBytes = socketHelper.Receive(dataLength);
