@@ -7,9 +7,10 @@ namespace Server
 	{
 		private static Storage instance = null;
 		private static readonly object lockObject = new object();
-		
-		public List<User> users;
-		public List<Product> products;
+		private static readonly TestData testData = new TestData();
+
+		public List<User> users = testData.GetUsers();
+		public List<Product> products = testData.GetProducts();
 		
 		public static Storage Instance
 		{
@@ -40,7 +41,8 @@ namespace Server
 		{
 			lock (lockObject)
 			{
-				products.Add(product);
+                ValidateProduct(product.name);
+                products.Add(product);
 			}
 		}
 
@@ -72,8 +74,16 @@ namespace Server
                 throw new ServerException("Username must be unique");
             }
         }
-		
-		public List<Product> GetAllProducts()
+
+        private void ValidateProduct(string name)
+        {
+            if (products.Any(u => u.name == name))
+            {
+                throw new ServerException("Product name must be unique");
+            }
+        }
+
+        public List<Product> GetAllProducts()
 		{
 			lock (lockObject)
 			{
@@ -88,12 +98,20 @@ namespace Server
 				return products.FirstOrDefault(p => p.id == productId);
 			}
 		}
-		
-		public void DeleteProduct(Guid productId)
+
+        public Product GetProductByName(string productName)
+        {
+            lock (lockObject)
+            {
+                return products.FirstOrDefault(p => p.name == productName);
+            }
+        }
+
+        public void DeleteProduct(string productName)
 		{
 			lock (lockObject)
 			{
-				Product productToRemove = products.FirstOrDefault(p => p.id == productId);
+				Product productToRemove = products.FirstOrDefault(p => p.name == productName);
 
 				if (productToRemove != null)
 				{

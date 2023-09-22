@@ -12,7 +12,6 @@ namespace Client
     public class ProgramClient
     {
         static readonly SettingsManager settingsMngr = new SettingsManager();
-        private static readonly Login login = new Login();
         
         public static void Main(string[] args)
         {
@@ -20,7 +19,7 @@ namespace Client
             
             try
             {
-                var socketCliente = new Socket(
+                var socketClient = new Socket(
                     AddressFamily.InterNetwork,
                     SocketType.Stream,
                     ProtocolType.Tcp);
@@ -30,23 +29,24 @@ namespace Client
                 int serverPort = int.Parse(settingsMngr.ReadSettings(ClientConfig.serverPortconfigkey));
 
                 var localEndPoint = new IPEndPoint(IPAddress.Parse(ipClient), 0);
-                socketCliente.Bind(localEndPoint);
+                socketClient.Bind(localEndPoint);
                 var serverEndpoint = new IPEndPoint(IPAddress.Parse(ipServer), serverPort);
-                socketCliente.Connect(serverEndpoint);
+                socketClient.Connect(serverEndpoint);
                 Console.WriteLine("You're connected to the server!");
 
                 bool exit = false;
                 while (!exit)
                 {
-                    login.Show(socketCliente);
+                    Login login = new Login(socketClient);
+                    login.Show();
                     string line = Console.ReadLine();
                     if (line == "exit") { exit = true; }
                 }
     
                 Console.WriteLine("Closing client...");
 
-                socketCliente.Shutdown(SocketShutdown.Both);
-                socketCliente.Close();
+                socketClient.Shutdown(SocketShutdown.Both);
+                socketClient.Close();
             }
             catch (SocketException ex)
             {
