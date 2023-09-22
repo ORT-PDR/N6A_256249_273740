@@ -17,6 +17,7 @@ namespace Server.BusinessLogic
         {
             ValidateProduct(product);
             product.id = Guid.NewGuid();
+            product.reviews = new List<Review>();
 
             storage.AddProduct(product);
         }
@@ -45,12 +46,8 @@ namespace Server.BusinessLogic
 
         public Product UpdateProduct(Product updatedProduct)
         {
-            string aux = updatedProduct.name;
-            updatedProduct.name = "Updated Product";
-            ValidateProduct(updatedProduct);
-            updatedProduct.name = aux;
-
             Product existingProduct = storage.GetProductByName(updatedProduct.name);
+    
             if (existingProduct == null)
             {
                 throw new ServerException("Product not found.");
@@ -60,18 +57,20 @@ namespace Server.BusinessLogic
             existingProduct.stock = updatedProduct.stock;
             existingProduct.price = updatedProduct.price;
             existingProduct.imagePath = updatedProduct.imagePath;
+            
+            ValidateProduct(existingProduct);
 
             return existingProduct;
         }
 
-        public void DeleteProduct(string productName)
+        public void DeleteProduct(string product, string user)
         {
-            Product existingProduct = storage.GetProductByName(productName);
+            Product existingProduct = storage.GetUserProductByName(product, user);
             if (existingProduct == null)
             {
                 throw new ServerException("Product not found.");
             }
-            storage.DeleteProduct(productName);
+            storage.DeleteProduct(existingProduct.id);
         }
         
         public List<Product> GetProductsByUser(string userName)
@@ -111,11 +110,6 @@ namespace Server.BusinessLogic
             if (product.price <= 0)
             {
                 throw new ServerException("Price must be a positive number.");
-            }
-            
-            if (!string.IsNullOrWhiteSpace(product.imagePath) && !File.Exists(product.imagePath))
-            {
-                throw new ServerException("Image path is invalid.");
             }
         }
     }

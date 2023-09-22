@@ -87,6 +87,43 @@ namespace Server
                 new Product
                 {
                     id = Guid.NewGuid(),
+                    name = "Jerseyy",
+                    description = "muito bonito SIUUU",
+                    stock = 20,
+                    price = 29.99,
+                    imagePath = "soccer_jersey.jpg",
+                    creator = "Cristiano Ronaldo",
+                    reviews = new List<Review>
+                    {
+                        new Review
+                        {
+                            Id = Guid.NewGuid(),
+                            user = new User
+                            {
+                                id = Guid.NewGuid(),
+                                username = "Kylian Mbappé",
+                                password = "password789"
+                            },
+                            comment = "I love the fabric quality",
+                            score = 5
+                        },
+                        new Review
+                        {
+                            Id = Guid.NewGuid(),
+                            user = new User
+                            {
+                                id = Guid.NewGuid(),
+                                username = "Sergio Ramos",
+                                password = "passwordabc"
+                            },
+                            comment = "Spectacular design",
+                            score = 4
+                        }
+                    }
+                },
+                new Product
+                {
+                    id = Guid.NewGuid(),
                     name = "Soccer Cleats",
                     description = "Professional soccer cleats for maximum performance",
                     stock = 30,
