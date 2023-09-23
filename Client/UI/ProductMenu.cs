@@ -34,8 +34,9 @@ namespace Server.UI
                 Console.WriteLine("1. Publish Product");
                 Console.WriteLine("2. Update Product");
                 Console.WriteLine("3. Delete Product");
-                Console.WriteLine("4. Search Products");
+                Console.WriteLine("4. View Products");
                 Console.WriteLine("5. Exit");
+                
 
                 string choice = Console.ReadLine();
 
@@ -51,7 +52,7 @@ namespace Server.UI
                         DeleteProduct();
                         break;
                     case "4":
-                        SearchProducts();
+                        ViewProductsMenu();
                         break;
                     case "5":
                         return;
@@ -153,6 +154,27 @@ namespace Server.UI
             try
             {
                 socketHelper.Send(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.GetAllUserProducts));
+                Send(user);
+
+                byte[] lBytes = socketHelper.Receive(Protocol.FixedDataSize);
+                int dataLength = conversionHandler.ConvertBytesToInt(lBytes);
+                byte[] listBytes = socketHelper.Receive(dataLength);
+                string list = conversionHandler.ConvertBytesToString(listBytes);
+                string[] products = list.Split(";");
+                return products;
+            }
+            catch(Exception e)
+            {
+                Console.WriteLine(e.Message);
+            }
+            return new string[0];
+        }
+        
+        private string[] RetrieveAllProducts()
+        {
+            try
+            {
+                socketHelper.Send(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.GetAllProducts));
                 Send(user);
 
                 byte[] lBytes = socketHelper.Receive(Protocol.FixedDataSize);
@@ -360,14 +382,93 @@ namespace Server.UI
             }
         }
 
-        private void SearchProducts()
+        private void ViewProductsMenu()
         {
-            Console.Clear();
-            Console.WriteLine("Enter product name to search:");
-            string productName = Console.ReadLine();
+            var products = RetrieveAllProducts();
 
+            if (!products.All(string.IsNullOrEmpty) && products.Length > 0)
+            {
+                Console.WriteLine("If you want to search a product, type the name of the product, else select a product to expand");
+                for (int i = 0; i < products.Length; i++)
+                {
+                    string[] data = products[i].Split(":");
+                    Console.WriteLine(
+                        $"{i + 1}. Name: {data[0]} | Description: {data[1]} | Stock: {data[2]} | Price: {data[3]}");
+                }
+                var option = Console.ReadLine();
+
+                if (int.TryParse(option, out int selectedIndex) && selectedIndex >= 1 &&
+                    selectedIndex <= products.Length)
+                {
+                    var product = products[selectedIndex - 1].Split(":");
+                    ViewProduct(product);
+                }
+                else
+                {
+                    SearchProducts(option);
+                }
+            }
+            else
+            {
+                Console.WriteLine("You have no products to view.");
+            }
+        }
+        
+        private void ViewProduct(string[] product)
+        {
+            Console.WriteLine($"Name: {product[0]}");
+            Console.WriteLine($"Description: {product[1]}");
+            Console.WriteLine($"Stock: {product[2]}");
+            Console.WriteLine($"Price: {product[3]}");
+            Console.WriteLine($"Image Path: {product[4]}");
+            Console.WriteLine($"Owner: {product[5]}");
+            Console.WriteLine();
+            Console.WriteLine("Menu:");
+            Console.WriteLine("1. Buy Product");
+            Console.WriteLine("2. Review Product");
+            Console.WriteLine("3. Go Back");
+
+            bool exit = false;
+            while (!exit)
+            {
+                var userInput = Console.ReadLine();
+                if (int.TryParse(userInput, out int attributeChoice) && attributeChoice >= 1 && attributeChoice <= 3)
+                {
+                    switch (attributeChoice)
+                    {
+                        case 1:
+                            BuyProduct();
+                            break;
+                        case 2:
+                            ReviewProduct();
+                            break;
+                        case 3:
+                            return;
+                    }
+                    exit = true;
+                }
+                else
+                {
+                    Console.WriteLine("Invalid attribute selection. Please select a valid option (1-3) or type 'exit' to quit.");
+                }
+            }
+        }
+
+        private void BuyProduct()
+        {
+            
+        }
+        
+        private void ReviewProduct()
+        {
+            
+        }
+
+        private void SearchProducts(string productName)
+        {
             try
             {
+                Console.Clear();
                 socketHelper.Send(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.SearchProducts));
                 Send(productName);
 
@@ -380,16 +481,42 @@ namespace Server.UI
 
                 if (products.Length > 0)
                 {
-                    Console.WriteLine("Select a product to delete:");
+                    Console.WriteLine("Select a product to expand:");
                     for (int i = 0; i < products.Length; i++)
                     {
                         string[] data = products[i].Split(":");
                         Console.WriteLine($"{i + 1}. Name: {data[0]} | Description: {data[1]} | Stock: {data[2]} | Price: {data[3]}");
                     }
+
+                    bool exit = false;
+                    while (!exit)
+                    {
+                        var option = Console.ReadLine();
+
+                        if (option == "exit")
+                        {
+                            exit = true;
+                            break;
+                        }
+
+                        if (int.TryParse(option, out int selectedIndex) && selectedIndex >= 1 &&
+                            selectedIndex <= products.Length)
+                        {
+                            var product = products[selectedIndex - 1].Split(":");
+                            exit = true;
+                            ViewProduct(product);
+                        }
+                        else
+                        {
+                            Console.WriteLine("Invalid selection. Please select a valid product number or type 'exit' to quit.");
+                        }
+                    }
                 }
                 else
                 {
                     Console.WriteLine("No products match your search");
+                    Console.WriteLine("Returning to previous window");
+                    ViewProductsMenu();
                 }
             }
             catch (SocketException)

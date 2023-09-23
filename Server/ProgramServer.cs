@@ -94,9 +94,15 @@ namespace Server
                     }
                     if(command == Protocol.ProtocolCommands.GetAllUserProducts)
                     {
-                        Console.WriteLine("Products requested by client.");
+                        Console.WriteLine("User products requested by client.");
                         ProductHandler productHandler = new ProductHandler(socketHelper, conversionHandler, productService);
                         productHandler.SendAllUserProducts();
+                    }
+                    if(command == Protocol.ProtocolCommands.GetAllProducts)
+                    {
+                        Console.WriteLine("All products requested by client.");
+                        ProductHandler productHandler = new ProductHandler(socketHelper, conversionHandler, productService);
+                        productHandler.SendAllProducts();
                     }
                     if (command == Protocol.ProtocolCommands.UpdateProduct)
                     {

@@ -87,7 +87,7 @@ namespace Server.BusinessLogic
                 return "Product is null";
             }
 
-            return $"{product.name}:{product.description}:{product.stock}:{product.price}:{product.imagePath}";
+            return $"{product.name}:{product.description}:{product.stock}:{product.price}:{product.imagePath}:{product.creator}";
         }
 
         private void ValidateProduct(Product product)
