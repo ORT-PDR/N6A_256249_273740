@@ -422,8 +422,7 @@ namespace Server.UI
             Console.WriteLine($"Price: {product[3]}");
             Console.WriteLine($"Image Path: {product[4]}");
             Console.WriteLine($"Owner: {product[5]}");
-            Console.WriteLine();
-            Console.WriteLine("Menu:");
+            Console.WriteLine("----Menu----");
             Console.WriteLine("1. Buy Product");
             Console.WriteLine("2. Review Product");
             Console.WriteLine("3. Go Back");
