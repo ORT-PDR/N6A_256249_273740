@@ -174,7 +174,7 @@ namespace Server.UIHandler
 
             for (int i = 0; i < products.Count; i++)
             {
-                productNames = productService.ProductToString(products[i]) + ";";
+                productNames += productService.ProductToString(products[i]) + ";";
             }
             if (!string.IsNullOrEmpty(productNames))
             {
