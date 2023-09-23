@@ -72,6 +72,16 @@ namespace Server.BusinessLogic
             }
             storage.DeleteProduct(existingProduct.id);
         }
+
+        public void BuyProduct(string product, string user)
+        {
+            Product existingProduct = storage.GetUserProductByName(product, user);
+            if (existingProduct == null)
+            {
+                throw new ServerException("Product not found.");
+            }
+            storage.BuyProduct(existingProduct.id);
+        }
         
         public List<Product> GetProductsByUser(string userName)
         {

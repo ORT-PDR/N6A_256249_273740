@@ -131,6 +131,26 @@ namespace Server
 				}
 			}
 		}
+        
+        public void BuyProduct(Guid productId)
+        {
+	        lock (lockObject)
+	        {
+		        Product productToBuy = products.FirstOrDefault(p => p.id == productId);
+
+		        if (productToBuy == null)
+		        {
+			        throw new ServerException("Product not found.");
+		        }
+
+		        if (productToBuy.stock <= 0)
+		        {
+			        throw new ServerException("Product out of stock.");
+		        }
+                
+		        productToBuy.stock--;
+	        }
+        }
     }
 }
 

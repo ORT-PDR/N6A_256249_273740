@@ -183,6 +183,23 @@ namespace Server.UIHandler
             Send(productNames);
         }
 
+        public void BuyProduct()
+        {
+            byte[] lengthBytes = socketHelper.Receive(Protocol.FixedDataSize);
+            int dataLength = conversionHandler.ConvertBytesToInt(lengthBytes);
+            byte[] dataBytes = socketHelper.Receive(dataLength);
+            string data = conversionHandler.ConvertBytesToString(dataBytes);
+            
+            string product = data.Split(":")[0];
+            string username = data.Split(":")[1];
+            
+            productService.BuyProduct(product, username);
+            
+            string response = "Success";
+            byte[] responseBytes = conversionHandler.ConvertStringToBytes(response);
+            SendResponse(responseBytes);
+        }
+
         private void Send(string response)
         {
             byte[] responseBytes = conversionHandler.ConvertStringToBytes(response);

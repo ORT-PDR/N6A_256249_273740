@@ -74,6 +74,9 @@ namespace Server
             {
                 var socketHelper = new SocketHelper(socketCliente);
                 bool exit = false;
+                
+                UserAuthorization userAuthorization = new UserAuthorization(socketHelper, conversionHandler, userService);
+                ProductHandler productHandler = new ProductHandler(socketHelper, conversionHandler, productService);
 
                 while (!exit)
                 {
@@ -83,50 +86,48 @@ namespace Server
                     if (command == Protocol.ProtocolCommands.Authenticate)
                     {
                         Console.WriteLine("Authentication requested by client.");
-                        UserAuthorization userAuthorization = new UserAuthorization(socketHelper, conversionHandler, userService);
+                        
                         userAuthorization.Authenticate();
                     }
                     if(command == Protocol.ProtocolCommands.PublishProduct)
                     {
                         Console.WriteLine("Product publish requested by client.");
-                        ProductHandler productHandler = new ProductHandler(socketHelper, conversionHandler, productService);
                         productHandler.PublishProduct();
                     }
                     if(command == Protocol.ProtocolCommands.GetAllUserProducts)
                     {
                         Console.WriteLine("User products requested by client.");
-                        ProductHandler productHandler = new ProductHandler(socketHelper, conversionHandler, productService);
                         productHandler.SendAllUserProducts();
                     }
                     if(command == Protocol.ProtocolCommands.GetAllProducts)
                     {
                         Console.WriteLine("All products requested by client.");
-                        ProductHandler productHandler = new ProductHandler(socketHelper, conversionHandler, productService);
                         productHandler.SendAllProducts();
                     }
                     if (command == Protocol.ProtocolCommands.UpdateProduct)
                     {
                         Console.WriteLine("Update product requested by client.");
-                        ProductHandler productHandler = new ProductHandler(socketHelper, conversionHandler, productService);
                         productHandler.UpdateProduct();
                     }
                     if(command == Protocol.ProtocolCommands.DeleteProduct)
                     {
                         Console.WriteLine("Delete product requested by client.");
-                        ProductHandler productHandler = new ProductHandler(socketHelper, conversionHandler, productService);
                         productHandler.DeleteProduct();
                     }
                     if(command == Protocol.ProtocolCommands.SearchProducts)
                     {
                         Console.WriteLine("Search products requested by client.");
-                        ProductHandler productHandler = new ProductHandler(socketHelper, conversionHandler, productService);
                         productHandler.SearchProducts();
                     }
                     if(command == Protocol.ProtocolCommands.CreateUser)
                     {
-                        Console.WriteLine("Client reating a new user.");
-                        UserAuthorization userAuthorization = new UserAuthorization(socketHelper, conversionHandler, userService);
+                        Console.WriteLine("Client creating a new user.");
                         userAuthorization.CreateUser();
+                    }
+                    if(command == Protocol.ProtocolCommands.BuyProduct)
+                    {
+                        Console.WriteLine("Client buying a product.");
+                        productHandler.BuyProduct();
                     }
                     if(command == Protocol.ProtocolCommands.Exit)
                     {

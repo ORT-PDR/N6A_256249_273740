@@ -437,7 +437,7 @@ namespace Server.UI
                     switch (attributeChoice)
                     {
                         case 1:
-                            BuyProduct();
+                            BuyProduct(product);
                             break;
                         case 2:
                             ReviewProduct();
@@ -454,9 +454,41 @@ namespace Server.UI
             }
         }
 
-        private void BuyProduct()
+        private void BuyProduct(string[] product)
         {
+            if (int.Parse(product[2]) <= 0)
+            {
+                Console.WriteLine("Product out of stock");
+                return;
+            }
+            if (product[5] == user)
+            {
+                Console.WriteLine("ERROR: You can't buy your product");
+                return;
+            }
             
+            Console.WriteLine($"Are you sure you want to Buy this product for {product[3]}$? (yes/no)");
+
+            string confirmation = Console.ReadLine();
+            if (confirmation.Equals("yes", StringComparison.OrdinalIgnoreCase))
+            {
+                socketHelper.Send(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.BuyProduct));
+                Send(product[0]+":"+product[5]+":"+user);
+                            
+                byte[] lBytes = socketHelper.Receive(Protocol.FixedDataSize);
+                int dataLength = conversionHandler.ConvertBytesToInt(lBytes);
+                byte[] responseBytes = socketHelper.Receive(dataLength);
+                string response = conversionHandler.ConvertBytesToString(responseBytes);
+
+                if (response == "Success")
+                {
+                    Console.WriteLine("Product bought successfully.");
+                }
+            }
+            else
+            {
+                Console.WriteLine("Product not bought.");
+            }
         }
         
         private void ReviewProduct()
