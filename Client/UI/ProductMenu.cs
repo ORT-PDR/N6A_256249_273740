@@ -135,7 +135,7 @@ namespace Server.UI
                 for (int i = 0; i < userProducts.Length; i++)
                 {
                     string[] data = userProducts[i].Split(":");
-                    Console.WriteLine($"{i + 1}. Name: {data[0]} | Description: {data[1]} | Stock: {data[2]} | Price: {data[3]} | Image path: {data[4]}");
+                    Console.WriteLine($"{i + 1}. Name: {data[0]} | Description: {data[1]} | Stock: {data[2]} | Price: {data[3]}");
                 }
 
                 if (int.TryParse(Console.ReadLine(), out int selectedIndex) && selectedIndex >= 1 && selectedIndex <= userProducts.Length)
@@ -259,11 +259,19 @@ namespace Server.UI
         {
             try
             {
-                socketHelper.Send(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.UpdateProduct));
+                if (attribute == "image")
+                {
+                    SendNewImage(productName, newValue);
+                }
 
-                string data = $"{productName}:{attribute}:{newValue}";
+                else
+                {
+                    socketHelper.Send(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.UpdateProduct));
 
-                Send(data);
+                    string data = $"{productName}:{attribute}:{newValue}";
+
+                    Send(data);
+                }
 
                 byte[] lBytes = socketHelper.Receive(Protocol.FixedDataSize);
                 int dataLength = conversionHandler.ConvertBytesToInt(lBytes);
@@ -280,6 +288,33 @@ namespace Server.UI
                 {
                     Console.WriteLine("Product updated error.");
                 }
+            }
+            catch (SocketException)
+            {
+                Console.WriteLine("Server disconnected");
+            }
+            catch (ServerException e)
+            {
+                Console.Write(e.Message);
+            }
+            catch (FormatException formatEx)
+            {
+                Console.WriteLine("Format exception. Stock and price must be integer.");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Unexpected Exception: " + ex.Message);
+            }
+        }
+
+        private void SendNewImage(string productName, string newImagePath)
+        {
+            try
+            {
+                socketHelper.Send(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.UpdateProductImage));
+                var fileCommonHandler = new FileCommsHandler(socketHelper);
+                fileCommonHandler.SendFile(newImagePath);
+                Send(productName);
             }
             catch (SocketException)
             {

@@ -11,10 +11,4 @@
     <ProjectReference Include="..\Communication\Communication.csproj" />
     <ProjectReference Include="..\Models\Models.csproj" />
   </ItemGroup>
-  <ItemGroup>
-    <None Remove="productImages\" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="productImages\" />
-  </ItemGroup>
 </Project>

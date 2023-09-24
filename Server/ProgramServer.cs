@@ -104,6 +104,12 @@ namespace Server
                         ProductHandler productHandler = new ProductHandler(socketHelper, conversionHandler, productService);
                         productHandler.UpdateProduct();
                     }
+                    if(command == Protocol.ProtocolCommands.UpdateProductImage)
+                    {
+                        Console.WriteLine("Update product image requested by client.");
+                        ProductHandler productHandler = new ProductHandler(socketHelper, conversionHandler, productService);
+                        productHandler.UpdateProductImage();
+                    }
                     if(command == Protocol.ProtocolCommands.DeleteProduct)
                     {
                         Console.WriteLine("Delete product requested by client.");
