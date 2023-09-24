@@ -9,12 +9,14 @@ namespace Client.UI
         private ProductMenu _productMenu;
         private ConversionHandler conversionHandler;
         private SocketHelper socketHelper;
+        private Socket _socketClient;
 
         public Login(Socket socketClient)
         {
             conversionHandler = new ConversionHandler();
             _productMenu = new ProductMenu(socketClient);
             socketHelper = new SocketHelper(socketClient);
+            _socketClient = socketClient;
         }
 
         public void Show()
@@ -25,7 +27,7 @@ namespace Client.UI
 
                 while (!isAuthenticated)
                 {
-                    Console.WriteLine("Login (1) or create a new account (2)");
+                    Console.WriteLine("Login (1), create a new account (2) or type 'exit' to disconnect");
                     var text = Console.ReadLine();
                     if (text == "1")
                     {
@@ -75,7 +77,7 @@ namespace Client.UI
                         byte[] responseBytes = socketHelper.Receive(dataLength);
                         string response = conversionHandler.ConvertBytesToString(responseBytes);
 
-                        if(response == "success")
+                        if (response == "success")
                         {
                             Console.WriteLine("User created successfully!");
                             Console.WriteLine("Welcome ");
@@ -88,6 +90,11 @@ namespace Client.UI
                             Console.WriteLine("Error creating new user:");
                             Console.WriteLine(response);
                         }
+                    }
+                    else if(string.Equals(text, "exit", StringComparison.OrdinalIgnoreCase))
+                    {
+                        _socketClient.Close();
+                        break;
                     }
                 }
             }

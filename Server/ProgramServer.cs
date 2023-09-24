@@ -143,6 +143,11 @@ namespace Server
                         Console.WriteLine("Client rating a product.");
                         productHandler.RateProduct();
                     }
+                    if(command == Protocol.ProtocolCommands.DownloadProductImage)
+                    {
+                        Console.WriteLine("Image download requested by client.");
+                        productHandler.DownloadProductImage();
+                    }
                     if(command == Protocol.ProtocolCommands.GetAllProductReviews)
                     {
                         Console.WriteLine("Client requesting all product reviews.");
