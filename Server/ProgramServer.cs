@@ -129,6 +129,21 @@ namespace Server
                         Console.WriteLine("Client buying a product.");
                         productHandler.BuyProduct();
                     }
+                    if(command == Protocol.ProtocolCommands.GetAllPurchases)
+                    {
+                        Console.WriteLine("Client requesting all purchases.");
+                        productHandler.SendAllPurchases();
+                    }
+                    if(command == Protocol.ProtocolCommands.RateProduct)
+                    {
+                        Console.WriteLine("Client rating a product.");
+                        productHandler.RateProduct();
+                    }
+                    if(command == Protocol.ProtocolCommands.GetAllProductReviews)
+                    {
+                        Console.WriteLine("Client requesting all product reviews.");
+                        productHandler.SendAllProductReviews();
+                    }
                     if(command == Protocol.ProtocolCommands.Exit)
                     {
                         Console.WriteLine("Exit requested by client.");

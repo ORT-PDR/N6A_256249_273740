@@ -22,6 +22,8 @@ namespace Communication
             public const string RateProduct = "RATE";
             public const string GetAllProducts = "GALL";
             public const string GetAllUserProducts = "GUPR";
+            public const string GetAllPurchases = "GPCH";
+            public const string GetAllProductReviews = "GPRV";
             public const string Exit = "EXIT";
         }
         

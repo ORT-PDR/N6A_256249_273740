@@ -35,7 +35,8 @@ namespace Server.UI
                 Console.WriteLine("2. Update Product");
                 Console.WriteLine("3. Delete Product");
                 Console.WriteLine("4. View Products");
-                Console.WriteLine("5. Exit");
+                Console.WriteLine("5. My Purchases");
+                Console.WriteLine("6. Exit");
                 
 
                 string choice = Console.ReadLine();
@@ -55,6 +56,9 @@ namespace Server.UI
                         ViewProductsMenu();
                         break;
                     case "5":
+                        ViewPurchases();
+                        break;
+                    case "6":
                         return;
                     default:
                         Console.WriteLine("Invalid choice. Please try again.");
@@ -424,14 +428,15 @@ namespace Server.UI
             Console.WriteLine($"Owner: {product[5]}");
             Console.WriteLine("----Menu----");
             Console.WriteLine("1. Buy Product");
-            Console.WriteLine("2. Review Product");
-            Console.WriteLine("3. Go Back");
+            Console.WriteLine("2. Add Review");
+            Console.WriteLine("3. Explore Reviews");
+            Console.WriteLine("4. Exit");
 
             bool exit = false;
             while (!exit)
             {
                 var userInput = Console.ReadLine();
-                if (int.TryParse(userInput, out int attributeChoice) && attributeChoice >= 1 && attributeChoice <= 3)
+                if (int.TryParse(userInput, out int attributeChoice) && attributeChoice >= 1 && attributeChoice <= 4)
                 {
                     switch (attributeChoice)
                     {
@@ -439,16 +444,23 @@ namespace Server.UI
                             BuyProduct(product);
                             break;
                         case 2:
-                            ReviewProduct();
+                            ReviewProduct(product);
                             break;
                         case 3:
+                            ExploreReviews(product);
+                            break;
+                        case 4:
                             return;
                     }
                     exit = true;
                 }
                 else
                 {
-                    Console.WriteLine("Invalid attribute selection. Please select a valid option (1-3) or type 'exit' to quit.");
+                    if (userInput == "exit")
+                    {
+                        return;
+                    }
+                    Console.WriteLine("Invalid attribute selection. Please select a valid option (1-4) or type 'exit' to quit.");
                 }
             }
         }
@@ -489,10 +501,154 @@ namespace Server.UI
                 Console.WriteLine("Product not bought.");
             }
         }
-        
-        private void ReviewProduct()
+
+        private void ViewPurchases()
         {
+            var products = RetrieveAllPurchases();
             
+            if (!products.All(string.IsNullOrEmpty) && products.Length > 0)
+            {
+                Console.WriteLine("Select a product to expand:");
+                
+                bool exit = false;
+                while (!exit)
+                {
+                    for (int i = 0; i < products.Length; i++)
+                    {
+                        string[] data = products[i].Split(":");
+                        Console.WriteLine(
+                            $"{i + 1}. Name: {data[0]} | Description: {data[1]} | Units: {data[2]} | Bought for: {data[3]}");
+                    }
+                    
+                    var option = Console.ReadLine();
+                
+                    if (int.TryParse(option, out int selectedIndex) && selectedIndex >= 1 &&
+                        selectedIndex <= products.Length)
+                    {
+                        var product = products[selectedIndex - 1].Split(":");
+                        ViewProduct(product);
+                    }
+                    else if (option == "exit")
+                    {
+                        return;
+                    }
+                    else
+                    {
+                        Console.WriteLine("Invalid selection. Please select a valid product number or type 'exit' to quit.");
+                    }
+                }
+            }
+            else
+            {
+                Console.WriteLine("You have no products to view.");
+            }
+        }
+
+        private string[] RetrieveAllPurchases()
+        {
+            try
+            {
+                socketHelper.Send(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.GetAllPurchases));
+                Send(user);
+
+                byte[] lBytes = socketHelper.Receive(Protocol.FixedDataSize);
+                int dataLength = conversionHandler.ConvertBytesToInt(lBytes);
+                byte[] listBytes = socketHelper.Receive(dataLength);
+                string list = conversionHandler.ConvertBytesToString(listBytes);
+                string[] products = list.Split(";");
+                return products;
+            }
+            catch(Exception e)
+            {
+                Console.WriteLine(e.Message);
+            }
+            
+            return new string[0];
+        }
+        
+        private void ReviewProduct(string [] product)
+        {
+            Console.WriteLine("Enter your Score from 1 to 5:");
+            string score = Console.ReadLine();
+            Console.WriteLine("Enter your Review:");
+            string review = Console.ReadLine();
+
+            try
+            {
+                socketHelper.Send(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.RateProduct));
+                Send(product[0]+":"+product[5]+":"+score+":"+review+":"+user);
+            
+                byte[] lBytes = socketHelper.Receive(Protocol.FixedDataSize);
+                int dataLength = conversionHandler.ConvertBytesToInt(lBytes);
+                byte[] responseBytes = socketHelper.Receive(dataLength);
+                string response = conversionHandler.ConvertBytesToString(responseBytes);
+
+                if (response == "Success")
+                {
+                    Console.WriteLine("Product published successfully.");
+                    Console.WriteLine("Press any key to continue");
+                    Console.ReadKey();
+                }
+                else
+                {
+                    PublishProduct();
+                }
+            }
+            catch (SocketException)
+            {
+                Console.WriteLine("Server disconnected");
+            }
+            catch (ServerException e)
+            {
+                Console.Write(e.Message);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Unexpected Exception: " + ex.Message);
+            }
+        }
+
+        private void ExploreReviews(string[] product)
+        {
+            var reviews = RetrieveProductReviews(product);
+            
+            if (!reviews.All(string.IsNullOrEmpty) && reviews.Length > 0)
+            {
+                for (int i = 0; i < reviews.Length; i++)
+                {
+                    string[] data = reviews[i].Split(":");
+                    Console.WriteLine(
+                        $"Score: {data[0]} | Review: {data[1]} | User: {data[2]}");
+                }
+                Console.WriteLine("Press any key to continue");
+                Console.ReadKey();
+            }
+            else
+            {
+                Console.WriteLine("You have no products to view.");
+            }
+        }
+
+        private string[] RetrieveProductReviews(string[] product)
+        {
+            try
+            {
+                socketHelper.Send(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.GetAllProductReviews));
+                Send(product[0]+":"+product[5]);
+
+                byte[] lBytes = socketHelper.Receive(Protocol.FixedDataSize);
+                int dataLength = conversionHandler.ConvertBytesToInt(lBytes);
+                byte[] listBytes = socketHelper.Receive(dataLength);
+                string list = conversionHandler.ConvertBytesToString(listBytes);
+                string[] reviews = list.Split(";");
+                return reviews;
+            }
+            catch(Exception e)
+            {
+                Console.WriteLine(e.Message);
+            }
+            
+            return new string[0];
         }
 
         private void SearchProducts(string productName)
