@@ -17,6 +17,7 @@ namespace Server
         static readonly UserService userService = new UserService(storage);
         static readonly ProductService productService = new ProductService(storage);
         static readonly ConversionHandler conversionHandler = new ConversionHandler();
+        private static bool exit = false;
 
         public static void Main(string[] args)
         {
@@ -35,17 +36,15 @@ namespace Server
                 var localEndpoint = new IPEndPoint(IPAddress.Parse(ipServer), ipPort);
                 socketServer.Bind(localEndpoint);
                 socketServer.Listen();
-
-                bool exit = false;
+                
+                new Thread(ConsoleInputThread).Start();
 
                 while (!exit)
                 {
                     var socketClient = socketServer.Accept();
                     Console.WriteLine("New connection!");
                     new Thread(() => HandleClient(socketClient)).Start();
-
-                    string line = Console.ReadLine();
-                    if (line == "exit") { exit = true; }
+                    
                 }
 
                 while (Thread.CurrentThread.ManagedThreadId != 1)
@@ -159,6 +158,12 @@ namespace Server
                         Console.WriteLine("Exit requested by client.");
                         exit = true;
                     }
+                    
+                    if (socketCliente.Poll(0, SelectMode.SelectRead) && socketCliente.Available == 0)
+                    {
+                        Console.WriteLine("Client disconnected");
+                        break;
+                    }
                 }
             }
             catch (SocketException)
@@ -167,21 +172,31 @@ namespace Server
             }
             catch (ServerException ex)
             {
-                throw new ServerException("Server Exception: " + ex.Message);
+                Console.WriteLine("Unexpected Exception: " + ex.Message);
             }
             catch (Exception ex)
             {
-                throw new ServerException("Unexpected Exception: " + ex.Message);
-            }
-            finally
-            {
-                socketCliente.Close();
+                Console.WriteLine("Unexpected Exception: " + ex.Message);
             }
         }
-
-        static void MainMenu()
+        
+        private static void ConsoleInputThread()
         {
-            Console.WriteLine("God");
+            while (!exit)
+            {
+                if (Console.KeyAvailable)
+                {
+                    string line = Console.ReadLine();
+                    if (line == "exit")
+                    {
+                        exit = true;
+                        break;
+                    }
+                }
+
+                Thread.Sleep(100);
+            }
         }
+        
     }
 }
