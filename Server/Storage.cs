@@ -123,6 +123,10 @@ namespace Server
 
 				if (productToRemove != null)
 				{
+					if (!string.IsNullOrWhiteSpace(productToRemove.imagePath))
+					{
+						File.Delete(productToRemove.imagePath);
+					}
 					products.Remove(productToRemove);
 				}
 				else
