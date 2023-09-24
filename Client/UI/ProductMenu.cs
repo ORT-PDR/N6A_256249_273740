@@ -8,6 +8,7 @@ using System.Net.Sockets;
 using System.Diagnostics;
 using System.Xml.Linq;
 using System.Runtime.InteropServices;
+using Communication.FileHandlers;
 
 namespace Server.UI
 {
@@ -17,10 +18,10 @@ namespace Server.UI
         private SocketHelper socketHelper;
         private string user;
 
-        public ProductMenu(Socket socketClient)
+        public ProductMenu(Socket _socketClient)
         {
             conversionHandler = new ConversionHandler();
-            socketHelper = new SocketHelper(socketClient);
+            socketHelper = new SocketHelper(_socketClient);
         }
 
         public void ShowMainMenu(string _user)
@@ -75,10 +76,15 @@ namespace Server.UI
             string? price = Console.ReadLine();
             Console.WriteLine("Stock available: ");
             string ? stock = Console.ReadLine();
+            Console.WriteLine("Absolute path of the product picture: ");
+            String imageAbsPath = Console.ReadLine();
 
             try
             {
                 socketHelper.Send(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.PublishProduct));
+
+                var fileCommonHandler = new FileCommsHandler(socketHelper);
+                fileCommonHandler.SendFile(imageAbsPath);
 
                 string data = $"{name}:{description}:{price}:{stock}:{user}";
                 Send(data);
@@ -129,7 +135,7 @@ namespace Server.UI
                 for (int i = 0; i < userProducts.Length; i++)
                 {
                     string[] data = userProducts[i].Split(":");
-                    Console.WriteLine($"{i + 1}. Name: {data[0]} | Description: {data[1]} | Stock: {data[2]} | Price: {data[3]}");
+                    Console.WriteLine($"{i + 1}. Name: {data[0]} | Description: {data[1]} | Stock: {data[2]} | Price: {data[3]} | Image path: {data[4]}");
                 }
 
                 if (int.TryParse(Console.ReadLine(), out int selectedIndex) && selectedIndex >= 1 && selectedIndex <= userProducts.Length)

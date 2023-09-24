@@ -14,4 +14,10 @@
   <ItemGroup>
     <ProjectReference Include="..\Models\Models.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <None Remove="FileHandlers\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="FileHandlers\" />
+  </ItemGroup>
 </Project>

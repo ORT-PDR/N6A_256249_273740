@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Net;
 using Communication;
+using Communication.FileHandlers;
 using Models;
 using Server.BusinessLogic;
 
@@ -23,6 +24,10 @@ namespace Server.UIHandler
 		{
             Console.WriteLine("Product publication requested by client.");
 
+            var fileCommonHandler = new FileCommsHandler(socketHelper);
+            string path = fileCommonHandler.ReceiveFile();
+            Console.WriteLine("File recieved");
+
             byte[] lengthBytes = socketHelper.Receive(Protocol.FixedDataSize);
             int dataLength = conversionHandler.ConvertBytesToInt(lengthBytes);
             byte[] dataBytes = socketHelper.Receive(dataLength);
@@ -37,7 +42,8 @@ namespace Server.UIHandler
                     description = dataParts[1],
                     price = double.Parse(dataParts[2]),
                     stock = int.Parse(dataParts[3]),
-                    creator = dataParts[4]
+                    creator = dataParts[4],
+                    imagePath = path
                 };
 
                 productService.PublishProduct(product);
