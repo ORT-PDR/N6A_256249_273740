@@ -72,6 +72,61 @@ namespace Server.BusinessLogic
             }
             storage.DeleteProduct(existingProduct.id);
         }
+
+        public void BuyProduct(string product, string creator, string buyer)
+        {
+            Product existingProduct = storage.GetUserProductByName(product, creator);
+            if (existingProduct == null)
+            {
+                throw new ServerException("Product not found.");
+            }
+            storage.BuyProduct(existingProduct.id, buyer);
+        }
+        
+        public List<Product> GetPurchases(string username)
+        {
+            User user = storage.GetUser(username);
+
+            return user.purchases;
+        }
+        
+        public void AddReview(string product, string user, int score, string comment, string creator)
+        {
+            Product existingProduct = storage.GetUserProductByName(product, user);
+            if (existingProduct == null)
+            {
+                throw new ServerException("Product not found.");
+            }
+
+            Review review = new Review()
+            {
+                score = score,
+                comment = comment,
+                user = storage.GetUser(creator)
+            };
+            storage.AddReview(existingProduct, review);
+        }
+
+        public List<Review> GetReviews(string product, string user)
+        {
+            Product existingProduct = storage.GetUserProductByName(product, user);
+            if (existingProduct == null)
+            {
+                throw new ServerException("Product not found.");
+            }
+
+            return existingProduct.reviews;
+        }
+        
+        public string ReviewToString(Review review)
+        {
+            if (review == null)
+            {
+                return "Review is null";
+            }
+
+            return $"{review.user.username}:{review.comment}:{review.score}";
+        }
         
         public List<Product> GetProductsByUser(string userName)
         {
@@ -87,7 +142,7 @@ namespace Server.BusinessLogic
                 return "Product is null";
             }
 
-            return $"{product.name}:{product.description}:{product.stock}:{product.price}:{product.imagePath}";
+            return $"{product.name}:{product.description}:{product.stock}:{product.price}:{product.imagePath}:{product.creator}";
         }
 
         private void ValidateProduct(Product product)

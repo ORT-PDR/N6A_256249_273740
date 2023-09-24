@@ -121,6 +121,28 @@ namespace Server.UIHandler
 
             Send(productNames);
         }
+        
+        public void SendAllProducts()
+        {
+            byte[] lengthBytes = socketHelper.Receive(Protocol.FixedDataSize);
+            int dataLength = conversionHandler.ConvertBytesToInt(lengthBytes);
+            byte[] dataBytes = socketHelper.Receive(dataLength);
+            string username = conversionHandler.ConvertBytesToString(dataBytes);
+
+            List<Product> products = productService.GetProducts();
+            string productNames = "";
+
+            for(int i = 0; i < products.Count; i++)
+            {
+                productNames += productService.ProductToString(products[i]) + ";";
+            }
+            if (!string.IsNullOrEmpty(productNames))
+            {
+                productNames = productNames.TrimEnd(';');
+            }
+
+            Send(productNames);
+        }
 
         public void DeleteProduct()
         {
@@ -152,13 +174,104 @@ namespace Server.UIHandler
 
             for (int i = 0; i < products.Count; i++)
             {
-                productNames = productService.ProductToString(products[i]) + ";";
+                productNames += productService.ProductToString(products[i]) + ";";
             }
             if (!string.IsNullOrEmpty(productNames))
             {
                 productNames = productNames.TrimEnd(';');
             }
             Send(productNames);
+        }
+
+        public void BuyProduct()
+        {
+            byte[] lengthBytes = socketHelper.Receive(Protocol.FixedDataSize);
+            int dataLength = conversionHandler.ConvertBytesToInt(lengthBytes);
+            byte[] dataBytes = socketHelper.Receive(dataLength);
+            string data = conversionHandler.ConvertBytesToString(dataBytes);
+            
+            string product = data.Split(":")[0];
+            string username = data.Split(":")[1];
+            string buyer = data.Split(":")[2];
+            
+            productService.BuyProduct(product, username, buyer);
+            
+            string response = "Success";
+            byte[] responseBytes = conversionHandler.ConvertStringToBytes(response);
+            SendResponse(responseBytes);
+        }
+        
+        public void SendAllPurchases()
+        {
+            byte[] lengthBytes = socketHelper.Receive(Protocol.FixedDataSize);
+            int dataLength = conversionHandler.ConvertBytesToInt(lengthBytes);
+            byte[] dataBytes = socketHelper.Receive(dataLength);
+            string username = conversionHandler.ConvertBytesToString(dataBytes);
+
+            List<Product> products = productService.GetPurchases(username);
+            string productNames = "";
+
+            for(int i = 0; i < products.Count; i++)
+            {
+                productNames += productService.ProductToString(products[i]) + ";";
+            }
+            if (!string.IsNullOrEmpty(productNames))
+            {
+                productNames = productNames.TrimEnd(';');
+            }
+
+            Send(productNames);
+        }
+
+        public void RateProduct()
+        {
+            byte[] lengthBytes = socketHelper.Receive(Protocol.FixedDataSize);
+            int dataLength = conversionHandler.ConvertBytesToInt(lengthBytes);
+            byte[] dataBytes = socketHelper.Receive(dataLength);
+            string review = conversionHandler.ConvertBytesToString(dataBytes);
+            
+            string product = review.Split(":")[0];
+            string user = review.Split(":")[1];
+            string score = review.Split(":")[2];
+            string reviewText = review.Split(":")[3];
+            string creator = review.Split(":")[4];
+
+            if (int.TryParse(score, out int scoreInt))
+            {
+                productService.AddReview(product, user, scoreInt, reviewText, creator);
+                string response = "Success";
+                byte[] responseBytes = conversionHandler.ConvertStringToBytes(response);
+                SendResponse(responseBytes);
+            }
+            else
+            {
+                throw new ServerException("Score must be an integer.");
+            }
+        }
+
+        public void SendAllProductReviews()
+        {
+            byte[] lengthBytes = socketHelper.Receive(Protocol.FixedDataSize);
+            int dataLength = conversionHandler.ConvertBytesToInt(lengthBytes);
+            byte[] dataBytes = socketHelper.Receive(dataLength);
+            string data = conversionHandler.ConvertBytesToString(dataBytes);
+            
+            string product = data.Split(":")[0];
+            string creator = data.Split(":")[1];
+
+            List<Review> reviews = productService.GetReviews(product, creator);
+            string reviewsString = "";
+
+            for(int i = 0; i < reviews.Count; i++)
+            {
+                reviewsString += productService.ReviewToString(reviews[i]) + ";";
+            }
+            if (!string.IsNullOrEmpty(reviewsString))
+            {
+                reviewsString = reviewsString.TrimEnd(';');
+            }
+
+            Send(reviewsString);
         }
 
         private void Send(string response)

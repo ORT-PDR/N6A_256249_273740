@@ -48,9 +48,9 @@ namespace Server
 
         public void AddReview(Product product, Review review)
         {
-            if (review.score < 1 || review.score > 10)
+            if (review.score < 1 || review.score > 5)
             {
-				throw new ServerException("Score must be between 1 and 10");
+				throw new ServerException("Score must be between 1 and 5");
             }
 
             lock (lockObject)
@@ -115,6 +115,11 @@ namespace Server
 	        }
         }
 
+        public User GetUser(string username)
+        {
+	        return users.FirstOrDefault(u => u.username == username);
+        }
+
         public void DeleteProduct(Guid id)
 		{
 			lock (lockObject)
@@ -131,6 +136,34 @@ namespace Server
 				}
 			}
 		}
+        
+        public void BuyProduct(Guid productId, string buyer)
+        {
+	        lock (lockObject)
+	        {
+		        Product productToBuy = products.FirstOrDefault(p => p.id == productId);
+
+		        if (productToBuy == null)
+		        {
+			        throw new ServerException("Product not found.");
+		        }
+
+		        if (productToBuy.stock <= 0)
+		        {
+			        throw new ServerException("Product out of stock.");
+		        }
+                
+		        productToBuy.stock--;
+		        Product p = productToBuy;
+		        
+		        User user = users.FirstOrDefault(u => u.username == buyer);
+		        if (user != null)
+		        {
+			        p.stock = 1;
+			        user.purchases.Add(p);
+		        }
+	        }
+        }
     }
 }
 

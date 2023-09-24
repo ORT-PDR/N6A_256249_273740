@@ -27,7 +27,8 @@ namespace Server.BusinessLogic
             {
                 id = Guid.NewGuid(),
                 username = username,
-                password = password
+                password = password,
+                purchases = new List<Product>()
             };
             
             storage.AddUser(newUser);

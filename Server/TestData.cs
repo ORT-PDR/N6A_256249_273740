@@ -171,31 +171,36 @@ namespace Server
                 {
                     id = Guid.NewGuid(),
                     username = "Lionel Messi",
-                    password = "password123"
+                    password = "password123",
+                    purchases = new List<Product>()
                 },
                 new User
                 {
                     id = Guid.NewGuid(),
                     username = "Cristiano Ronaldo",
-                    password = "password456"
+                    password = "password456",
+                    purchases = new List<Product>()
                 },
                 new User
                 {
                     id = Guid.NewGuid(),
                     username = "Neymar Jr",
-                    password = "password789"
+                    password = "password789",
+                    purchases = new List<Product>()
                 },
                 new User
                 {
                     id = Guid.NewGuid(),
                     username = "Kylian Mbappé",
-                    password = "passwordabc"
+                    password = "passwordabc",
+                    purchases = new List<Product>()
                 },
                 new User
                 {
                     id = Guid.NewGuid(),
                     username = "Sergio Ramos",
-                    password = "passworddef"
+                    password = "passworddef",
+                    purchases = new List<Product>()
                 }
             };
 
