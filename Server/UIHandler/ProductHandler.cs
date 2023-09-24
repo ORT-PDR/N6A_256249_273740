@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Net;
 using Communication;
+using Communication.FileHandlers;
 using Models;
 using Server.BusinessLogic;
 
@@ -23,6 +24,10 @@ namespace Server.UIHandler
 		{
             Console.WriteLine("Product publication requested by client.");
 
+            var fileCommonHandler = new FileCommsHandler(socketHelper);
+            string path = fileCommonHandler.ReceiveFile();
+            Console.WriteLine("File recieved");
+
             byte[] lengthBytes = socketHelper.Receive(Protocol.FixedDataSize);
             int dataLength = conversionHandler.ConvertBytesToInt(lengthBytes);
             byte[] dataBytes = socketHelper.Receive(dataLength);
@@ -37,7 +42,8 @@ namespace Server.UIHandler
                     description = dataParts[1],
                     price = double.Parse(dataParts[2]),
                     stock = int.Parse(dataParts[3]),
-                    creator = dataParts[4]
+                    creator = dataParts[4],
+                    imagePath = path
                 };
 
                 productService.PublishProduct(product);
@@ -81,10 +87,6 @@ namespace Server.UIHandler
                     case "price":
                         p.price = int.Parse(newValue);
                         break;
-
-                    case "image":
-                        p.imagePath = newValue;
-                        break;
                 }
 
                 productService.UpdateProduct(p);
@@ -93,6 +95,38 @@ namespace Server.UIHandler
                 SendResponse(responseBytes);
             }
             catch(Exception e)
+            {
+                string response = e.Message;
+                byte[] responseBytes = conversionHandler.ConvertStringToBytes(response);
+                SendResponse(responseBytes);
+            }
+        }
+
+        public void UpdateProductImage()
+        {
+            try
+            {
+                var fileCommonHandler = new FileCommsHandler(socketHelper);
+                string path = fileCommonHandler.ReceiveFile();
+                Console.WriteLine("File recieved");
+
+                byte[] lengthBytes = socketHelper.Receive(Protocol.FixedDataSize);
+                int dataLength = conversionHandler.ConvertBytesToInt(lengthBytes);
+                byte[] dataBytes = socketHelper.Receive(dataLength);
+                string productName = conversionHandler.ConvertBytesToString(dataBytes);
+
+                Product p = productService.GetProductByName(productName);
+                string aux = p.imagePath;
+                p.imagePath = path;
+
+                productService.UpdateProduct(p);
+                File.Delete(aux);
+
+                string response = "Success";
+                byte[] responseBytes = conversionHandler.ConvertStringToBytes(response);
+                SendResponse(responseBytes);
+            }
+            catch (Exception e)
             {
                 string response = e.Message;
                 byte[] responseBytes = conversionHandler.ConvertStringToBytes(response);

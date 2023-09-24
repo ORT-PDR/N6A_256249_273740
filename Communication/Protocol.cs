@@ -16,6 +16,7 @@ namespace Communication
             public const string PublishProduct = "PUBL";
             public const string BuyProduct = "BUYP";
             public const string UpdateProduct = "UPDT";
+            public const string UpdateProductImage = "UIMG";
             public const string DeleteProduct = "DELT";
             public const string SearchProducts = "SRCH";
             public const string GetProductDetails = "DETL";

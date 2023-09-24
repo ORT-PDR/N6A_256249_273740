@@ -8,6 +8,7 @@ using System.Net.Sockets;
 using System.Diagnostics;
 using System.Xml.Linq;
 using System.Runtime.InteropServices;
+using Communication.FileHandlers;
 
 namespace Server.UI
 {
@@ -17,10 +18,10 @@ namespace Server.UI
         private SocketHelper socketHelper;
         private string user;
 
-        public ProductMenu(Socket socketClient)
+        public ProductMenu(Socket _socketClient)
         {
             conversionHandler = new ConversionHandler();
-            socketHelper = new SocketHelper(socketClient);
+            socketHelper = new SocketHelper(_socketClient);
         }
 
         public void ShowMainMenu(string _user)
@@ -80,10 +81,15 @@ namespace Server.UI
             string? price = Console.ReadLine();
             Console.WriteLine("Stock available: ");
             string ? stock = Console.ReadLine();
+            Console.WriteLine("Absolute path of the product picture: ");
+            String imageAbsPath = Console.ReadLine();
 
             try
             {
                 socketHelper.Send(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.PublishProduct));
+
+                var fileCommonHandler = new FileCommsHandler(socketHelper);
+                fileCommonHandler.SendFile(imageAbsPath);
 
                 string data = $"{name}:{description}:{price}:{stock}:{user}";
                 Send(data);
@@ -279,11 +285,19 @@ namespace Server.UI
         {
             try
             {
-                socketHelper.Send(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.UpdateProduct));
+                if (attribute == "image")
+                {
+                    SendNewImage(productName, newValue);
+                }
 
-                string data = $"{productName}:{attribute}:{newValue}";
+                else
+                {
+                    socketHelper.Send(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.UpdateProduct));
 
-                Send(data);
+                    string data = $"{productName}:{attribute}:{newValue}";
+
+                    Send(data);
+                }
 
                 byte[] lBytes = socketHelper.Receive(Protocol.FixedDataSize);
                 int dataLength = conversionHandler.ConvertBytesToInt(lBytes);
@@ -300,6 +314,33 @@ namespace Server.UI
                 {
                     Console.WriteLine("Product updated error.");
                 }
+            }
+            catch (SocketException)
+            {
+                Console.WriteLine("Server disconnected");
+            }
+            catch (ServerException e)
+            {
+                Console.Write(e.Message);
+            }
+            catch (FormatException formatEx)
+            {
+                Console.WriteLine("Format exception. Stock and price must be integer.");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Unexpected Exception: " + ex.Message);
+            }
+        }
+
+        private void SendNewImage(string productName, string newImagePath)
+        {
+            try
+            {
+                socketHelper.Send(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.UpdateProductImage));
+                var fileCommonHandler = new FileCommsHandler(socketHelper);
+                fileCommonHandler.SendFile(newImagePath);
+                Send(productName);
             }
             catch (SocketException)
             {
