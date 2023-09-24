@@ -34,29 +34,40 @@ namespace Server.UIHandler
             string data = conversionHandler.ConvertBytesToString(dataBytes);
             string[] dataParts = data.Split(':');
 
-            if (dataParts.Length == 5)
+            try
             {
-                Product product = new Product()
+                if (dataParts.Length == 5)
                 {
-                    name = dataParts[0],
-                    description = dataParts[1],
-                    price = double.Parse(dataParts[2]),
-                    stock = int.Parse(dataParts[3]),
-                    creator = dataParts[4],
-                    imagePath = path
-                };
+                    Product product = new Product()
+                    {
+                        name = dataParts[0],
+                        description = dataParts[1],
+                        price = double.Parse(dataParts[2]),
+                        stock = int.Parse(dataParts[3]),
+                        creator = dataParts[4],
+                        imagePath = path
+                    };
 
-                productService.PublishProduct(product);
-                Console.WriteLine("Product published by client.");
+                    productService.PublishProduct(product);
+                    Console.WriteLine("Product published by client.");
+                }
+                else
+                {
+                    string resp = "All product fields must have a value!";
+                    byte[] respBytes = conversionHandler.ConvertStringToBytes(resp);
+                    SendResponse(respBytes);
+                }
+
+                string response = "Success";
+                byte[] responseBytes = conversionHandler.ConvertStringToBytes(response);
+                SendResponse(responseBytes);
             }
-            else
+            catch(Exception e)
             {
-                throw new ServerException("All product fields must have a value!");
+                string resp = "There was an error: " + e.Message;
+                byte[] respBytes = conversionHandler.ConvertStringToBytes(resp);
+                SendResponse(respBytes);
             }
-
-            string response = "Success";
-            byte[] responseBytes = conversionHandler.ConvertStringToBytes(response);
-            SendResponse(responseBytes);
         }
 
         public void UpdateProduct()
@@ -72,8 +83,9 @@ namespace Server.UIHandler
                 string productName = dataArray[0];
                 string attribute = dataArray[1];
                 string newValue = dataArray[2];
+                string user = dataArray[3];
 
-                Product p = productService.GetProductByName(productName);
+                Product p = productService.GetProductByName(productName, user);
                 switch (attribute)
                 {
                     case "description":
@@ -108,14 +120,17 @@ namespace Server.UIHandler
             {
                 var fileCommonHandler = new FileCommsHandler(socketHelper);
                 string path = fileCommonHandler.ReceiveFile();
-                Console.WriteLine("File recieved");
+                Console.WriteLine("File received");
 
                 byte[] lengthBytes = socketHelper.Receive(Protocol.FixedDataSize);
                 int dataLength = conversionHandler.ConvertBytesToInt(lengthBytes);
                 byte[] dataBytes = socketHelper.Receive(dataLength);
-                string productName = conversionHandler.ConvertBytesToString(dataBytes);
+                string data = conversionHandler.ConvertBytesToString(dataBytes);
 
-                Product p = productService.GetProductByName(productName);
+                string product = data.Split(":")[0];
+                string user = data.Split(":")[1];
+
+                Product p = productService.GetProductByName(product, user);
                 string aux = p.imagePath;
                 p.imagePath = path;
 
@@ -306,6 +321,35 @@ namespace Server.UIHandler
             }
 
             Send(reviewsString);
+        }
+
+        public void DownloadProductImage()
+        {
+            byte[] lengthBytes = socketHelper.Receive(Protocol.FixedDataSize);
+            int dataLength = conversionHandler.ConvertBytesToInt(lengthBytes);
+            byte[] dataBytes = socketHelper.Receive(dataLength);
+            string imagePath = conversionHandler.ConvertBytesToString(dataBytes);
+
+            try
+            {
+                string fileName = Path.GetFileName(imagePath);
+                string destinationFolderPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads");
+                string destinationPath = Path.Combine(destinationFolderPath, fileName);
+
+                lock(new object())
+                {
+                    File.Copy(imagePath, destinationPath);
+                }
+                
+                byte[] responseBytes = conversionHandler.ConvertStringToBytes("Success");
+                SendResponse(responseBytes);
+                Console.WriteLine("Image download was successful.");
+            }
+            catch(Exception e)
+            {
+                byte[] responseBytes = conversionHandler.ConvertStringToBytes(e.Message);
+                SendResponse(responseBytes);
+            }
         }
 
         private void Send(string response)

@@ -102,13 +102,16 @@ namespace Server.UI
                 if (response == "Success")
                 {
                     Console.WriteLine("Product published successfully.");
-                    Console.ReadKey();
                     System.Console.WriteLine("Press any key to continue");
                     System.Console.ReadKey();
+                    Console.Clear();
                 }
                 else
                 {
-                    PublishProduct();
+                    Console.WriteLine(response);
+                    System.Console.WriteLine("Press any key to continue");
+                    System.Console.ReadKey();
+                    Console.Clear();
                 }
             }
             catch (SocketException)
@@ -294,7 +297,7 @@ namespace Server.UI
                 {
                     socketHelper.Send(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.UpdateProduct));
 
-                    string data = $"{productName}:{attribute}:{newValue}";
+                    string data = $"{productName}:{attribute}:{newValue}:{user}";
 
                     Send(data);
                 }
@@ -340,7 +343,7 @@ namespace Server.UI
                 socketHelper.Send(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.UpdateProductImage));
                 var fileCommonHandler = new FileCommsHandler(socketHelper);
                 fileCommonHandler.SendFile(newImagePath);
-                Send(productName);
+                Send($"{productName}:{user}");
             }
             catch (SocketException)
             {
@@ -429,6 +432,7 @@ namespace Server.UI
 
         private void ViewProductsMenu()
         {
+            Console.Clear();
             var products = RetrieveAllProducts();
 
             if (!products.All(string.IsNullOrEmpty) && products.Length > 0)
@@ -461,6 +465,7 @@ namespace Server.UI
         
         private void ViewProduct(string[] product)
         {
+            Console.Clear();
             Console.WriteLine($"Name: {product[0]}");
             Console.WriteLine($"Description: {product[1]}");
             Console.WriteLine($"Stock: {product[2]}");
@@ -471,13 +476,14 @@ namespace Server.UI
             Console.WriteLine("1. Buy Product");
             Console.WriteLine("2. Add Review");
             Console.WriteLine("3. Explore Reviews");
-            Console.WriteLine("4. Exit");
+            Console.WriteLine("4. Download Product Image");
+            Console.WriteLine("5. Exit");
 
             bool exit = false;
             while (!exit)
             {
                 var userInput = Console.ReadLine();
-                if (int.TryParse(userInput, out int attributeChoice) && attributeChoice >= 1 && attributeChoice <= 4)
+                if (int.TryParse(userInput, out int attributeChoice) && attributeChoice >= 1 && attributeChoice <= 5)
                 {
                     switch (attributeChoice)
                     {
@@ -491,6 +497,9 @@ namespace Server.UI
                             ExploreReviews(product);
                             break;
                         case 4:
+                            DownloadImage(product);
+                            break;
+                        case 5:
                             return;
                     }
                     exit = true;
@@ -501,7 +510,7 @@ namespace Server.UI
                     {
                         return;
                     }
-                    Console.WriteLine("Invalid attribute selection. Please select a valid option (1-4) or type 'exit' to quit.");
+                    Console.WriteLine("Invalid attribute selection. Please select a valid option (1-5) or type 'exit' to quit.");
                 }
             }
         }
@@ -545,6 +554,7 @@ namespace Server.UI
 
         private void ViewPurchases()
         {
+            Console.Clear();
             var products = RetrieveAllPurchases();
             
             if (!products.All(string.IsNullOrEmpty) && products.Length > 0)
@@ -583,6 +593,27 @@ namespace Server.UI
             {
                 Console.WriteLine("You have no products to view.");
             }
+        }
+
+        private void DownloadImage(string[] product)
+        {
+            socketHelper.Send(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.DownloadProductImage));
+            Send(product[4]);
+
+            byte[] lBytes = socketHelper.Receive(Protocol.FixedDataSize);
+            int dataLength = conversionHandler.ConvertBytesToInt(lBytes);
+            byte[] responseBytes = socketHelper.Receive(dataLength);
+            string response = conversionHandler.ConvertBytesToString(responseBytes);
+
+            if (response == "Success")
+            {
+                Console.WriteLine("Image has been downloaded to your Downloads folder.");
+            }
+            else
+            {
+                Console.Write("There was an error downloading the image: " + response);
+            }
+            Console.Clear();
         }
 
         private string[] RetrieveAllPurchases()

@@ -112,7 +112,6 @@ namespace Server
                     if(command == Protocol.ProtocolCommands.UpdateProductImage)
                     {
                         Console.WriteLine("Update product image requested by client.");
-                        ProductHandler productHandler = new ProductHandler(socketHelper, conversionHandler, productService);
                         productHandler.UpdateProductImage();
                     }
                     if(command == Protocol.ProtocolCommands.DeleteProduct)
@@ -144,6 +143,11 @@ namespace Server
                     {
                         Console.WriteLine("Client rating a product.");
                         productHandler.RateProduct();
+                    }
+                    if(command == Protocol.ProtocolCommands.DownloadProductImage)
+                    {
+                        Console.WriteLine("Image download requested by client.");
+                        productHandler.DownloadProductImage();
                     }
                     if(command == Protocol.ProtocolCommands.GetAllProductReviews)
                     {
