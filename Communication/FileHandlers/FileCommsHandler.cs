@@ -33,7 +33,7 @@ namespace Communication.FileHandlers
             }
             else
             {
-                throw new Exception("File does not exist");
+                throw new ProtocolException("File does not exist");
             }
         }
 

@@ -1,6 +1,5 @@
 using System.Net.Sockets;
 using Communication;
-using Server.UI;
 
 namespace Client.UI
 {
@@ -25,7 +24,7 @@ namespace Client.UI
 
                 while (!isAuthenticated)
                 {
-                    Console.WriteLine("Login (1) or create a new account (2)");
+                    Console.WriteLine("Login (1) or create a new account (2). Type exit to disconnect.");
                     var text = Console.ReadLine();
                     if (text == "1")
                     {
@@ -88,6 +87,10 @@ namespace Client.UI
                             Console.WriteLine("Error creating new user:");
                             Console.WriteLine(response);
                         }
+                    }
+                    else if (text.ToLower() == "exit")
+                    {
+                        return;
                     }
                 }
             }
