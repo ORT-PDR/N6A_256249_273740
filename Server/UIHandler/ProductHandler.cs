@@ -72,13 +72,14 @@ namespace Server.UIHandler
 
         public void UpdateProduct()
         {
+
+            byte[] lengthBytes = socketHelper.Receive(Protocol.FixedDataSize);
+            int dataLength = conversionHandler.ConvertBytesToInt(lengthBytes);
+            byte[] dataBytes = socketHelper.Receive(dataLength);
+            string data = conversionHandler.ConvertBytesToString(dataBytes);
+
             try
             {
-                byte[] lengthBytes = socketHelper.Receive(Protocol.FixedDataSize);
-                int dataLength = conversionHandler.ConvertBytesToInt(lengthBytes);
-                byte[] dataBytes = socketHelper.Receive(dataLength);
-                string data = conversionHandler.ConvertBytesToString(dataBytes);
-
                 string[] dataArray = data.Split(":");
                 string productName = dataArray[0];
                 string attribute = dataArray[1];
@@ -156,19 +157,32 @@ namespace Server.UIHandler
             byte[] dataBytes = socketHelper.Receive(dataLength);
             string username = conversionHandler.ConvertBytesToString(dataBytes);
 
-            List<Product> products = productService.GetProductsByUser(username);
-            string productNames = "";
-
-            for(int i = 0; i < products.Count; i++)
+            try
             {
-                productNames += productService.ProductToString(products[i]) + ";";
-            }
-            if (!string.IsNullOrEmpty(productNames))
-            {
-                productNames = productNames.TrimEnd(';');
-            }
+                List<Product> products = productService.GetProductsByUser(username);
+                string productNames = "";
 
-            Send(productNames);
+                for (int i = 0; i < products.Count; i++)
+                {
+                    productNames += productService.ProductToString(products[i]) + ";";
+                }
+                if (!string.IsNullOrEmpty(productNames))
+                {
+                    productNames = productNames.TrimEnd(';');
+                }
+
+                Send(productNames);
+
+                string response = "Success";
+                byte[] responseBytes = conversionHandler.ConvertStringToBytes(response);
+                SendResponse(responseBytes);
+            }
+            catch(Exception e)
+            {
+                string response = e.Message;
+                byte[] responseBytes = conversionHandler.ConvertStringToBytes(response);
+                SendResponse(responseBytes);
+            }
         }
         
         public void SendAllProducts()
@@ -178,19 +192,32 @@ namespace Server.UIHandler
             byte[] dataBytes = socketHelper.Receive(dataLength);
             string username = conversionHandler.ConvertBytesToString(dataBytes);
 
-            List<Product> products = productService.GetProducts();
-            string productNames = "";
-
-            for(int i = 0; i < products.Count; i++)
+            try
             {
-                productNames += productService.ProductToString(products[i]) + ";";
-            }
-            if (!string.IsNullOrEmpty(productNames))
-            {
-                productNames = productNames.TrimEnd(';');
-            }
+                List<Product> products = productService.GetProducts();
+                string productNames = "";
 
-            Send(productNames);
+                for (int i = 0; i < products.Count; i++)
+                {
+                    productNames += productService.ProductToString(products[i]) + ";";
+                }
+                if (!string.IsNullOrEmpty(productNames))
+                {
+                    productNames = productNames.TrimEnd(';');
+                }
+
+                Send(productNames);
+
+                string response = "Success";
+                byte[] responseBytes = conversionHandler.ConvertStringToBytes(response);
+                SendResponse(responseBytes);
+            }
+            catch (Exception e)
+            {
+                string response = e.Message;
+                byte[] responseBytes = conversionHandler.ConvertStringToBytes(response);
+                SendResponse(responseBytes);
+            }
         }
 
         public void DeleteProduct()
@@ -200,15 +227,24 @@ namespace Server.UIHandler
             byte[] dataBytes = socketHelper.Receive(dataLength);
             string data = conversionHandler.ConvertBytesToString(dataBytes);
 
-            string product = data.Split(":")[0];
-            string user = data.Split(":")[1];
-            
-            productService.DeleteProduct(product, user);
-            Console.WriteLine("Product deleted by client.");
+            try
+            {
+                string product = data.Split(":")[0];
+                string user = data.Split(":")[1];
 
-            string response = "Success";
-            byte[] responseBytes = conversionHandler.ConvertStringToBytes(response);
-            SendResponse(responseBytes);
+                productService.DeleteProduct(product, user);
+                Console.WriteLine("Product deleted by client.");
+
+                string response = "Success";
+                byte[] responseBytes = conversionHandler.ConvertStringToBytes(response);
+                SendResponse(responseBytes);
+            }
+            catch (Exception e)
+            {
+                string response = e.Message;
+                byte[] responseBytes = conversionHandler.ConvertStringToBytes(response);
+                SendResponse(responseBytes);
+            }
         }
 
         public void SearchProducts()
@@ -218,18 +254,31 @@ namespace Server.UIHandler
             byte[] dataBytes = socketHelper.Receive(dataLength);
             string name = conversionHandler.ConvertBytesToString(dataBytes);
 
-            List<Product> products = productService.GetProducts(name);
-            string productNames = "";
+            try
+            {
+                List<Product> products = productService.GetProducts(name);
+                string productNames = "";
 
-            for (int i = 0; i < products.Count; i++)
-            {
-                productNames += productService.ProductToString(products[i]) + ";";
+                for (int i = 0; i < products.Count; i++)
+                {
+                    productNames += productService.ProductToString(products[i]) + ";";
+                }
+                if (!string.IsNullOrEmpty(productNames))
+                {
+                    productNames = productNames.TrimEnd(';');
+                }
+                Send(productNames);
+
+                string response = "Success";
+                byte[] responseBytes = conversionHandler.ConvertStringToBytes(response);
+                SendResponse(responseBytes);
             }
-            if (!string.IsNullOrEmpty(productNames))
+            catch (Exception e)
             {
-                productNames = productNames.TrimEnd(';');
+                string response = e.Message;
+                byte[] responseBytes = conversionHandler.ConvertStringToBytes(response);
+                SendResponse(responseBytes);
             }
-            Send(productNames);
         }
 
         public void BuyProduct()
@@ -238,16 +287,25 @@ namespace Server.UIHandler
             int dataLength = conversionHandler.ConvertBytesToInt(lengthBytes);
             byte[] dataBytes = socketHelper.Receive(dataLength);
             string data = conversionHandler.ConvertBytesToString(dataBytes);
-            
-            string product = data.Split(":")[0];
-            string username = data.Split(":")[1];
-            string buyer = data.Split(":")[2];
-            
-            productService.BuyProduct(product, username, buyer);
-            
-            string response = "Success";
-            byte[] responseBytes = conversionHandler.ConvertStringToBytes(response);
-            SendResponse(responseBytes);
+
+            try
+            {
+                string product = data.Split(":")[0];
+                string username = data.Split(":")[1];
+                string buyer = data.Split(":")[2];
+
+                productService.BuyProduct(product, username, buyer);
+
+                string response = "Success";
+                byte[] responseBytes = conversionHandler.ConvertStringToBytes(response);
+                SendResponse(responseBytes);
+            }
+            catch (Exception e)
+            {
+                string response = e.Message;
+                byte[] responseBytes = conversionHandler.ConvertStringToBytes(response);
+                SendResponse(responseBytes);
+            }
         }
         
         public void SendAllPurchases()
@@ -256,20 +314,32 @@ namespace Server.UIHandler
             int dataLength = conversionHandler.ConvertBytesToInt(lengthBytes);
             byte[] dataBytes = socketHelper.Receive(dataLength);
             string username = conversionHandler.ConvertBytesToString(dataBytes);
-
-            List<Product> products = productService.GetPurchases(username);
-            string productNames = "";
-
-            for(int i = 0; i < products.Count; i++)
+            try
             {
-                productNames += productService.ProductToString(products[i]) + ";";
-            }
-            if (!string.IsNullOrEmpty(productNames))
-            {
-                productNames = productNames.TrimEnd(';');
-            }
+                List<Product> products = productService.GetPurchases(username);
+                string productNames = "";
 
-            Send(productNames);
+                for (int i = 0; i < products.Count; i++)
+                {
+                    productNames += productService.ProductToString(products[i]) + ";";
+                }
+                if (!string.IsNullOrEmpty(productNames))
+                {
+                    productNames = productNames.TrimEnd(';');
+                }
+
+                Send(productNames);
+
+                string response = "Success";
+                byte[] responseBytes = conversionHandler.ConvertStringToBytes(response);
+                SendResponse(responseBytes);
+            }
+            catch (Exception e)
+            {
+                string response = e.Message;
+                byte[] responseBytes = conversionHandler.ConvertStringToBytes(response);
+                SendResponse(responseBytes);
+            }
         }
 
         public void RateProduct()
@@ -278,23 +348,32 @@ namespace Server.UIHandler
             int dataLength = conversionHandler.ConvertBytesToInt(lengthBytes);
             byte[] dataBytes = socketHelper.Receive(dataLength);
             string review = conversionHandler.ConvertBytesToString(dataBytes);
-            
-            string product = review.Split(":")[0];
-            string user = review.Split(":")[1];
-            string score = review.Split(":")[2];
-            string reviewText = review.Split(":")[3];
-            string creator = review.Split(":")[4];
 
-            if (int.TryParse(score, out int scoreInt))
+            try
             {
-                productService.AddReview(product, user, scoreInt, reviewText, creator);
-                string response = "Success";
+                string product = review.Split(":")[0];
+                string user = review.Split(":")[1];
+                string score = review.Split(":")[2];
+                string reviewText = review.Split(":")[3];
+                string creator = review.Split(":")[4];
+
+                if (int.TryParse(score, out int scoreInt))
+                {
+                    productService.AddReview(product, user, scoreInt, reviewText, creator);
+                    string response = "Success";
+                    byte[] responseBytes = conversionHandler.ConvertStringToBytes(response);
+                    SendResponse(responseBytes);
+                }
+                else
+                {
+                    throw new ServerException("Score must be an integer.");
+                }
+            }
+            catch (Exception e)
+            {
+                string response = e.Message;
                 byte[] responseBytes = conversionHandler.ConvertStringToBytes(response);
                 SendResponse(responseBytes);
-            }
-            else
-            {
-                throw new ServerException("Score must be an integer.");
             }
         }
 
@@ -304,23 +383,36 @@ namespace Server.UIHandler
             int dataLength = conversionHandler.ConvertBytesToInt(lengthBytes);
             byte[] dataBytes = socketHelper.Receive(dataLength);
             string data = conversionHandler.ConvertBytesToString(dataBytes);
-            
-            string product = data.Split(":")[0];
-            string creator = data.Split(":")[1];
 
-            List<Review> reviews = productService.GetReviews(product, creator);
-            string reviewsString = "";
-
-            for(int i = 0; i < reviews.Count; i++)
+            try
             {
-                reviewsString += productService.ReviewToString(reviews[i]) + ";";
-            }
-            if (!string.IsNullOrEmpty(reviewsString))
-            {
-                reviewsString = reviewsString.TrimEnd(';');
-            }
+                string product = data.Split(":")[0];
+                string creator = data.Split(":")[1];
 
-            Send(reviewsString);
+                List<Review> reviews = productService.GetReviews(product, creator);
+                string reviewsString = "";
+
+                for (int i = 0; i < reviews.Count; i++)
+                {
+                    reviewsString += productService.ReviewToString(reviews[i]) + ";";
+                }
+                if (!string.IsNullOrEmpty(reviewsString))
+                {
+                    reviewsString = reviewsString.TrimEnd(';');
+                }
+
+                Send(reviewsString);
+
+                string response = "Success";
+                byte[] responseBytes = conversionHandler.ConvertStringToBytes(response);
+                SendResponse(responseBytes);
+            }
+            catch (Exception e)
+            {
+                string response = e.Message;
+                byte[] responseBytes = conversionHandler.ConvertStringToBytes(response);
+                SendResponse(responseBytes);
+            }
         }
 
         public void DownloadProductImage()
