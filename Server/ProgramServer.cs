@@ -18,14 +18,16 @@ namespace Server
         static readonly ProductService productService = new ProductService(storage);
         static readonly ConversionHandler conversionHandler = new ConversionHandler();
         private static bool exit = false;
-
+        private static Socket socketServer;
+        
+        
         public static void Main(string[] args)
         {
             Console.WriteLine("Starting server...");
 
             try
             {
-                var socketServer = new Socket(
+                 socketServer = new Socket(
                     AddressFamily.InterNetwork,
                     SocketType.Stream,
                     ProtocolType.Tcp);
@@ -35,27 +37,28 @@ namespace Server
 
                 var localEndpoint = new IPEndPoint(IPAddress.Parse(ipServer), ipPort);
                 socketServer.Bind(localEndpoint);
-                socketServer.Listen();
+                socketServer.Listen(10);
                 
-                new Thread(ConsoleInputThread).Start();
+                new Thread(HandleConsoleInput).Start();
 
                 while (!exit)
                 {
-                    var socketClient = socketServer.Accept();
-                    Console.WriteLine("New connection!");
-                    new Thread(() => HandleClient(socketClient)).Start();
-                    
+                    try
+                    {
+                        var socketClient = socketServer.Accept();
+                        Console.WriteLine("New connection!");
+                        new Thread(() => HandleClient(socketClient)).Start();
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine("Server Closed");
+                    }
                 }
 
-                while (Thread.CurrentThread.ManagedThreadId != 1)
+                if (!exit)
                 {
-                    Thread.Sleep(100);
+                    CloseServer();
                 }
-
-                Console.WriteLine("Closing server...");
-
-                socketServer.Shutdown(SocketShutdown.Both);
-                socketServer.Close();
             }
             catch (ServerException ex)
             {
@@ -72,7 +75,6 @@ namespace Server
             try
             {
                 var socketHelper = new SocketHelper(socketCliente);
-                bool exit = false;
                 
                 UserAuthorization userAuthorization = new UserAuthorization(socketHelper, conversionHandler, userService);
                 ProductHandler productHandler = new ProductHandler(socketHelper, conversionHandler, productService);
@@ -162,6 +164,8 @@ namespace Server
                     if (socketCliente.Poll(0, SelectMode.SelectRead) && socketCliente.Available == 0)
                     {
                         Console.WriteLine("Client disconnected");
+                        exit = true;
+                        socketCliente.Close(); 
                         break;
                     }
                 }
@@ -172,24 +176,31 @@ namespace Server
             }
             catch (ServerException ex)
             {
-                Console.WriteLine("Unexpected Exception: " + ex.Message);
+                Console.WriteLine(ex.Message);
+            }
+            catch (ThreadInterruptedException ex)
+            {
+                Console.WriteLine("ThreadInterruptedException during socket close: " + ex.Message);
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Unexpected Exception: " + ex.Message);
+                Console.WriteLine(ex.Message);
             }
         }
         
-        private static void ConsoleInputThread()
+        private static void HandleConsoleInput()
         {
-            while (!exit)
+            while (true)
             {
                 if (Console.KeyAvailable)
                 {
                     string line = Console.ReadLine();
-                    if (line == "exit")
+                    if (line.ToLower() == "exit")
                     {
                         exit = true;
+                        
+                        Console.WriteLine("Received exit command");
+                        CloseServer();
                         break;
                     }
                 }
@@ -197,6 +208,32 @@ namespace Server
                 Thread.Sleep(100);
             }
         }
-        
+        private static void CloseServer()
+        {
+            try
+            {
+                exit = true;
+                if (socketServer != null)
+                {
+                    if (socketServer.Connected)
+                        //socketServer.Shutdown(SocketShutdown.Both);
+                    
+                    Console.WriteLine("Closing Server!");
+                    socketServer.Close();
+                }
+            }
+            catch (SocketException ex)
+            {
+                Console.WriteLine("SocketException during socket close: " + ex.Message);
+            }
+            catch (ThreadInterruptedException ex)
+            {
+                Console.WriteLine("ThreadInterruptedException during socket close: " + ex.Message);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Exception during socket close: " + ex.Message);
+            }
+        }
     }
 }

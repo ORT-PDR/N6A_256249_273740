@@ -3,9 +3,6 @@ using System.Net.Sockets;
 using System.Text;
 using Client.UI;
 using Communication;
-using Server;
-using Server.BusinessLogic;
-using Server.UI;
 
 namespace Client
 {

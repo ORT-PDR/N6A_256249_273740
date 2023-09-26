@@ -1,7 +1,6 @@
 using System;
 using System.Linq;
 using Server.BusinessLogic;
-using Models;
 using Communication;
 using System.Net;
 using System.Net.Sockets;
@@ -10,7 +9,7 @@ using System.Xml.Linq;
 using System.Runtime.InteropServices;
 using Communication.FileHandlers;
 
-namespace Server.UI
+namespace Client.UI
 {
     public class ProductMenu
     {
@@ -120,10 +119,6 @@ namespace Server.UI
             catch (SocketException)
             {
                 Console.WriteLine("Server disconnected");
-            }
-            catch (ServerException e)
-            {
-                Console.Write(e.Message);
             }
             catch(FormatException formatEx)
             {
@@ -339,11 +334,6 @@ namespace Server.UI
                 Console.WriteLine("Server disconnected");
                 Console.ReadKey();
             }
-            catch (ServerException e)
-            {
-                Console.Write(e.Message);
-                Console.ReadKey();
-            }
             catch (FormatException formatEx)
             {
                 Console.WriteLine("Format exception. Stock and price must be integer.");
@@ -368,11 +358,6 @@ namespace Server.UI
             catch (SocketException)
             {
                 Console.WriteLine("Server disconnected");
-                Console.ReadKey();
-            }
-            catch (ServerException e)
-            {
-                Console.Write(e.Message);
                 Console.ReadKey();
             }
             catch (FormatException formatEx)
@@ -449,11 +434,6 @@ namespace Server.UI
             catch (SocketException)
             {
                 Console.WriteLine("Server disconnected");
-                Console.ReadKey();
-            }
-            catch (ServerException e)
-            {
-                Console.Write(e.Message);
                 Console.ReadKey();
             }
             catch (Exception ex)
@@ -743,11 +723,6 @@ namespace Server.UI
                 Console.WriteLine("Server disconnected");
                 Console.ReadKey();
             }
-            catch (ServerException e)
-            {
-                Console.Write(e.Message);
-                Console.ReadKey();
-            }
             catch (Exception ex)
             {
                 Console.WriteLine("Unexpected Exception: " + ex.Message);
@@ -885,11 +860,6 @@ namespace Server.UI
             catch (SocketException)
             {
                 Console.WriteLine("Server disconnected");
-                Console.ReadKey();
-            }
-            catch (ServerException e)
-            {
-                Console.Write(e.Message);
                 Console.ReadKey();
             }
             catch (Exception ex)
