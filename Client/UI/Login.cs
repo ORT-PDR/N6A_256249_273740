@@ -27,7 +27,7 @@ namespace Client.UI
 
                 while (!isAuthenticated)
                 {
-                    Console.WriteLine("Login (1), create a new account (2) or type 'exit' to disconnect");
+                    Console.WriteLine("Login (1) or create a new account (2)");
                     var text = Console.ReadLine();
                     if (text == "1")
                     {
@@ -90,11 +90,6 @@ namespace Client.UI
                             Console.WriteLine("Error creating new user:");
                             Console.WriteLine(response);
                         }
-                    }
-                    else if(string.Equals(text, "exit", StringComparison.OrdinalIgnoreCase))
-                    {
-                        _socketClient.Close();
-                        break;
                     }
                 }
             }
