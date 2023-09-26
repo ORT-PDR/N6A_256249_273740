@@ -8,12 +8,14 @@ namespace Client.UI
         private ProductMenu _productMenu;
         private ConversionHandler conversionHandler;
         private SocketHelper socketHelper;
+        private Socket _socketClient;
 
         public Login(Socket socketClient)
         {
             conversionHandler = new ConversionHandler();
             _productMenu = new ProductMenu(socketClient);
             socketHelper = new SocketHelper(socketClient);
+            _socketClient = socketClient;
         }
 
         public void Show()
@@ -74,7 +76,7 @@ namespace Client.UI
                         byte[] responseBytes = socketHelper.Receive(dataLength);
                         string response = conversionHandler.ConvertBytesToString(responseBytes);
 
-                        if(response == "success")
+                        if (response == "success")
                         {
                             Console.WriteLine("User created successfully!");
                             Console.WriteLine("Welcome ");

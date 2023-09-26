@@ -39,9 +39,9 @@ namespace Server.BusinessLogic
             return storage.GetProductById(productId);
         }
 
-        public Product GetProductByName(string name)
+        public Product GetProductByName(string name, string user)
         {
-            return storage.GetProductByName(name);
+            return storage.GetUserProductByName(name, user);
         }
 
         public Product UpdateProduct(Product updatedProduct)
@@ -52,13 +52,16 @@ namespace Server.BusinessLogic
             {
                 throw new ServerException("Product not found.");
             }
-            
-            existingProduct.description = updatedProduct.description;
-            existingProduct.stock = updatedProduct.stock;
-            existingProduct.price = updatedProduct.price;
-            existingProduct.imagePath = updatedProduct.imagePath;
-            
-            ValidateProduct(existingProduct);
+
+            lock (new object())
+            {
+                existingProduct.description = updatedProduct.description;
+                existingProduct.stock = updatedProduct.stock;
+                existingProduct.price = updatedProduct.price;
+                existingProduct.imagePath = updatedProduct.imagePath;
+
+                ValidateProduct(existingProduct);
+            }
 
             return existingProduct;
         }

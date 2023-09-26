@@ -33,21 +33,31 @@ namespace Communication.FileHandlers
             }
             else
             {
-                throw new ProtocolException("File does not exist");
+                byte[] responseBytes = _conversionHandler.ConvertStringToBytes("empty");
+                int responseLength = responseBytes.Length;
+                byte[] lengthBytes = _conversionHandler.ConvertIntToBytes(responseLength);
+                _socketHelper.Send(lengthBytes);
+                _socketHelper.Send(responseBytes);
             }
         }
 
         public string ReceiveFile()
         {
+            string fullSavePath = "";
+
             int fileNameSize = _conversionHandler.ConvertBytesToInt(
                 _socketHelper.Receive(Protocol.FixedDataSize));
             string fileName = _conversionHandler.ConvertBytesToString(_socketHelper.Receive(fileNameSize));
-            long fileSize = _conversionHandler.ConvertBytesToLong(_socketHelper.Receive(Protocol.FixedFileSize));
 
-            string saveFolderPath = "../../Server/productImages";
+            if (fileName != "empty")
+            {
+                long fileSize = _conversionHandler.ConvertBytesToLong(_socketHelper.Receive(Protocol.FixedFileSize));
 
-            string fullSavePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, saveFolderPath, fileName);
-            ReceiveFileWithStreams(fileSize, fullSavePath);
+                string saveFolderPath = "../../Server/productImages";
+
+                fullSavePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, saveFolderPath, fileName);
+                ReceiveFileWithStreams(fileSize, fullSavePath);
+            }
             return fullSavePath;
         }
 

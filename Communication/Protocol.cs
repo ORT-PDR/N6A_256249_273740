@@ -21,6 +21,7 @@ namespace Communication
             public const string SearchProducts = "SRCH";
             public const string GetProductDetails = "DETL";
             public const string RateProduct = "RATE";
+            public const string DownloadProductImage = "DWLD";
             public const string GetAllProducts = "GALL";
             public const string GetAllUserProducts = "GUPR";
             public const string GetAllPurchases = "GPCH";

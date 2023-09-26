@@ -87,8 +87,11 @@ namespace Client.UI
             {
                 socketHelper.Send(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.PublishProduct));
 
-                var fileCommonHandler = new FileCommsHandler(socketHelper);
-                fileCommonHandler.SendFile(imageAbsPath);
+                if (imageAbsPath != null)
+                {
+                    var fileCommonHandler = new FileCommsHandler(socketHelper);
+                    fileCommonHandler.SendFile(imageAbsPath);
+                }
 
                 string data = $"{name}:{description}:{price}:{stock}:{user}";
                 Send(data);
@@ -101,13 +104,16 @@ namespace Client.UI
                 if (response == "Success")
                 {
                     Console.WriteLine("Product published successfully.");
-                    Console.ReadKey();
                     System.Console.WriteLine("Press any key to continue");
                     System.Console.ReadKey();
+                    Console.Clear();
                 }
                 else
                 {
-                    PublishProduct();
+                    Console.WriteLine(response);
+                    System.Console.WriteLine("Press any key to continue");
+                    System.Console.ReadKey();
+                    Console.Clear();
                 }
             }
             catch (SocketException)
@@ -129,28 +135,41 @@ namespace Client.UI
             Console.Clear();
             var userProducts = RetrieveAllUserProducts();
 
-            if (userProducts.Length > 0)
-            {
-                Console.WriteLine("Select a product to update:");
-                for (int i = 0; i < userProducts.Length; i++)
-                {
-                    string[] data = userProducts[i].Split(":");
-                    Console.WriteLine($"{i + 1}. Name: {data[0]} | Description: {data[1]} | Stock: {data[2]} | Price: {data[3]}");
-                }
+            byte[] lBytes = socketHelper.Receive(Protocol.FixedDataSize);
+            int dataLength = conversionHandler.ConvertBytesToInt(lBytes);
+            byte[] listBytes = socketHelper.Receive(dataLength);
+            string response = conversionHandler.ConvertBytesToString(listBytes);
 
-                if (int.TryParse(Console.ReadLine(), out int selectedIndex) && selectedIndex >= 1 && selectedIndex <= userProducts.Length)
+            if (response == "Success")
+            {
+                if (userProducts.Length > 0)
                 {
-                    ModifyProductMenu(userProducts[selectedIndex - 1]);
+                    Console.WriteLine("Select a product to update:");
+                    for (int i = 0; i < userProducts.Length; i++)
+                    {
+                        string[] data = userProducts[i].Split(":");
+                        Console.WriteLine($"{i + 1}. Name: {data[0]} | Description: {data[1]} | Stock: {data[2]} | Price: {data[3]}");
+                    }
+
+                    if (int.TryParse(Console.ReadLine(), out int selectedIndex) && selectedIndex >= 1 && selectedIndex <= userProducts.Length)
+                    {
+                        ModifyProductMenu(userProducts[selectedIndex - 1]);
+                    }
+                    else
+                    {
+                        Console.WriteLine("Invalid selection.");
+                    }
                 }
                 else
                 {
-                    Console.WriteLine("Invalid selection.");
+                    Console.WriteLine("You have no products to update.");
                 }
             }
             else
             {
-                Console.WriteLine("You have no products to update.");
+                Console.WriteLine(response);
             }
+            Console.WriteLine("Press any key to continue");
             Console.ReadKey();
         }
 
@@ -289,7 +308,7 @@ namespace Client.UI
                 {
                     socketHelper.Send(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.UpdateProduct));
 
-                    string data = $"{productName}:{attribute}:{newValue}";
+                    string data = $"{productName}:{attribute}:{newValue}:{user}";
 
                     Send(data);
                 }
@@ -313,14 +332,17 @@ namespace Client.UI
             catch (SocketException)
             {
                 Console.WriteLine("Server disconnected");
+                Console.ReadKey();
             }
             catch (FormatException formatEx)
             {
                 Console.WriteLine("Format exception. Stock and price must be integer.");
+                Console.ReadKey();
             }
             catch (Exception ex)
             {
                 Console.WriteLine("Unexpected Exception: " + ex.Message);
+                Console.ReadKey();
             }
         }
 
@@ -331,19 +353,22 @@ namespace Client.UI
                 socketHelper.Send(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.UpdateProductImage));
                 var fileCommonHandler = new FileCommsHandler(socketHelper);
                 fileCommonHandler.SendFile(newImagePath);
-                Send(productName);
+                Send($"{productName}:{user}");
             }
             catch (SocketException)
             {
                 Console.WriteLine("Server disconnected");
+                Console.ReadKey();
             }
             catch (FormatException formatEx)
             {
                 Console.WriteLine("Format exception. Stock and price must be integer.");
+                Console.ReadKey();
             }
             catch (Exception ex)
             {
                 Console.WriteLine("Unexpected Exception: " + ex.Message);
+                Console.ReadKey();
             }
         }
 
@@ -384,6 +409,12 @@ namespace Client.UI
                             {
                                 Console.WriteLine("Product deleted successfully.");
                             }
+                            else
+                            {
+                                Console.WriteLine(response);
+                                Console.WriteLine("Press any key to continue");
+                                Console.ReadKey();
+                            }
                         }
                         else
                         {
@@ -403,47 +434,65 @@ namespace Client.UI
             catch (SocketException)
             {
                 Console.WriteLine("Server disconnected");
+                Console.ReadKey();
             }
             catch (Exception ex)
             {
                 Console.WriteLine("Unexpected Exception: " + ex.Message);
+                Console.ReadKey();
             }
         }
 
         private void ViewProductsMenu()
         {
+            Console.Clear();
             var products = RetrieveAllProducts();
 
-            if (!products.All(string.IsNullOrEmpty) && products.Length > 0)
-            {
-                Console.WriteLine("If you want to search a product, type the name of the product, else select a product to expand");
-                for (int i = 0; i < products.Length; i++)
-                {
-                    string[] data = products[i].Split(":");
-                    Console.WriteLine(
-                        $"{i + 1}. Name: {data[0]} | Description: {data[1]} | Stock: {data[2]} | Price: {data[3]}");
-                }
-                var option = Console.ReadLine();
+            byte[] lBytes = socketHelper.Receive(Protocol.FixedDataSize);
+            int dataLength = conversionHandler.ConvertBytesToInt(lBytes);
+            byte[] responseBytes = socketHelper.Receive(dataLength);
+            string response = conversionHandler.ConvertBytesToString(responseBytes);
 
-                if (int.TryParse(option, out int selectedIndex) && selectedIndex >= 1 &&
-                    selectedIndex <= products.Length)
+            if (response == "Success")
+            {
+                if (!products.All(string.IsNullOrEmpty) && products.Length > 0)
                 {
-                    var product = products[selectedIndex - 1].Split(":");
-                    ViewProduct(product);
+                    Console.WriteLine("If you want to search a product, type the name of the product, else select a product to expand");
+                    for (int i = 0; i < products.Length; i++)
+                    {
+                        string[] data = products[i].Split(":");
+                        Console.WriteLine(
+                            $"{i + 1}. Name: {data[0]} | Description: {data[1]} | Stock: {data[2]} | Price: {data[3]}");
+                    }
+                    var option = Console.ReadLine();
+
+                    if (int.TryParse(option, out int selectedIndex) && selectedIndex >= 1 &&
+                        selectedIndex <= products.Length)
+                    {
+                        var product = products[selectedIndex - 1].Split(":");
+                        ViewProduct(product);
+                    }
+                    else
+                    {
+                        SearchProducts(option);
+                    }
                 }
                 else
                 {
-                    SearchProducts(option);
+                    Console.WriteLine("You have no products to view.");
                 }
             }
             else
             {
-                Console.WriteLine("You have no products to view.");
+                Console.WriteLine(response);
+                Console.WriteLine("Press any key to continue");
+                Console.ReadKey();
             }
         }
         
         private void ViewProduct(string[] product)
         {
+            Console.Clear();
             Console.WriteLine($"Name: {product[0]}");
             Console.WriteLine($"Description: {product[1]}");
             Console.WriteLine($"Stock: {product[2]}");
@@ -454,13 +503,14 @@ namespace Client.UI
             Console.WriteLine("1. Buy Product");
             Console.WriteLine("2. Add Review");
             Console.WriteLine("3. Explore Reviews");
-            Console.WriteLine("4. Exit");
+            Console.WriteLine("4. Download Product Image");
+            Console.WriteLine("5. Exit");
 
             bool exit = false;
             while (!exit)
             {
                 var userInput = Console.ReadLine();
-                if (int.TryParse(userInput, out int attributeChoice) && attributeChoice >= 1 && attributeChoice <= 4)
+                if (int.TryParse(userInput, out int attributeChoice) && attributeChoice >= 1 && attributeChoice <= 5)
                 {
                     switch (attributeChoice)
                     {
@@ -474,6 +524,9 @@ namespace Client.UI
                             ExploreReviews(product);
                             break;
                         case 4:
+                            DownloadImage(product);
+                            break;
+                        case 5:
                             return;
                     }
                     exit = true;
@@ -484,7 +537,7 @@ namespace Client.UI
                     {
                         return;
                     }
-                    Console.WriteLine("Invalid attribute selection. Please select a valid option (1-4) or type 'exit' to quit.");
+                    Console.WriteLine("Invalid attribute selection. Please select a valid option (1-5) or type 'exit' to quit.");
                 }
             }
         }
@@ -519,6 +572,12 @@ namespace Client.UI
                 {
                     Console.WriteLine("Product bought successfully.");
                 }
+                else
+                {
+                    Console.WriteLine(response);
+                    Console.WriteLine("Press any key to continue");
+                    Console.ReadKey();
+                }
             }
             else
             {
@@ -528,44 +587,82 @@ namespace Client.UI
 
         private void ViewPurchases()
         {
+            Console.Clear();
             var products = RetrieveAllPurchases();
-            
-            if (!products.All(string.IsNullOrEmpty) && products.Length > 0)
+
+
+            byte[] lb = socketHelper.Receive(Protocol.FixedDataSize);
+            int dl = conversionHandler.ConvertBytesToInt(lb);
+            byte[] responseBytes = socketHelper.Receive(dl);
+            string response = conversionHandler.ConvertBytesToString(responseBytes);
+
+            if (response == "Success")
             {
-                Console.WriteLine("Select a product to expand:");
-                
-                bool exit = false;
-                while (!exit)
+
+                if (!products.All(string.IsNullOrEmpty) && products.Length > 0)
                 {
-                    for (int i = 0; i < products.Length; i++)
+                    Console.WriteLine("Select a product to expand:");
+
+                    bool exit = false;
+                    while (!exit)
                     {
-                        string[] data = products[i].Split(":");
-                        Console.WriteLine(
-                            $"{i + 1}. Name: {data[0]} | Description: {data[1]} | Units: {data[2]} | Bought for: {data[3]}");
+                        for (int i = 0; i < products.Length; i++)
+                        {
+                            string[] data = products[i].Split(":");
+                            Console.WriteLine(
+                                $"{i + 1}. Name: {data[0]} | Description: {data[1]} | Units: {data[2]} | Bought for: {data[3]}");
+                        }
+
+                        var option = Console.ReadLine();
+
+                        if (int.TryParse(option, out int selectedIndex) && selectedIndex >= 1 &&
+                            selectedIndex <= products.Length)
+                        {
+                            var product = products[selectedIndex - 1].Split(":");
+                            ViewProduct(product);
+                        }
+                        else if (option == "exit")
+                        {
+                            return;
+                        }
+                        else
+                        {
+                            Console.WriteLine("Invalid selection. Please select a valid product number or type 'exit' to quit.");
+                        }
                     }
-                    
-                    var option = Console.ReadLine();
-                
-                    if (int.TryParse(option, out int selectedIndex) && selectedIndex >= 1 &&
-                        selectedIndex <= products.Length)
-                    {
-                        var product = products[selectedIndex - 1].Split(":");
-                        ViewProduct(product);
-                    }
-                    else if (option == "exit")
-                    {
-                        return;
-                    }
-                    else
-                    {
-                        Console.WriteLine("Invalid selection. Please select a valid product number or type 'exit' to quit.");
-                    }
+                }
+                else
+                {
+                    Console.WriteLine("You have no products to view.");
                 }
             }
             else
             {
-                Console.WriteLine("You have no products to view.");
+                Console.WriteLine(response);
+                Console.WriteLine("Press any key to continue");
+                Console.ReadKey();
             }
+        }
+
+        private void DownloadImage(string[] product)
+        {
+            socketHelper.Send(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.DownloadProductImage));
+            Send(product[4]);
+
+            byte[] lBytes = socketHelper.Receive(Protocol.FixedDataSize);
+            int dataLength = conversionHandler.ConvertBytesToInt(lBytes);
+            byte[] responseBytes = socketHelper.Receive(dataLength);
+            string response = conversionHandler.ConvertBytesToString(responseBytes);
+
+            if (response == "Success")
+            {
+                Console.WriteLine("Image has been downloaded to your Downloads folder.");
+            }
+            else
+            {
+                Console.Write("There was an error downloading the image: " + response);
+            }
+            Console.Clear();
         }
 
         private string[] RetrieveAllPurchases()
@@ -585,6 +682,7 @@ namespace Client.UI
             catch(Exception e)
             {
                 Console.WriteLine(e.Message);
+                Console.ReadKey();
             }
             
             return new string[0];
@@ -615,37 +713,55 @@ namespace Client.UI
                 }
                 else
                 {
-                    PublishProduct();
+                    Console.WriteLine(response);
+                    Console.WriteLine("Press any key to continue");
+                    Console.ReadKey();
                 }
             }
             catch (SocketException)
             {
                 Console.WriteLine("Server disconnected");
+                Console.ReadKey();
             }
             catch (Exception ex)
             {
                 Console.WriteLine("Unexpected Exception: " + ex.Message);
+                Console.ReadKey();
             }
         }
 
         private void ExploreReviews(string[] product)
         {
             var reviews = RetrieveProductReviews(product);
-            
-            if (!reviews.All(string.IsNullOrEmpty) && reviews.Length > 0)
+
+            byte[] lBytes = socketHelper.Receive(Protocol.FixedDataSize);
+            int dataLength = conversionHandler.ConvertBytesToInt(lBytes);
+            byte[] responseBytes = socketHelper.Receive(dataLength);
+            string response = conversionHandler.ConvertBytesToString(responseBytes);
+
+            if (response == "Success")
             {
-                for (int i = 0; i < reviews.Length; i++)
+                if (!reviews.All(string.IsNullOrEmpty) && reviews.Length > 0)
                 {
-                    string[] data = reviews[i].Split(":");
-                    Console.WriteLine(
-                        $"Score: {data[0]} | Review: {data[1]} | User: {data[2]}");
+                    for (int i = 0; i < reviews.Length; i++)
+                    {
+                        string[] data = reviews[i].Split(":");
+                        Console.WriteLine(
+                            $"Score: {data[0]} | Review: {data[1]} | User: {data[2]}");
+                    }
+                    Console.WriteLine("Press any key to continue");
+                    Console.ReadKey();
                 }
-                Console.WriteLine("Press any key to continue");
-                Console.ReadKey();
+                else
+                {
+                    Console.WriteLine("You have no products to view.");
+                }
             }
             else
             {
-                Console.WriteLine("You have no products to view.");
+                Console.WriteLine(response);
+                Console.WriteLine("Press any key to continue");
+                Console.ReadKey();
             }
         }
 
@@ -666,6 +782,7 @@ namespace Client.UI
             catch(Exception e)
             {
                 Console.WriteLine(e.Message);
+                Console.ReadKey();
             }
             
             return new string[0];
@@ -684,55 +801,71 @@ namespace Client.UI
                 byte[] responseBytes = socketHelper.Receive(dataLength);
                 string response = conversionHandler.ConvertBytesToString(responseBytes);
 
-                string[] products = response.Split(";");
+                byte[] lb = socketHelper.Receive(Protocol.FixedDataSize);
+                int dl = conversionHandler.ConvertBytesToInt(lb);
+                byte[] rb = socketHelper.Receive(dl);
+                string r = conversionHandler.ConvertBytesToString(rb);
 
-                if (products.Length > 0)
+                if (r == "Success")
                 {
-                    Console.WriteLine("Select a product to expand:");
-                    for (int i = 0; i < products.Length; i++)
+                    string[] products = response.Split(";");
+
+                    if (products.Length > 0)
                     {
-                        string[] data = products[i].Split(":");
-                        Console.WriteLine($"{i + 1}. Name: {data[0]} | Description: {data[1]} | Stock: {data[2]} | Price: {data[3]}");
+                        Console.WriteLine("Select a product to expand:");
+                        for (int i = 0; i < products.Length; i++)
+                        {
+                            string[] data = products[i].Split(":");
+                            Console.WriteLine($"{i + 1}. Name: {data[0]} | Description: {data[1]} | Stock: {data[2]} | Price: {data[3]}");
+                        }
+
+                        bool exit = false;
+                        while (!exit)
+                        {
+                            var option = Console.ReadLine();
+
+                            if (option == "exit")
+                            {
+                                exit = true;
+                                break;
+                            }
+
+                            if (int.TryParse(option, out int selectedIndex) && selectedIndex >= 1 &&
+                                selectedIndex <= products.Length)
+                            {
+                                var product = products[selectedIndex - 1].Split(":");
+                                exit = true;
+                                ViewProduct(product);
+                            }
+                            else
+                            {
+                                Console.WriteLine("Invalid selection. Please select a valid product number or type 'exit' to quit.");
+                            }
+                        }
                     }
-
-                    bool exit = false;
-                    while (!exit)
+                    else
                     {
-                        var option = Console.ReadLine();
-
-                        if (option == "exit")
-                        {
-                            exit = true;
-                            break;
-                        }
-
-                        if (int.TryParse(option, out int selectedIndex) && selectedIndex >= 1 &&
-                            selectedIndex <= products.Length)
-                        {
-                            var product = products[selectedIndex - 1].Split(":");
-                            exit = true;
-                            ViewProduct(product);
-                        }
-                        else
-                        {
-                            Console.WriteLine("Invalid selection. Please select a valid product number or type 'exit' to quit.");
-                        }
+                        Console.WriteLine("No products match your search");
+                        Console.WriteLine("Returning to previous window");
+                        ViewProductsMenu();
                     }
                 }
                 else
                 {
-                    Console.WriteLine("No products match your search");
-                    Console.WriteLine("Returning to previous window");
-                    ViewProductsMenu();
+                    Console.WriteLine(r);
+                    Console.WriteLine("Press any key to continue");
+                    Console.ReadKey();
                 }
             }
             catch (SocketException)
             {
                 Console.WriteLine("Server disconnected");
+                Console.ReadKey();
             }
             catch (Exception ex)
             {
                 Console.WriteLine("Unexpected Exception: " + ex.Message);
+                Console.ReadKey();
             }
         }
 
