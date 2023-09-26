@@ -36,8 +36,7 @@ namespace Client
                 {
                     Login login = new Login(socketClient);
                     login.Show();
-                    string line = Console.ReadLine();
-                    if (line == "exit") { exit = true; }
+                    exit = true;
                 }
     
                 Console.WriteLine("Closing client...");
