@@ -88,8 +88,11 @@ namespace Server.UI
             {
                 socketHelper.Send(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.PublishProduct));
 
-                var fileCommonHandler = new FileCommsHandler(socketHelper);
-                fileCommonHandler.SendFile(imageAbsPath);
+                if (imageAbsPath != null)
+                {
+                    var fileCommonHandler = new FileCommsHandler(socketHelper);
+                    fileCommonHandler.SendFile(imageAbsPath);
+                }
 
                 string data = $"{name}:{description}:{price}:{stock}:{user}";
                 Send(data);
@@ -334,18 +337,22 @@ namespace Server.UI
             catch (SocketException)
             {
                 Console.WriteLine("Server disconnected");
+                Console.ReadKey();
             }
             catch (ServerException e)
             {
                 Console.Write(e.Message);
+                Console.ReadKey();
             }
             catch (FormatException formatEx)
             {
                 Console.WriteLine("Format exception. Stock and price must be integer.");
+                Console.ReadKey();
             }
             catch (Exception ex)
             {
                 Console.WriteLine("Unexpected Exception: " + ex.Message);
+                Console.ReadKey();
             }
         }
 
@@ -361,18 +368,22 @@ namespace Server.UI
             catch (SocketException)
             {
                 Console.WriteLine("Server disconnected");
+                Console.ReadKey();
             }
             catch (ServerException e)
             {
                 Console.Write(e.Message);
+                Console.ReadKey();
             }
             catch (FormatException formatEx)
             {
                 Console.WriteLine("Format exception. Stock and price must be integer.");
+                Console.ReadKey();
             }
             catch (Exception ex)
             {
                 Console.WriteLine("Unexpected Exception: " + ex.Message);
+                Console.ReadKey();
             }
         }
 
@@ -438,14 +449,17 @@ namespace Server.UI
             catch (SocketException)
             {
                 Console.WriteLine("Server disconnected");
+                Console.ReadKey();
             }
             catch (ServerException e)
             {
                 Console.Write(e.Message);
+                Console.ReadKey();
             }
             catch (Exception ex)
             {
                 Console.WriteLine("Unexpected Exception: " + ex.Message);
+                Console.ReadKey();
             }
         }
 
@@ -688,6 +702,7 @@ namespace Server.UI
             catch(Exception e)
             {
                 Console.WriteLine(e.Message);
+                Console.ReadKey();
             }
             
             return new string[0];
@@ -726,14 +741,17 @@ namespace Server.UI
             catch (SocketException)
             {
                 Console.WriteLine("Server disconnected");
+                Console.ReadKey();
             }
             catch (ServerException e)
             {
                 Console.Write(e.Message);
+                Console.ReadKey();
             }
             catch (Exception ex)
             {
                 Console.WriteLine("Unexpected Exception: " + ex.Message);
+                Console.ReadKey();
             }
         }
 
@@ -789,6 +807,7 @@ namespace Server.UI
             catch(Exception e)
             {
                 Console.WriteLine(e.Message);
+                Console.ReadKey();
             }
             
             return new string[0];
@@ -866,14 +885,17 @@ namespace Server.UI
             catch (SocketException)
             {
                 Console.WriteLine("Server disconnected");
+                Console.ReadKey();
             }
             catch (ServerException e)
             {
                 Console.Write(e.Message);
+                Console.ReadKey();
             }
             catch (Exception ex)
             {
                 Console.WriteLine("Unexpected Exception: " + ex.Message);
+                Console.ReadKey();
             }
         }
 

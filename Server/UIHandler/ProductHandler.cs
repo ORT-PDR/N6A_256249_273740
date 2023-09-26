@@ -26,7 +26,14 @@ namespace Server.UIHandler
 
             var fileCommonHandler = new FileCommsHandler(socketHelper);
             string path = fileCommonHandler.ReceiveFile();
-            Console.WriteLine("File recieved");
+            if (path == "")
+            {
+                Console.WriteLine("File does not exist. Product will not have an image");
+            }
+            else
+            {
+                Console.WriteLine("File recieved");
+            }
 
             byte[] lengthBytes = socketHelper.Receive(Protocol.FixedDataSize);
             int dataLength = conversionHandler.ConvertBytesToInt(lengthBytes);
@@ -121,7 +128,14 @@ namespace Server.UIHandler
             {
                 var fileCommonHandler = new FileCommsHandler(socketHelper);
                 string path = fileCommonHandler.ReceiveFile();
-                Console.WriteLine("File received");
+                if (path == "")
+                {
+                    Console.WriteLine("File does not exist. Product will no longer have an image");
+                }
+                else
+                {
+                    Console.WriteLine("File received");
+                }
 
                 byte[] lengthBytes = socketHelper.Receive(Protocol.FixedDataSize);
                 int dataLength = conversionHandler.ConvertBytesToInt(lengthBytes);
@@ -136,7 +150,10 @@ namespace Server.UIHandler
                 p.imagePath = path;
 
                 productService.UpdateProduct(p);
-                File.Delete(aux);
+                if (aux != "")
+                {
+                    File.Delete(aux);
+                }
 
                 string response = "Success";
                 byte[] responseBytes = conversionHandler.ConvertStringToBytes(response);
