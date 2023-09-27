@@ -31,21 +31,22 @@ namespace Client.UI
                     if (text == "1")
                     {
                         ret = Connect();
-
-                        if (ret.Connected)
-                        {
-                            socketHelper = new SocketHelper(ret);
-                            _socketHelper = socketHelper;
                         
-                            socketHelper.Send(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.Authenticate));
-                            Console.WriteLine("Enter username: ");
-                            string username = Console.ReadLine();
-                            Console.WriteLine("Enter password: ");
-                            string password = Console.ReadLine();
+                        socketHelper = new SocketHelper(ret);
+                        _socketHelper = socketHelper;
+                        
+                        socketHelper.Send(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.Authenticate));
+                        Console.WriteLine("Enter username: ");
+                        string username = Console.ReadLine();
+                        Console.WriteLine("Enter password: ");
+                        string password = Console.ReadLine();
 
-                            string credentials = $"{username}:{password}";
-                            Send(credentials);
+                        string credentials = $"{username}:{password}";
+                        Send(credentials);
 
+                        try
+                        {
+                            ret.ReceiveTimeout = 5000;
                             byte[] lBytes = socketHelper.Receive(Protocol.FixedDataSize);
                             int dataLength = conversionHandler.ConvertBytesToInt(lBytes);
                             byte[] responseBytes = socketHelper.Receive(dataLength);
@@ -70,29 +71,31 @@ namespace Client.UI
                                 Console.WriteLine("Login failed. Please try again.");
                             }
                         }
-                        else
+                        catch (SocketException ex)
                         {
-                            Console.WriteLine("Unable to connect to server");
+                            Console.WriteLine("Unable to connect to server. Please try again.");
                         }
                     }
                     else if (text == "2")
                     {
                         ret = Connect();
 
-                        if (ret.Connected)
+                        
+                        socketHelper = new SocketHelper(ret);
+                        _socketHelper = socketHelper;
+
+                        socketHelper.Send(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.CreateUser));
+                        Console.WriteLine("Enter username: ");
+                        string username = Console.ReadLine();
+                        Console.WriteLine("Enter password: ");
+                        string password = Console.ReadLine();
+
+                        string credentials = $"{username}:{password}";
+                        Send(credentials);
+
+                        try
                         {
-                            socketHelper = new SocketHelper(ret);
-                            _socketHelper = socketHelper;
-
-                            socketHelper.Send(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.CreateUser));
-                            Console.WriteLine("Enter username: ");
-                            string username = Console.ReadLine();
-                            Console.WriteLine("Enter password: ");
-                            string password = Console.ReadLine();
-
-                            string credentials = $"{username}:{password}";
-                            Send(credentials);
-
+                            ret.ReceiveTimeout = 5000;
                             byte[] lBytes = socketHelper.Receive(Protocol.FixedDataSize);
                             int dataLength = conversionHandler.ConvertBytesToInt(lBytes);
                             byte[] responseBytes = socketHelper.Receive(dataLength);
@@ -115,9 +118,9 @@ namespace Client.UI
                                 Console.WriteLine(response);
                             }
                         }
-                        else
+                        catch (SocketException ex)
                         {
-                            Console.WriteLine("Unable to connect to server");
+                            Console.WriteLine("Unable to connect to server. Please try again.");
                         }
                     }
                 }
