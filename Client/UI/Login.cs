@@ -18,7 +18,6 @@ namespace Client.UI
 
         public Socket Log()
         {
-            Console.Clear();
             Socket ret = null;
             try
             {
@@ -32,10 +31,10 @@ namespace Client.UI
                     if (text == "1")
                     {
                         ret = Connect();
+                        
                         socketHelper = new SocketHelper(ret);
-
                         _socketHelper = socketHelper;
-
+                        
                         socketHelper.Send(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.Authenticate));
                         Console.WriteLine("Enter username: ");
                         string username = Console.ReadLine();
@@ -45,35 +44,44 @@ namespace Client.UI
                         string credentials = $"{username}:{password}";
                         Send(credentials);
 
-                        byte[] lBytes = socketHelper.Receive(Protocol.FixedDataSize);
-                        int dataLength = conversionHandler.ConvertBytesToInt(lBytes);
-                        byte[] responseBytes = socketHelper.Receive(dataLength);
-                        string response = conversionHandler.ConvertBytesToString(responseBytes);
-
-                        Console.WriteLine($"Server Response: {response}");
-
-                        if (response == "Authentication successful")
+                        try
                         {
-                            isAuthenticated = true;
-                            Console.WriteLine("Login successful");
-                            Console.WriteLine("You're connected to the server!");
-                            Console.WriteLine("Press any key to continue");
-                            Console.ReadKey();
+                            ret.ReceiveTimeout = 5000;
+                            byte[] lBytes = socketHelper.Receive(Protocol.FixedDataSize);
+                            int dataLength = conversionHandler.ConvertBytesToInt(lBytes);
+                            byte[] responseBytes = socketHelper.Receive(dataLength);
+                            string response = conversionHandler.ConvertBytesToString(responseBytes);
 
-                            ProductMenu _productMenu = new ProductMenu(ret);
-                            _productMenu.ShowMainMenu(username);
-                            isAuthenticated = false;
+                            Console.WriteLine($"Server Response: {response}");
+
+                            if (response == "Authentication successful")
+                            {
+                                isAuthenticated = true;
+                                Console.WriteLine("Login successful");
+                                Console.WriteLine("You're connected to the server!");
+                                Console.WriteLine("Press any key to continue");
+                                Console.ReadKey();
+
+                                ProductMenu _productMenu = new ProductMenu(ret);
+                                _productMenu.ShowMainMenu(username);
+                                isAuthenticated = false;
+                            }
+                            else
+                            {
+                                Console.WriteLine("Login failed. Please try again.");
+                            }
                         }
-                        else
+                        catch (SocketException ex)
                         {
-                            Console.WriteLine("Login failed. Please try again.");
+                            Console.WriteLine("Unable to connect to server. Please try again.");
                         }
                     }
                     else if (text == "2")
                     {
                         ret = Connect();
-                        socketHelper = new SocketHelper(ret);
 
+                        
+                        socketHelper = new SocketHelper(ret);
                         _socketHelper = socketHelper;
 
                         socketHelper.Send(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.CreateUser));
@@ -85,26 +93,34 @@ namespace Client.UI
                         string credentials = $"{username}:{password}";
                         Send(credentials);
 
-                        byte[] lBytes = socketHelper.Receive(Protocol.FixedDataSize);
-                        int dataLength = conversionHandler.ConvertBytesToInt(lBytes);
-                        byte[] responseBytes = socketHelper.Receive(dataLength);
-                        string response = conversionHandler.ConvertBytesToString(responseBytes);
-
-                        if (response == "success")
+                        try
                         {
-                            Console.WriteLine("User created successfully!");
-                            Console.WriteLine("You're connected to the server!");
-                            Console.WriteLine("Press any key to continue");
-                            Console.ReadKey();
+                            ret.ReceiveTimeout = 5000;
+                            byte[] lBytes = socketHelper.Receive(Protocol.FixedDataSize);
+                            int dataLength = conversionHandler.ConvertBytesToInt(lBytes);
+                            byte[] responseBytes = socketHelper.Receive(dataLength);
+                            string response = conversionHandler.ConvertBytesToString(responseBytes);
 
-                            ProductMenu _productMenu = new ProductMenu(ret);
-                            _productMenu.ShowMainMenu(username);
-                            isAuthenticated = false;
+                            if (response == "success")
+                            {
+                                Console.WriteLine("User created successfully!");
+                                Console.WriteLine("You're connected to the server!");
+                                Console.WriteLine("Press any key to continue");
+                                Console.ReadKey();
+
+                                ProductMenu _productMenu = new ProductMenu(ret);
+                                _productMenu.ShowMainMenu(username);
+                                isAuthenticated = false;
+                            }
+                            else
+                            {
+                                Console.WriteLine("Error creating new user:");
+                                Console.WriteLine(response);
+                            }
                         }
-                        else
+                        catch (SocketException ex)
                         {
-                            Console.WriteLine("Error creating new user:");
-                            Console.WriteLine(response);
+                            Console.WriteLine("Unable to connect to server. Please try again.");
                         }
                     }
                 }
@@ -122,21 +138,29 @@ namespace Client.UI
 
         public Socket Connect()
         {
-            var socketClient = new Socket(
+            try
+            {
+                var socketClient = new Socket(
                     AddressFamily.InterNetwork,
                     SocketType.Stream,
                     ProtocolType.Tcp);
 
-            string ipServer = settingsMngr.ReadSettings(ClientConfig.serverIPconfigkey);
-            string ipClient = settingsMngr.ReadSettings(ClientConfig.clientIPconfigkey);
-            int serverPort = int.Parse(settingsMngr.ReadSettings(ClientConfig.serverPortconfigkey));
+                string ipServer = settingsMngr.ReadSettings(ClientConfig.serverIPconfigkey);
+                string ipClient = settingsMngr.ReadSettings(ClientConfig.clientIPconfigkey);
+                int serverPort = int.Parse(settingsMngr.ReadSettings(ClientConfig.serverPortconfigkey));
 
-            var localEndPoint = new IPEndPoint(IPAddress.Parse(ipClient), 0);
-            socketClient.Bind(localEndPoint);
-            var serverEndpoint = new IPEndPoint(IPAddress.Parse(ipServer), serverPort);
-            socketClient.Connect(serverEndpoint);
+                var localEndPoint = new IPEndPoint(IPAddress.Parse(ipClient), 0);
+                socketClient.Bind(localEndPoint);
+                var serverEndpoint = new IPEndPoint(IPAddress.Parse(ipServer), serverPort);
+                socketClient.Connect(serverEndpoint);
 
-            return socketClient;
+                return socketClient;
+            }
+            catch(SocketException ex)
+            {
+                Console.WriteLine("Could not connect to server");
+                return null;
+            }
         }
 
         private void Send(string response)
