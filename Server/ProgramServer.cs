@@ -19,6 +19,7 @@ namespace Server
         static readonly ConversionHandler conversionHandler = new ConversionHandler();
         private static bool exit = false;
         private static Socket socketServer;
+        private static List<Socket> clientSockets = new List<Socket>();
         
         
         public static void Main(string[] args)
@@ -46,6 +47,7 @@ namespace Server
                     try
                     {
                         var socketClient = socketServer.Accept();
+                        clientSockets.Add(socketClient);
                         Console.WriteLine("New connection!");
                         new Thread(() => HandleClient(socketClient)).Start();
                     }
@@ -213,11 +215,12 @@ namespace Server
             try
             {
                 exit = true;
+                foreach (Socket client in clientSockets)
+                {
+                    client.Shutdown(SocketShutdown.Both);
+                }
                 if (socketServer != null)
                 {
-                    if (socketServer.Connected)
-                        //socketServer.Shutdown(SocketShutdown.Both);
-                    
                     Console.WriteLine("Closing Server!");
                     socketServer.Close();
                 }
