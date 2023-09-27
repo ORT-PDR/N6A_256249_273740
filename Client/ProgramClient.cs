@@ -16,34 +16,11 @@ namespace Client
             
             try
             {
-                var socketClient = new Socket(
-                    AddressFamily.InterNetwork,
-                    SocketType.Stream,
-                    ProtocolType.Tcp);
-
-                string ipServer = settingsMngr.ReadSettings(ClientConfig.serverIPconfigkey);
-                string ipClient = settingsMngr.ReadSettings(ClientConfig.clientIPconfigkey);
-                int serverPort = int.Parse(settingsMngr.ReadSettings(ClientConfig.serverPortconfigkey));
-
-                var localEndPoint = new IPEndPoint(IPAddress.Parse(ipClient), 0);
-                socketClient.Bind(localEndPoint);
-                var serverEndpoint = new IPEndPoint(IPAddress.Parse(ipServer), serverPort);
-                socketClient.Connect(serverEndpoint);
-                Console.WriteLine("You're connected to the server!");
+                Socket socketClient;
 
                 bool exit = false;
-                while (!exit)
-                {
-                    Login login = new Login(socketClient);
-                    login.Show();
-                    string line = Console.ReadLine();
-                    if (line == "exit") { exit = true; }
-                }
-    
-                Console.WriteLine("Closing client...");
-
-                socketClient.Shutdown(SocketShutdown.Both);
-                socketClient.Close();
+                Login login = new Login(settingsMngr);
+                socketClient = login.Log();
             }
             catch (SocketException ex)
             {
