@@ -16,11 +16,14 @@ namespace Client
             
             try
             {
-                Socket socketClient;
+                while (true)
+                {
+                    Socket socketClient;
 
-                bool exit = false;
-                Login login = new Login(settingsMngr);
-                socketClient = login.Log();
+                    bool exit = false;
+                    Login login = new Login(settingsMngr);
+                    socketClient = login.Log();
+                }
             }
             catch (SocketException ex)
             {
