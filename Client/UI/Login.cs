@@ -1,3 +1,4 @@
+using System.Net;
 using System.Net.Sockets;
 using Communication;
 
@@ -5,31 +6,36 @@ namespace Client.UI
 {
     public class Login
     {
-        private ProductMenu _productMenu;
         private ConversionHandler conversionHandler;
-        private SocketHelper socketHelper;
-        private Socket _socketClient;
+        private SettingsManager settingsMngr;
+        private SocketHelper _socketHelper;
 
-        public Login(Socket socketClient)
+        public Login(SettingsManager _settingsMngr)
         {
+            settingsMngr = _settingsMngr;
             conversionHandler = new ConversionHandler();
-            _productMenu = new ProductMenu(socketClient);
-            socketHelper = new SocketHelper(socketClient);
-            _socketClient = socketClient;
         }
 
-        public void Show()
+        public Socket Log()
         {
+            Console.Clear();
+            Socket ret = null;
             try
             {
                 bool isAuthenticated = false;
+                SocketHelper socketHelper;
 
                 while (!isAuthenticated)
                 {
-                    Console.WriteLine("Login (1) or create a new account (2). Type exit to disconnect.");
+                    Console.WriteLine("Login (1) or create a new account (2)");
                     var text = Console.ReadLine();
                     if (text == "1")
                     {
+                        ret = Connect();
+                        socketHelper = new SocketHelper(ret);
+
+                        _socketHelper = socketHelper;
+
                         socketHelper.Send(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.Authenticate));
                         Console.WriteLine("Enter username: ");
                         string username = Console.ReadLine();
@@ -53,7 +59,10 @@ namespace Client.UI
                             Console.WriteLine("Welcome ");
                             Console.WriteLine("Press any key to continue");
                             Console.ReadKey();
+
+                            ProductMenu _productMenu = new ProductMenu(ret);
                             _productMenu.ShowMainMenu(username);
+                            isAuthenticated = false;
                         }
                         else
                         {
@@ -62,6 +71,11 @@ namespace Client.UI
                     }
                     else if (text == "2")
                     {
+                        ret = Connect();
+                        socketHelper = new SocketHelper(ret);
+
+                        _socketHelper = socketHelper;
+
                         socketHelper.Send(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.CreateUser));
                         Console.WriteLine("Enter username: ");
                         string username = Console.ReadLine();
@@ -82,17 +96,16 @@ namespace Client.UI
                             Console.WriteLine("Welcome ");
                             Console.WriteLine("Press any key to continue");
                             Console.ReadKey();
+
+                            ProductMenu _productMenu = new ProductMenu(ret);
                             _productMenu.ShowMainMenu(username);
+                            isAuthenticated = false;
                         }
                         else
                         {
                             Console.WriteLine("Error creating new user:");
                             Console.WriteLine(response);
                         }
-                    }
-                    else if (text.ToLower() == "exit")
-                    {
-                        return;
                     }
                 }
             }
@@ -104,6 +117,27 @@ namespace Client.UI
             {
                 Console.WriteLine("Unexpected Exception: " + ex.Message);
             }
+            return ret;
+        }
+
+        public Socket Connect()
+        {
+            var socketClient = new Socket(
+                    AddressFamily.InterNetwork,
+                    SocketType.Stream,
+                    ProtocolType.Tcp);
+
+            string ipServer = settingsMngr.ReadSettings(ClientConfig.serverIPconfigkey);
+            string ipClient = settingsMngr.ReadSettings(ClientConfig.clientIPconfigkey);
+            int serverPort = int.Parse(settingsMngr.ReadSettings(ClientConfig.serverPortconfigkey));
+
+            var localEndPoint = new IPEndPoint(IPAddress.Parse(ipClient), 0);
+            socketClient.Bind(localEndPoint);
+            var serverEndpoint = new IPEndPoint(IPAddress.Parse(ipServer), serverPort);
+            socketClient.Connect(serverEndpoint);
+            Console.WriteLine("You're connected to the server!");
+
+            return socketClient;
         }
 
         private void Send(string response)
@@ -112,8 +146,8 @@ namespace Client.UI
             int responseLength = responseBytes.Length;
 
             byte[] lengthBytes = conversionHandler.ConvertIntToBytes(responseLength);
-            socketHelper.Send(lengthBytes);
-            socketHelper.Send(responseBytes);
+            _socketHelper.Send(lengthBytes);
+            _socketHelper.Send(responseBytes);
         }
     }
 }
