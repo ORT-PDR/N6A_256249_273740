@@ -16,11 +16,13 @@ namespace Client.UI
         private ConversionHandler conversionHandler;
         private SocketHelper socketHelper;
         private string user;
+        private Socket socketClient;
 
         public ProductMenu(Socket _socketClient)
         {
             conversionHandler = new ConversionHandler();
             socketHelper = new SocketHelper(_socketClient);
+            socketClient = _socketClient;
         }
 
         public void ShowMainMenu(string _user)
@@ -59,6 +61,10 @@ namespace Client.UI
                         ViewPurchases();
                         break;
                     case "6":
+                        Console.WriteLine("Logging out...");
+
+                        socketClient.Shutdown(SocketShutdown.Both);
+                        socketClient.Close();
                         return;
                     default:
                         Console.WriteLine("Invalid choice. Please try again.");
