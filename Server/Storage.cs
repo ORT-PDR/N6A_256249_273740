@@ -158,13 +158,11 @@ namespace Server
 		        }
                 
 		        productToBuy.stock--;
-		        Product p = productToBuy;
 		        
 		        User user = users.FirstOrDefault(u => u.username == buyer);
 		        if (user != null)
 		        {
-			        p.stock = 1;
-			        user.purchases.Add(p);
+			        user.purchases.Add(productToBuy);
 		        }
 	        }
         }

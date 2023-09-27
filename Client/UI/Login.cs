@@ -56,7 +56,7 @@ namespace Client.UI
                         {
                             isAuthenticated = true;
                             Console.WriteLine("Login successful");
-                            Console.WriteLine("Welcome ");
+                            Console.WriteLine("You're connected to the server!");
                             Console.WriteLine("Press any key to continue");
                             Console.ReadKey();
 
@@ -93,7 +93,7 @@ namespace Client.UI
                         if (response == "success")
                         {
                             Console.WriteLine("User created successfully!");
-                            Console.WriteLine("Welcome ");
+                            Console.WriteLine("You're connected to the server!");
                             Console.WriteLine("Press any key to continue");
                             Console.ReadKey();
 
@@ -135,7 +135,6 @@ namespace Client.UI
             socketClient.Bind(localEndPoint);
             var serverEndpoint = new IPEndPoint(IPAddress.Parse(ipServer), serverPort);
             socketClient.Connect(serverEndpoint);
-            Console.WriteLine("You're connected to the server!");
 
             return socketClient;
         }
