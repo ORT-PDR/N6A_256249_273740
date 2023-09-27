@@ -616,7 +616,7 @@ namespace Client.UI
                         {
                             string[] data = products[i].Split(":");
                             Console.WriteLine(
-                                $"{i + 1}. Name: {data[0]} | Description: {data[1]} | Units: {data[2]} | Bought for: {data[3]}");
+                                $"{i + 1}. Name: {data[0]} | Bought for: {data[3]}");
                         }
 
                         var option = Console.ReadLine();
@@ -626,6 +626,7 @@ namespace Client.UI
                         {
                             var product = products[selectedIndex - 1].Split(":");
                             ViewProduct(product);
+                            return;
                         }
                         else if (option == "exit")
                         {
@@ -753,7 +754,7 @@ namespace Client.UI
                     {
                         string[] data = reviews[i].Split(":");
                         Console.WriteLine(
-                            $"Score: {data[0]} | Review: {data[1]} | User: {data[2]}");
+                            $"-> Score: {data[2]} | Review: {data[1]} | User: {data[0]}");
                     }
                     Console.WriteLine("Press any key to continue");
                     Console.ReadKey();
