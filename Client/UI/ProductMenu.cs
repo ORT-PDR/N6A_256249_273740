@@ -384,57 +384,65 @@ namespace Client.UI
             try
             {
                 var userProducts = RetrieveAllUserProducts();
+                
+                byte[] lenBytes = socketHelper.Receive(Protocol.FixedDataSize);
+                int responseLength = conversionHandler.ConvertBytesToInt(lenBytes);
+                byte[] resBytes = socketHelper.Receive(responseLength);
+                string res = conversionHandler.ConvertBytesToString(resBytes);
 
-                if (!userProducts.All(string.IsNullOrEmpty) && userProducts.Length > 0)
+                if (res == "Success")
                 {
-                    Console.WriteLine("Select a product to delete:");
-                    for (int i = 0; i < userProducts.Length; i++)
+                    if (!userProducts.All(string.IsNullOrEmpty) && userProducts.Length > 0)
                     {
-                        string[] data = userProducts[i].Split(":");
-                        Console.WriteLine($"{i + 1}. Name: {data[0]} | Description: {data[1]} | Stock: {data[2]} | Price: {data[3]}");
-                    }
-                    
-                    var selectedProduct = Console.ReadLine();
-
-                    if (int.TryParse(selectedProduct, out int selectedIndex) && selectedIndex >= 1 && selectedIndex <= userProducts.Length)
-                    {
-                        Console.WriteLine($"Are you sure you want to delete this product? (yes/no)");
-
-                        string confirmation = Console.ReadLine();
-                        if (confirmation.Equals("yes", StringComparison.OrdinalIgnoreCase))
+                        Console.WriteLine("Select a product to delete:");
+                        for (int i = 0; i < userProducts.Length; i++)
                         {
-                            socketHelper.Send(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.DeleteProduct));
-                            Send(userProducts[selectedIndex-1].Split(":")[0]+":"+user);
-                            
-                            byte[] lBytes = socketHelper.Receive(Protocol.FixedDataSize);
-                            int dataLength = conversionHandler.ConvertBytesToInt(lBytes);
-                            byte[] responseBytes = socketHelper.Receive(dataLength);
-                            string response = conversionHandler.ConvertBytesToString(responseBytes);
+                            string[] data = userProducts[i].Split(":");
+                            Console.WriteLine($"{i + 1}. Name: {data[0]} | Description: {data[1]} | Stock: {data[2]} | Price: {data[3]}");
+                        }
+                    
+                        var selectedProduct = Console.ReadLine();
 
-                            if (response == "Success")
+                        if (int.TryParse(selectedProduct, out int selectedIndex) && selectedIndex >= 1 && selectedIndex <= userProducts.Length)
+                        {
+                            Console.WriteLine($"Are you sure you want to delete this product? (yes/no)");
+
+                            string confirmation = Console.ReadLine();
+                            if (confirmation.Equals("yes", StringComparison.OrdinalIgnoreCase))
                             {
-                                Console.WriteLine("Product deleted successfully.");
+                                socketHelper.Send(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.DeleteProduct));
+                                Send(userProducts[selectedIndex-1].Split(":")[0]+":"+user);
+                            
+                                byte[] lBytes = socketHelper.Receive(Protocol.FixedDataSize);
+                                int dataLength = conversionHandler.ConvertBytesToInt(lBytes);
+                                byte[] responseBytes = socketHelper.Receive(dataLength);
+                                string response = conversionHandler.ConvertBytesToString(responseBytes);
+
+                                if (response == "Success")
+                                {
+                                    Console.WriteLine("Product deleted successfully.");
+                                }
+                                else
+                                {
+                                    Console.WriteLine(response);
+                                    Console.WriteLine("Press any key to continue");
+                                    Console.ReadKey();
+                                }
                             }
                             else
                             {
-                                Console.WriteLine(response);
-                                Console.WriteLine("Press any key to continue");
-                                Console.ReadKey();
+                                Console.WriteLine("Product not deleted.");
                             }
                         }
                         else
                         {
-                            Console.WriteLine("Product not deleted.");
+                            Console.WriteLine("Invalid selection. Please select a valid product number or type 'back' to quit.");
                         }
                     }
                     else
                     {
-                        Console.WriteLine("Invalid selection. Please select a valid product number or type 'back' to quit.");
+                        Console.WriteLine("You have no products to delete.");
                     }
-                }
-                else
-                {
-                    Console.WriteLine("You have no products to delete.");
                 }
             }
             catch (SocketException)
