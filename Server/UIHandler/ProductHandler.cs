@@ -9,13 +9,13 @@ namespace Server.UIHandler
 {
 	public class ProductHandler
 	{
-        private readonly SocketHelper socketHelper;
+        private readonly NetworkDataHelper networkDataHelper;
         private readonly ConversionHandler conversionHandler;
         private readonly ProductService productService;
 
-        public ProductHandler(SocketHelper socketHelper, ConversionHandler conversionHandler, ProductService productService)
+        public ProductHandler(NetworkDataHelper networkDataHelper, ConversionHandler conversionHandler, ProductService productService)
 		{
-			this.socketHelper = socketHelper;
+			this.networkDataHelper = networkDataHelper;
 			this.conversionHandler = conversionHandler;
 			this.productService = productService;
 		}
@@ -24,7 +24,7 @@ namespace Server.UIHandler
 		{
             Console.WriteLine("Product publication requested by client.");
 
-            var fileCommonHandler = new FileCommsHandler(socketHelper);
+            var fileCommonHandler = new FileCommsHandler(networkDataHelper);
             string path = fileCommonHandler.ReceiveFile();
             if (path == "")
             {
@@ -35,9 +35,9 @@ namespace Server.UIHandler
                 Console.WriteLine("File recieved");
             }
 
-            byte[] lengthBytes = socketHelper.Receive(Protocol.FixedDataSize);
+            byte[] lengthBytes = networkDataHelper.Receive(Protocol.FixedDataSize);
             int dataLength = conversionHandler.ConvertBytesToInt(lengthBytes);
-            byte[] dataBytes = socketHelper.Receive(dataLength);
+            byte[] dataBytes = networkDataHelper.Receive(dataLength);
             string data = conversionHandler.ConvertBytesToString(dataBytes);
             string[] dataParts = data.Split(':');
 
@@ -80,9 +80,9 @@ namespace Server.UIHandler
         public void UpdateProduct()
         {
 
-            byte[] lengthBytes = socketHelper.Receive(Protocol.FixedDataSize);
+            byte[] lengthBytes = networkDataHelper.Receive(Protocol.FixedDataSize);
             int dataLength = conversionHandler.ConvertBytesToInt(lengthBytes);
-            byte[] dataBytes = socketHelper.Receive(dataLength);
+            byte[] dataBytes = networkDataHelper.Receive(dataLength);
             string data = conversionHandler.ConvertBytesToString(dataBytes);
 
             try
@@ -126,7 +126,7 @@ namespace Server.UIHandler
         {
             try
             {
-                var fileCommonHandler = new FileCommsHandler(socketHelper);
+                var fileCommonHandler = new FileCommsHandler(networkDataHelper);
                 string path = fileCommonHandler.ReceiveFile();
                 if (path == "")
                 {
@@ -137,9 +137,9 @@ namespace Server.UIHandler
                     Console.WriteLine("File received");
                 }
 
-                byte[] lengthBytes = socketHelper.Receive(Protocol.FixedDataSize);
+                byte[] lengthBytes = networkDataHelper.Receive(Protocol.FixedDataSize);
                 int dataLength = conversionHandler.ConvertBytesToInt(lengthBytes);
-                byte[] dataBytes = socketHelper.Receive(dataLength);
+                byte[] dataBytes = networkDataHelper.Receive(dataLength);
                 string data = conversionHandler.ConvertBytesToString(dataBytes);
 
                 string product = data.Split(":")[0];
@@ -169,9 +169,9 @@ namespace Server.UIHandler
 
         public void SendAllUserProducts()
         {
-            byte[] lengthBytes = socketHelper.Receive(Protocol.FixedDataSize);
+            byte[] lengthBytes = networkDataHelper.Receive(Protocol.FixedDataSize);
             int dataLength = conversionHandler.ConvertBytesToInt(lengthBytes);
-            byte[] dataBytes = socketHelper.Receive(dataLength);
+            byte[] dataBytes = networkDataHelper.Receive(dataLength);
             string username = conversionHandler.ConvertBytesToString(dataBytes);
 
             try
@@ -204,9 +204,9 @@ namespace Server.UIHandler
         
         public void SendAllProducts()
         {
-            byte[] lengthBytes = socketHelper.Receive(Protocol.FixedDataSize);
+            byte[] lengthBytes = networkDataHelper.Receive(Protocol.FixedDataSize);
             int dataLength = conversionHandler.ConvertBytesToInt(lengthBytes);
-            byte[] dataBytes = socketHelper.Receive(dataLength);
+            byte[] dataBytes = networkDataHelper.Receive(dataLength);
             string username = conversionHandler.ConvertBytesToString(dataBytes);
 
             try
@@ -239,9 +239,9 @@ namespace Server.UIHandler
 
         public void DeleteProduct()
         {
-            byte[] lengthBytes = socketHelper.Receive(Protocol.FixedDataSize);
+            byte[] lengthBytes = networkDataHelper.Receive(Protocol.FixedDataSize);
             int dataLength = conversionHandler.ConvertBytesToInt(lengthBytes);
-            byte[] dataBytes = socketHelper.Receive(dataLength);
+            byte[] dataBytes = networkDataHelper.Receive(dataLength);
             string data = conversionHandler.ConvertBytesToString(dataBytes);
 
             try
@@ -266,9 +266,9 @@ namespace Server.UIHandler
 
         public void SearchProducts()
         {
-            byte[] lengthBytes = socketHelper.Receive(Protocol.FixedDataSize);
+            byte[] lengthBytes = networkDataHelper.Receive(Protocol.FixedDataSize);
             int dataLength = conversionHandler.ConvertBytesToInt(lengthBytes);
-            byte[] dataBytes = socketHelper.Receive(dataLength);
+            byte[] dataBytes = networkDataHelper.Receive(dataLength);
             string name = conversionHandler.ConvertBytesToString(dataBytes);
 
             try
@@ -300,9 +300,9 @@ namespace Server.UIHandler
 
         public void BuyProduct()
         {
-            byte[] lengthBytes = socketHelper.Receive(Protocol.FixedDataSize);
+            byte[] lengthBytes = networkDataHelper.Receive(Protocol.FixedDataSize);
             int dataLength = conversionHandler.ConvertBytesToInt(lengthBytes);
-            byte[] dataBytes = socketHelper.Receive(dataLength);
+            byte[] dataBytes = networkDataHelper.Receive(dataLength);
             string data = conversionHandler.ConvertBytesToString(dataBytes);
 
             try
@@ -327,9 +327,9 @@ namespace Server.UIHandler
         
         public void SendAllPurchases()
         {
-            byte[] lengthBytes = socketHelper.Receive(Protocol.FixedDataSize);
+            byte[] lengthBytes = networkDataHelper.Receive(Protocol.FixedDataSize);
             int dataLength = conversionHandler.ConvertBytesToInt(lengthBytes);
-            byte[] dataBytes = socketHelper.Receive(dataLength);
+            byte[] dataBytes = networkDataHelper.Receive(dataLength);
             string username = conversionHandler.ConvertBytesToString(dataBytes);
             try
             {
@@ -361,9 +361,9 @@ namespace Server.UIHandler
 
         public void RateProduct()
         {
-            byte[] lengthBytes = socketHelper.Receive(Protocol.FixedDataSize);
+            byte[] lengthBytes = networkDataHelper.Receive(Protocol.FixedDataSize);
             int dataLength = conversionHandler.ConvertBytesToInt(lengthBytes);
-            byte[] dataBytes = socketHelper.Receive(dataLength);
+            byte[] dataBytes = networkDataHelper.Receive(dataLength);
             string review = conversionHandler.ConvertBytesToString(dataBytes);
 
             try
@@ -396,9 +396,9 @@ namespace Server.UIHandler
 
         public void SendAllProductReviews()
         {
-            byte[] lengthBytes = socketHelper.Receive(Protocol.FixedDataSize);
+            byte[] lengthBytes = networkDataHelper.Receive(Protocol.FixedDataSize);
             int dataLength = conversionHandler.ConvertBytesToInt(lengthBytes);
-            byte[] dataBytes = socketHelper.Receive(dataLength);
+            byte[] dataBytes = networkDataHelper.Receive(dataLength);
             string data = conversionHandler.ConvertBytesToString(dataBytes);
 
             try
@@ -434,9 +434,9 @@ namespace Server.UIHandler
 
         public void DownloadProductImage()
         {
-            byte[] lengthBytes = socketHelper.Receive(Protocol.FixedDataSize);
+            byte[] lengthBytes = networkDataHelper.Receive(Protocol.FixedDataSize);
             int dataLength = conversionHandler.ConvertBytesToInt(lengthBytes);
-            byte[] dataBytes = socketHelper.Receive(dataLength);
+            byte[] dataBytes = networkDataHelper.Receive(dataLength);
             string imagePath = conversionHandler.ConvertBytesToString(dataBytes);
 
             try
@@ -467,8 +467,8 @@ namespace Server.UIHandler
             int responseLength = responseBytes.Length;
 
             byte[] lengthBytes = conversionHandler.ConvertIntToBytes(responseLength);
-            socketHelper.Send(lengthBytes);
-            socketHelper.Send(responseBytes);
+            networkDataHelper.Send(lengthBytes);
+            networkDataHelper.Send(responseBytes);
         }
 
         private void SendResponse(byte[] responseBytes)
@@ -476,8 +476,8 @@ namespace Server.UIHandler
             int responseLength = responseBytes.Length;
 
             byte[] lengthBytes = conversionHandler.ConvertIntToBytes(responseLength);
-            socketHelper.Send(lengthBytes);
-            socketHelper.Send(responseBytes);
+            networkDataHelper.Send(lengthBytes);
+            networkDataHelper.Send(responseBytes);
         }
     }
 }

@@ -14,15 +14,15 @@ namespace Client.UI
     public class ProductMenu
     {
         private ConversionHandler conversionHandler;
-        private SocketHelper socketHelper;
+        private NetworkDataHelper networkDataHelper;
         private string user;
-        private Socket socketClient;
+        private TcpClient tcpClient;
 
-        public ProductMenu(Socket _socketClient)
+        public ProductMenu(TcpClient _tcpClient)
         {
             conversionHandler = new ConversionHandler();
-            socketHelper = new SocketHelper(_socketClient);
-            socketClient = _socketClient;
+            networkDataHelper = new NetworkDataHelper(_tcpClient);
+            tcpClient = _tcpClient;
         }
 
         public void ShowMainMenu(string _user)
@@ -63,8 +63,7 @@ namespace Client.UI
                     case "6":
                         Console.WriteLine("Logging out...");
 
-                        socketClient.Shutdown(SocketShutdown.Both);
-                        socketClient.Close();
+                        tcpClient.Close();
                         return;
                     default:
                         Console.WriteLine("Invalid choice. Please try again.");
@@ -91,20 +90,20 @@ namespace Client.UI
 
             try
             {
-                socketHelper.Send(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.PublishProduct));
+                networkDataHelper.Send(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.PublishProduct));
 
                 if (imageAbsPath != null)
                 {
-                    var fileCommonHandler = new FileCommsHandler(socketHelper);
+                    var fileCommonHandler = new FileCommsHandler(networkDataHelper);
                     fileCommonHandler.SendFile(imageAbsPath);
                 }
 
                 string data = $"{name}:{description}:{price}:{stock}:{user}";
                 Send(data);
 
-                byte[] lBytes = socketHelper.Receive(Protocol.FixedDataSize);
+                byte[] lBytes = networkDataHelper.Receive(Protocol.FixedDataSize);
                 int dataLength = conversionHandler.ConvertBytesToInt(lBytes);
-                byte[] responseBytes = socketHelper.Receive(dataLength);
+                byte[] responseBytes = networkDataHelper.Receive(dataLength);
                 string response = conversionHandler.ConvertBytesToString(responseBytes);
 
                 if (response == "Success")
@@ -141,9 +140,9 @@ namespace Client.UI
             Console.Clear();
             var userProducts = RetrieveAllUserProducts();
 
-            byte[] lBytes = socketHelper.Receive(Protocol.FixedDataSize);
+            byte[] lBytes = networkDataHelper.Receive(Protocol.FixedDataSize);
             int dataLength = conversionHandler.ConvertBytesToInt(lBytes);
-            byte[] listBytes = socketHelper.Receive(dataLength);
+            byte[] listBytes = networkDataHelper.Receive(dataLength);
             string response = conversionHandler.ConvertBytesToString(listBytes);
 
             if (response == "Success")
@@ -183,12 +182,12 @@ namespace Client.UI
         {
             try
             {
-                socketHelper.Send(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.GetAllUserProducts));
+                networkDataHelper.Send(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.GetAllUserProducts));
                 Send(user);
 
-                byte[] lBytes = socketHelper.Receive(Protocol.FixedDataSize);
+                byte[] lBytes = networkDataHelper.Receive(Protocol.FixedDataSize);
                 int dataLength = conversionHandler.ConvertBytesToInt(lBytes);
-                byte[] listBytes = socketHelper.Receive(dataLength);
+                byte[] listBytes = networkDataHelper.Receive(dataLength);
                 string list = conversionHandler.ConvertBytesToString(listBytes);
                 string[] products = list.Split(";");
                 return products;
@@ -204,12 +203,12 @@ namespace Client.UI
         {
             try
             {
-                socketHelper.Send(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.GetAllProducts));
+                networkDataHelper.Send(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.GetAllProducts));
                 Send(user);
 
-                byte[] lBytes = socketHelper.Receive(Protocol.FixedDataSize);
+                byte[] lBytes = networkDataHelper.Receive(Protocol.FixedDataSize);
                 int dataLength = conversionHandler.ConvertBytesToInt(lBytes);
-                byte[] listBytes = socketHelper.Receive(dataLength);
+                byte[] listBytes = networkDataHelper.Receive(dataLength);
                 string list = conversionHandler.ConvertBytesToString(listBytes);
                 string[] products = list.Split(";");
                 return products;
@@ -312,16 +311,16 @@ namespace Client.UI
 
                 else
                 {
-                    socketHelper.Send(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.UpdateProduct));
+                    networkDataHelper.Send(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.UpdateProduct));
 
                     string data = $"{productName}:{attribute}:{newValue}:{user}";
 
                     Send(data);
                 }
 
-                byte[] lBytes = socketHelper.Receive(Protocol.FixedDataSize);
+                byte[] lBytes = networkDataHelper.Receive(Protocol.FixedDataSize);
                 int dataLength = conversionHandler.ConvertBytesToInt(lBytes);
-                byte[] responseBytes = socketHelper.Receive(dataLength);
+                byte[] responseBytes = networkDataHelper.Receive(dataLength);
                 string response = conversionHandler.ConvertBytesToString(responseBytes);
 
                 if (response == "Success")
@@ -356,8 +355,8 @@ namespace Client.UI
         {
             try
             {
-                socketHelper.Send(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.UpdateProductImage));
-                var fileCommonHandler = new FileCommsHandler(socketHelper);
+                networkDataHelper.Send(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.UpdateProductImage));
+                var fileCommonHandler = new FileCommsHandler(networkDataHelper);
                 fileCommonHandler.SendFile(newImagePath);
                 Send($"{productName}:{user}");
             }
@@ -385,9 +384,9 @@ namespace Client.UI
             {
                 var userProducts = RetrieveAllUserProducts();
                 
-                byte[] lenBytes = socketHelper.Receive(Protocol.FixedDataSize);
+                byte[] lenBytes = networkDataHelper.Receive(Protocol.FixedDataSize);
                 int responseLength = conversionHandler.ConvertBytesToInt(lenBytes);
-                byte[] resBytes = socketHelper.Receive(responseLength);
+                byte[] resBytes = networkDataHelper.Receive(responseLength);
                 string res = conversionHandler.ConvertBytesToString(resBytes);
 
                 if (res == "Success")
@@ -410,12 +409,12 @@ namespace Client.UI
                             string confirmation = Console.ReadLine();
                             if (confirmation.Equals("yes", StringComparison.OrdinalIgnoreCase))
                             {
-                                socketHelper.Send(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.DeleteProduct));
+                                networkDataHelper.Send(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.DeleteProduct));
                                 Send(userProducts[selectedIndex-1].Split(":")[0]+":"+user);
                             
-                                byte[] lBytes = socketHelper.Receive(Protocol.FixedDataSize);
+                                byte[] lBytes = networkDataHelper.Receive(Protocol.FixedDataSize);
                                 int dataLength = conversionHandler.ConvertBytesToInt(lBytes);
-                                byte[] responseBytes = socketHelper.Receive(dataLength);
+                                byte[] responseBytes = networkDataHelper.Receive(dataLength);
                                 string response = conversionHandler.ConvertBytesToString(responseBytes);
 
                                 if (response == "Success")
@@ -462,9 +461,9 @@ namespace Client.UI
             Console.Clear();
             var products = RetrieveAllProducts();
 
-            byte[] lBytes = socketHelper.Receive(Protocol.FixedDataSize);
+            byte[] lBytes = networkDataHelper.Receive(Protocol.FixedDataSize);
             int dataLength = conversionHandler.ConvertBytesToInt(lBytes);
-            byte[] responseBytes = socketHelper.Receive(dataLength);
+            byte[] responseBytes = networkDataHelper.Receive(dataLength);
             string response = conversionHandler.ConvertBytesToString(responseBytes);
 
             if (response == "Success")
@@ -574,12 +573,12 @@ namespace Client.UI
             string confirmation = Console.ReadLine();
             if (confirmation.Equals("yes", StringComparison.OrdinalIgnoreCase))
             {
-                socketHelper.Send(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.BuyProduct));
+                networkDataHelper.Send(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.BuyProduct));
                 Send(product[0]+":"+product[5]+":"+user);
                             
-                byte[] lBytes = socketHelper.Receive(Protocol.FixedDataSize);
+                byte[] lBytes = networkDataHelper.Receive(Protocol.FixedDataSize);
                 int dataLength = conversionHandler.ConvertBytesToInt(lBytes);
-                byte[] responseBytes = socketHelper.Receive(dataLength);
+                byte[] responseBytes = networkDataHelper.Receive(dataLength);
                 string response = conversionHandler.ConvertBytesToString(responseBytes);
 
                 if (response == "Success")
@@ -605,9 +604,9 @@ namespace Client.UI
             var products = RetrieveAllPurchases();
 
 
-            byte[] lb = socketHelper.Receive(Protocol.FixedDataSize);
+            byte[] lb = networkDataHelper.Receive(Protocol.FixedDataSize);
             int dl = conversionHandler.ConvertBytesToInt(lb);
-            byte[] responseBytes = socketHelper.Receive(dl);
+            byte[] responseBytes = networkDataHelper.Receive(dl);
             string response = conversionHandler.ConvertBytesToString(responseBytes);
 
             if (response == "Success")
@@ -661,12 +660,12 @@ namespace Client.UI
 
         private void DownloadImage(string[] product)
         {
-            socketHelper.Send(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.DownloadProductImage));
+            networkDataHelper.Send(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.DownloadProductImage));
             Send(product[4]);
 
-            byte[] lBytes = socketHelper.Receive(Protocol.FixedDataSize);
+            byte[] lBytes = networkDataHelper.Receive(Protocol.FixedDataSize);
             int dataLength = conversionHandler.ConvertBytesToInt(lBytes);
-            byte[] responseBytes = socketHelper.Receive(dataLength);
+            byte[] responseBytes = networkDataHelper.Receive(dataLength);
             string response = conversionHandler.ConvertBytesToString(responseBytes);
 
             if (response == "Success")
@@ -684,12 +683,12 @@ namespace Client.UI
         {
             try
             {
-                socketHelper.Send(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.GetAllPurchases));
+                networkDataHelper.Send(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.GetAllPurchases));
                 Send(user);
 
-                byte[] lBytes = socketHelper.Receive(Protocol.FixedDataSize);
+                byte[] lBytes = networkDataHelper.Receive(Protocol.FixedDataSize);
                 int dataLength = conversionHandler.ConvertBytesToInt(lBytes);
-                byte[] listBytes = socketHelper.Receive(dataLength);
+                byte[] listBytes = networkDataHelper.Receive(dataLength);
                 string list = conversionHandler.ConvertBytesToString(listBytes);
                 string[] products = list.Split(";");
                 return products;
@@ -712,12 +711,12 @@ namespace Client.UI
 
             try
             {
-                socketHelper.Send(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.RateProduct));
+                networkDataHelper.Send(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.RateProduct));
                 Send(product[0]+":"+product[5]+":"+score+":"+review+":"+user);
             
-                byte[] lBytes = socketHelper.Receive(Protocol.FixedDataSize);
+                byte[] lBytes = networkDataHelper.Receive(Protocol.FixedDataSize);
                 int dataLength = conversionHandler.ConvertBytesToInt(lBytes);
-                byte[] responseBytes = socketHelper.Receive(dataLength);
+                byte[] responseBytes = networkDataHelper.Receive(dataLength);
                 string response = conversionHandler.ConvertBytesToString(responseBytes);
 
                 if (response == "Success")
@@ -749,9 +748,9 @@ namespace Client.UI
         {
             var reviews = RetrieveProductReviews(product);
 
-            byte[] lBytes = socketHelper.Receive(Protocol.FixedDataSize);
+            byte[] lBytes = networkDataHelper.Receive(Protocol.FixedDataSize);
             int dataLength = conversionHandler.ConvertBytesToInt(lBytes);
-            byte[] responseBytes = socketHelper.Receive(dataLength);
+            byte[] responseBytes = networkDataHelper.Receive(dataLength);
             string response = conversionHandler.ConvertBytesToString(responseBytes);
 
             if (response == "Success")
@@ -784,12 +783,12 @@ namespace Client.UI
         {
             try
             {
-                socketHelper.Send(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.GetAllProductReviews));
+                networkDataHelper.Send(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.GetAllProductReviews));
                 Send(product[0]+":"+product[5]);
 
-                byte[] lBytes = socketHelper.Receive(Protocol.FixedDataSize);
+                byte[] lBytes = networkDataHelper.Receive(Protocol.FixedDataSize);
                 int dataLength = conversionHandler.ConvertBytesToInt(lBytes);
-                byte[] listBytes = socketHelper.Receive(dataLength);
+                byte[] listBytes = networkDataHelper.Receive(dataLength);
                 string list = conversionHandler.ConvertBytesToString(listBytes);
                 string[] reviews = list.Split(";");
                 return reviews;
@@ -808,17 +807,17 @@ namespace Client.UI
             try
             {
                 Console.Clear();
-                socketHelper.Send(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.SearchProducts));
+                networkDataHelper.Send(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.SearchProducts));
                 Send(productName);
 
-                byte[] lBytes = socketHelper.Receive(Protocol.FixedDataSize);
+                byte[] lBytes = networkDataHelper.Receive(Protocol.FixedDataSize);
                 int dataLength = conversionHandler.ConvertBytesToInt(lBytes);
-                byte[] responseBytes = socketHelper.Receive(dataLength);
+                byte[] responseBytes = networkDataHelper.Receive(dataLength);
                 string response = conversionHandler.ConvertBytesToString(responseBytes);
 
-                byte[] lb = socketHelper.Receive(Protocol.FixedDataSize);
+                byte[] lb = networkDataHelper.Receive(Protocol.FixedDataSize);
                 int dl = conversionHandler.ConvertBytesToInt(lb);
-                byte[] rb = socketHelper.Receive(dl);
+                byte[] rb = networkDataHelper.Receive(dl);
                 string r = conversionHandler.ConvertBytesToString(rb);
 
                 if (r == "Success")
@@ -890,8 +889,8 @@ namespace Client.UI
             int responseLength = responseBytes.Length;
 
             byte[] lengthBytes = conversionHandler.ConvertIntToBytes(responseLength);
-            socketHelper.Send(lengthBytes);
-            socketHelper.Send(responseBytes);
+            networkDataHelper.Send(lengthBytes);
+            networkDataHelper.Send(responseBytes);
         }
     }
 }

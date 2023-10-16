@@ -5,22 +5,22 @@ namespace Server.UIHandler
 {
     public class UserAuthorization
     {
-        private readonly SocketHelper socketHelper;
+        private readonly NetworkDataHelper networkDataHelper;
         private readonly ConversionHandler conversionHandler;
         private readonly UserService _userService;
 
-        public UserAuthorization(SocketHelper socketHelper, ConversionHandler conversionHandler, UserService userService)
+        public UserAuthorization(NetworkDataHelper networkDataHelper, ConversionHandler conversionHandler, UserService userService)
         {
-            this.socketHelper = socketHelper;
+            this.networkDataHelper = networkDataHelper;
             this.conversionHandler = conversionHandler;
             _userService = userService;
         }
 
         public void Authenticate()
         {
-            byte[] lengthBytes = socketHelper.Receive(Protocol.FixedDataSize);
+            byte[] lengthBytes = networkDataHelper.Receive(Protocol.FixedDataSize);
             int dataLength = conversionHandler.ConvertBytesToInt(lengthBytes);
-            byte[] credentialsBytes = socketHelper.Receive(dataLength);
+            byte[] credentialsBytes = networkDataHelper.Receive(dataLength);
             string credentials = conversionHandler.ConvertBytesToString(credentialsBytes);
             string[] credentialsParts = credentials.Split(':');
 
@@ -45,9 +45,9 @@ namespace Server.UIHandler
 
         public void CreateUser()
         {
-            byte[] lengthBytes = socketHelper.Receive(Protocol.FixedDataSize);
+            byte[] lengthBytes = networkDataHelper.Receive(Protocol.FixedDataSize);
             int dataLength = conversionHandler.ConvertBytesToInt(lengthBytes);
-            byte[] credentialsBytes = socketHelper.Receive(dataLength);
+            byte[] credentialsBytes = networkDataHelper.Receive(dataLength);
             string credentials = conversionHandler.ConvertBytesToString(credentialsBytes);
             string[] credentialsParts = credentials.Split(':');
 
@@ -83,8 +83,8 @@ namespace Server.UIHandler
             int responseLength = responseBytes.Length;
 
             byte[] lengthBytes = conversionHandler.ConvertIntToBytes(responseLength);
-            socketHelper.Send(lengthBytes);
-            socketHelper.Send(responseBytes);
+            networkDataHelper.Send(lengthBytes);
+            networkDataHelper.Send(responseBytes);
         }
     }
 }

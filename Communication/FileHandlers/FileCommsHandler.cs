@@ -8,14 +8,14 @@ namespace Communication.FileHandlers
         private readonly ConversionHandler _conversionHandler;
         private readonly FileHandler _fileHandler;
         private readonly FileStreamHandler _fileStreamHandler;
-        private readonly SocketHelper _socketHelper;
+        private readonly NetworkDataHelper _networkDataHelper;
 
-        public FileCommsHandler(SocketHelper socketHelper)
+        public FileCommsHandler(NetworkDataHelper networkDataHelper)
         {
             _conversionHandler = new ConversionHandler();
             _fileHandler = new FileHandler();
             _fileStreamHandler = new FileStreamHandler();
-            _socketHelper = socketHelper;
+            _networkDataHelper = networkDataHelper;
         }
 
         public void SendFile(string path)
@@ -23,12 +23,12 @@ namespace Communication.FileHandlers
             if (_fileHandler.FileExists(path))
             {
                 var fileName = _fileHandler.GetFileName(path);
-                _socketHelper.Send(_conversionHandler.ConvertIntToBytes(fileName.Length));
-                _socketHelper.Send(_conversionHandler.ConvertStringToBytes(fileName));
+                _networkDataHelper.Send(_conversionHandler.ConvertIntToBytes(fileName.Length));
+                _networkDataHelper.Send(_conversionHandler.ConvertStringToBytes(fileName));
 
                 long fileSize = _fileHandler.GetFileSize(path);
                 var convertedFileSize = _conversionHandler.ConvertLongToBytes(fileSize);
-                _socketHelper.Send(convertedFileSize);
+                _networkDataHelper.Send(convertedFileSize);
                 SendFileWithStream(fileSize, path);
             }
             else
@@ -36,8 +36,8 @@ namespace Communication.FileHandlers
                 byte[] responseBytes = _conversionHandler.ConvertStringToBytes("empty");
                 int responseLength = responseBytes.Length;
                 byte[] lengthBytes = _conversionHandler.ConvertIntToBytes(responseLength);
-                _socketHelper.Send(lengthBytes);
-                _socketHelper.Send(responseBytes);
+                _networkDataHelper.Send(lengthBytes);
+                _networkDataHelper.Send(responseBytes);
             }
         }
 
@@ -46,12 +46,12 @@ namespace Communication.FileHandlers
             string fullSavePath = "";
 
             int fileNameSize = _conversionHandler.ConvertBytesToInt(
-                _socketHelper.Receive(Protocol.FixedDataSize));
-            string fileName = _conversionHandler.ConvertBytesToString(_socketHelper.Receive(fileNameSize));
+                _networkDataHelper.Receive(Protocol.FixedDataSize));
+            string fileName = _conversionHandler.ConvertBytesToString(_networkDataHelper.Receive(fileNameSize));
 
             if (fileName != "empty")
             {
-                long fileSize = _conversionHandler.ConvertBytesToLong(_socketHelper.Receive(Protocol.FixedFileSize));
+                long fileSize = _conversionHandler.ConvertBytesToLong(_networkDataHelper.Receive(Protocol.FixedFileSize));
 
                 string saveFolderPath = "../../Server/productImages";
 
@@ -82,7 +82,7 @@ namespace Communication.FileHandlers
                     offset += Protocol.MaxPacketSize;
                 }
 
-                _socketHelper.Send(data);
+                _networkDataHelper.Send(data);
                 currentPart++;
             }
         }
@@ -99,12 +99,12 @@ namespace Communication.FileHandlers
                 if (currentPart == fileParts)
                 {
                     var lastPartSize = (int)(fileSize - offset);
-                    data = _socketHelper.Receive(lastPartSize);
+                    data = _networkDataHelper.Receive(lastPartSize);
                     offset += lastPartSize;
                 }
                 else
                 {
-                    data = _socketHelper.Receive(Protocol.MaxPacketSize);
+                    data = _networkDataHelper.Receive(Protocol.MaxPacketSize);
                     offset += Protocol.MaxPacketSize;
                 }
                 _fileStreamHandler.Write(fileName, data);

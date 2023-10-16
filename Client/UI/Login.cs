@@ -8,7 +8,7 @@ namespace Client.UI
     {
         private ConversionHandler conversionHandler;
         private SettingsManager settingsMngr;
-        private SocketHelper _socketHelper;
+        private NetworkDataHelper _networkDataHelper;
 
         public Login(SettingsManager _settingsMngr)
         {
@@ -16,13 +16,14 @@ namespace Client.UI
             conversionHandler = new ConversionHandler();
         }
 
-        public Socket Log()
+        public TcpClient Log()
         {
-            Socket ret = null;
+            TcpClient ret = null;
             try
             {
                 bool isAuthenticated = false;
                 SocketHelper socketHelper;
+                NetworkDataHelper networkDataHelper;
 
                 while (!isAuthenticated)
                 {
@@ -31,11 +32,11 @@ namespace Client.UI
                     if (text == "1")
                     {
                         ret = Connect();
+
+                        networkDataHelper = new NetworkDataHelper(ret);
+                        _networkDataHelper = networkDataHelper;
                         
-                        socketHelper = new SocketHelper(ret);
-                        _socketHelper = socketHelper;
-                        
-                        socketHelper.Send(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.Authenticate));
+                        networkDataHelper.Send(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.Authenticate));
                         Console.WriteLine("Enter username: ");
                         string username = Console.ReadLine();
                         Console.WriteLine("Enter password: ");
@@ -47,9 +48,9 @@ namespace Client.UI
                         try
                         {
                             ret.ReceiveTimeout = 5000;
-                            byte[] lBytes = socketHelper.Receive(Protocol.FixedDataSize);
+                            byte[] lBytes = networkDataHelper.Receive(Protocol.FixedDataSize);
                             int dataLength = conversionHandler.ConvertBytesToInt(lBytes);
-                            byte[] responseBytes = socketHelper.Receive(dataLength);
+                            byte[] responseBytes = networkDataHelper.Receive(dataLength);
                             string response = conversionHandler.ConvertBytesToString(responseBytes);
 
                             Console.WriteLine($"Server Response: {response}");
@@ -79,12 +80,10 @@ namespace Client.UI
                     else if (text == "2")
                     {
                         ret = Connect();
+                        networkDataHelper = new NetworkDataHelper(ret);
+                        _networkDataHelper = networkDataHelper;
 
-                        
-                        socketHelper = new SocketHelper(ret);
-                        _socketHelper = socketHelper;
-
-                        socketHelper.Send(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.CreateUser));
+                        networkDataHelper.Send(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.CreateUser));
                         Console.WriteLine("Enter username: ");
                         string username = Console.ReadLine();
                         Console.WriteLine("Enter password: ");
@@ -96,9 +95,9 @@ namespace Client.UI
                         try
                         {
                             ret.ReceiveTimeout = 5000;
-                            byte[] lBytes = socketHelper.Receive(Protocol.FixedDataSize);
+                            byte[] lBytes = networkDataHelper.Receive(Protocol.FixedDataSize);
                             int dataLength = conversionHandler.ConvertBytesToInt(lBytes);
-                            byte[] responseBytes = socketHelper.Receive(dataLength);
+                            byte[] responseBytes = networkDataHelper.Receive(dataLength);
                             string response = conversionHandler.ConvertBytesToString(responseBytes);
 
                             if (response == "success")
@@ -124,6 +123,11 @@ namespace Client.UI
                         }
                     }
                 }
+                
+                if (ret != null)
+                {
+                    ret.Close();
+                }
             }
             catch (SocketException)
             {
@@ -131,12 +135,12 @@ namespace Client.UI
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Unexpected Exception: " + ex.Message);
+                Console.WriteLine("Server disconnected");
             }
             return ret;
         }
 
-        public Socket Connect()
+        public TcpClient Connect()
         {
             try
             {
@@ -148,13 +152,19 @@ namespace Client.UI
                 string ipServer = settingsMngr.ReadSettings(ClientConfig.serverIPconfigkey);
                 string ipClient = settingsMngr.ReadSettings(ClientConfig.clientIPconfigkey);
                 int serverPort = int.Parse(settingsMngr.ReadSettings(ClientConfig.serverPortconfigkey));
+                int clientPort = int.Parse(settingsMngr.ReadSettings(ClientConfig.clientPortconfigkey));
+
+                Console.WriteLine("Cliente con IP {0} y puerto {1}", ipClient, clientPort);
+                Console.WriteLine("Cliente conectado a IP {0} y puerto {1}", ipServer, serverPort);
 
                 var localEndPoint = new IPEndPoint(IPAddress.Parse(ipClient), 0);
-                socketClient.Bind(localEndPoint);
                 var serverEndpoint = new IPEndPoint(IPAddress.Parse(ipServer), serverPort);
-                socketClient.Connect(serverEndpoint);
 
-                return socketClient;
+                var tcpClient = new TcpClient(localEndPoint);
+                
+                tcpClient.Connect(serverEndpoint);
+
+                return tcpClient;
             }
             catch(SocketException ex)
             {
@@ -165,12 +175,23 @@ namespace Client.UI
 
         private void Send(string response)
         {
-            byte[] responseBytes = conversionHandler.ConvertStringToBytes(response);
-            int responseLength = responseBytes.Length;
+            try
+            {
+                byte[] responseBytes = conversionHandler.ConvertStringToBytes(response);
+                int responseLength = responseBytes.Length;
 
-            byte[] lengthBytes = conversionHandler.ConvertIntToBytes(responseLength);
-            _socketHelper.Send(lengthBytes);
-            _socketHelper.Send(responseBytes);
+                byte[] lengthBytes = conversionHandler.ConvertIntToBytes(responseLength);
+                _networkDataHelper.Send(lengthBytes);
+                _networkDataHelper.Send(responseBytes);
+            }
+            catch (SocketException ex)
+            {
+                Console.WriteLine("Server Disconnected");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Unexpected Exception: " + ex.Message);
+            }
         }
     }
 }

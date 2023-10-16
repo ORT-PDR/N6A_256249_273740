@@ -17,9 +17,9 @@ namespace Server
         static readonly UserService userService = new UserService(storage);
         static readonly ProductService productService = new ProductService(storage);
         static readonly ConversionHandler conversionHandler = new ConversionHandler();
+        static TcpListener tcpListener;
         private static bool exit = false;
-        private static Socket socketServer;
-        private static List<Socket> clientSockets = new List<Socket>();
+        private static List<TcpClient> clients = new List<TcpClient>();
         
         
         public static void Main(string[] args)
@@ -28,17 +28,14 @@ namespace Server
 
             try
             {
-                 socketServer = new Socket(
-                    AddressFamily.InterNetwork,
-                    SocketType.Stream,
-                    ProtocolType.Tcp);
-
                 string ipServer = settingsMngr.ReadSettings(ServerConfig.serverIPconfigkey);
                 int ipPort = int.Parse(settingsMngr.ReadSettings(ServerConfig.serverPortconfigkey));
-
                 var localEndpoint = new IPEndPoint(IPAddress.Parse(ipServer), ipPort);
-                socketServer.Bind(localEndpoint);
-                socketServer.Listen(10);
+                
+                Console.WriteLine($"Server initialized with IP {ipServer} and Port {ipPort}");
+                
+                tcpListener = new TcpListener(localEndpoint);
+                tcpListener.Start();
                 
                 new Thread(HandleConsoleInput).Start();
 
@@ -46,10 +43,10 @@ namespace Server
                 {
                     try
                     {
-                        var socketClient = socketServer.Accept();
-                        clientSockets.Add(socketClient);
+                        TcpClient tcpClient = tcpListener.AcceptTcpClient();
+                        clients.Add(tcpClient);
                         Console.WriteLine("New connection!");
-                        new Thread(() => HandleClient(socketClient)).Start();
+                        new Thread(() => HandleClient(tcpClient)).Start();
                     }
                     catch (Exception ex)
                     {
@@ -72,18 +69,18 @@ namespace Server
             }
         }
 
-        static void HandleClient(Socket socketCliente)
+        static void HandleClient(TcpClient tcpClient)
         {
             try
             {
-                var socketHelper = new SocketHelper(socketCliente);
+                NetworkDataHelper networkDataHelper = new NetworkDataHelper(tcpClient);
                 
-                UserAuthorization userAuthorization = new UserAuthorization(socketHelper, conversionHandler, userService);
-                ProductHandler productHandler = new ProductHandler(socketHelper, conversionHandler, productService);
+                UserAuthorization userAuthorization = new UserAuthorization(networkDataHelper, conversionHandler, userService);
+                ProductHandler productHandler = new ProductHandler(networkDataHelper, conversionHandler, productService);
 
                 while (!exit)
                 {
-                    byte[] commandBytes = socketHelper.Receive(Protocol.FixedDataSize);
+                    byte[] commandBytes = networkDataHelper.Receive(Protocol.FixedDataSize);
                     string command = conversionHandler.ConvertBytesToString(commandBytes);
 
                     if (command == Protocol.ProtocolCommands.Authenticate)
@@ -163,11 +160,11 @@ namespace Server
                         exit = true;
                     }
                     
-                    if (socketCliente.Poll(0, SelectMode.SelectRead) && socketCliente.Available == 0)
+                    if (tcpClient.Client.Poll(0, SelectMode.SelectRead) && tcpClient.Available == 0)
                     {
                         Console.WriteLine("Client disconnected");
                         exit = true;
-                        socketCliente.Close(); 
+                        tcpClient.Close(); 
                         break;
                     }
                 }
@@ -215,14 +212,14 @@ namespace Server
             try
             {
                 exit = true;
-                foreach (Socket client in clientSockets)
+                foreach (TcpClient client in clients)
                 {
-                    client.Shutdown(SocketShutdown.Both);
+                    client.Close();
                 }
-                if (socketServer != null)
+                if (tcpListener != null)
                 {
                     Console.WriteLine("Closing Server!");
-                    socketServer.Close();
+                    tcpListener.Stop();
                 }
             }
             catch (SocketException ex)

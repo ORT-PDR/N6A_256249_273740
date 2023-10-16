@@ -18,11 +18,11 @@ namespace Client
             {
                 while (true)
                 {
-                    Socket socketClient;
+                    TcpClient tcpClient;
 
                     bool exit = false;
                     Login login = new Login(settingsMngr);
-                    socketClient = login.Log();
+                    tcpClient = login.Log();
                 }
             }
             catch (SocketException ex)
