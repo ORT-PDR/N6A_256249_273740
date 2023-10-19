@@ -10,7 +10,7 @@ namespace Client
     {
         static readonly SettingsManager settingsMngr = new SettingsManager();
         
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
             Console.WriteLine("Starting client...");
             
@@ -18,11 +18,9 @@ namespace Client
             {
                 while (true)
                 {
-                    TcpClient tcpClient;
-
                     bool exit = false;
                     Login login = new Login(settingsMngr);
-                    tcpClient = login.Log();
+                    await login.Log();
                 }
             }
             catch (SocketException ex)

@@ -20,12 +20,12 @@ namespace Server.UIHandler
 			this.productService = productService;
 		}
 
-		public void PublishProduct()
+		public async Task PublishProduct()
 		{
             Console.WriteLine("Product publication requested by client.");
 
             var fileCommonHandler = new FileCommsHandler(networkDataHelper);
-            string path = fileCommonHandler.ReceiveFile();
+            string path = await fileCommonHandler.ReceiveFile();
             if (path == "")
             {
                 Console.WriteLine("File does not exist. Product will not have an image");
@@ -35,9 +35,9 @@ namespace Server.UIHandler
                 Console.WriteLine("File recieved");
             }
 
-            byte[] lengthBytes = networkDataHelper.Receive(Protocol.FixedDataSize);
+            byte[] lengthBytes = await networkDataHelper.ReceiveAsync(Protocol.FixedDataSize);
             int dataLength = conversionHandler.ConvertBytesToInt(lengthBytes);
-            byte[] dataBytes = networkDataHelper.Receive(dataLength);
+            byte[] dataBytes = await networkDataHelper.ReceiveAsync(dataLength);
             string data = conversionHandler.ConvertBytesToString(dataBytes);
             string[] dataParts = data.Split(':');
 
@@ -77,12 +77,12 @@ namespace Server.UIHandler
             }
         }
 
-        public void UpdateProduct()
+        public async Task UpdateProduct()
         {
 
-            byte[] lengthBytes = networkDataHelper.Receive(Protocol.FixedDataSize);
+            byte[] lengthBytes = await networkDataHelper.ReceiveAsync(Protocol.FixedDataSize);
             int dataLength = conversionHandler.ConvertBytesToInt(lengthBytes);
-            byte[] dataBytes = networkDataHelper.Receive(dataLength);
+            byte[] dataBytes = await networkDataHelper.ReceiveAsync(dataLength);
             string data = conversionHandler.ConvertBytesToString(dataBytes);
 
             try
@@ -122,12 +122,12 @@ namespace Server.UIHandler
             }
         }
 
-        public void UpdateProductImage()
+        public async Task UpdateProductImage()
         {
             try
             {
                 var fileCommonHandler = new FileCommsHandler(networkDataHelper);
-                string path = fileCommonHandler.ReceiveFile();
+                string path = await fileCommonHandler.ReceiveFile();
                 if (path == "")
                 {
                     Console.WriteLine("File does not exist. Product will no longer have an image");
@@ -137,9 +137,9 @@ namespace Server.UIHandler
                     Console.WriteLine("File received");
                 }
 
-                byte[] lengthBytes = networkDataHelper.Receive(Protocol.FixedDataSize);
+                byte[] lengthBytes = await networkDataHelper.ReceiveAsync(Protocol.FixedDataSize);
                 int dataLength = conversionHandler.ConvertBytesToInt(lengthBytes);
-                byte[] dataBytes = networkDataHelper.Receive(dataLength);
+                byte[] dataBytes = await networkDataHelper.ReceiveAsync(dataLength);
                 string data = conversionHandler.ConvertBytesToString(dataBytes);
 
                 string product = data.Split(":")[0];
@@ -167,11 +167,11 @@ namespace Server.UIHandler
             }
         }
 
-        public void SendAllUserProducts()
+        public async Task SendAllUserProducts()
         {
-            byte[] lengthBytes = networkDataHelper.Receive(Protocol.FixedDataSize);
+            byte[] lengthBytes = await networkDataHelper.ReceiveAsync(Protocol.FixedDataSize);
             int dataLength = conversionHandler.ConvertBytesToInt(lengthBytes);
-            byte[] dataBytes = networkDataHelper.Receive(dataLength);
+            byte[] dataBytes = await networkDataHelper.ReceiveAsync(dataLength);
             string username = conversionHandler.ConvertBytesToString(dataBytes);
 
             try
@@ -202,11 +202,11 @@ namespace Server.UIHandler
             }
         }
         
-        public void SendAllProducts()
+        public async Task SendAllProducts()
         {
-            byte[] lengthBytes = networkDataHelper.Receive(Protocol.FixedDataSize);
+            byte[] lengthBytes = await networkDataHelper.ReceiveAsync(Protocol.FixedDataSize);
             int dataLength = conversionHandler.ConvertBytesToInt(lengthBytes);
-            byte[] dataBytes = networkDataHelper.Receive(dataLength);
+            byte[] dataBytes = await networkDataHelper.ReceiveAsync(dataLength);
             string username = conversionHandler.ConvertBytesToString(dataBytes);
 
             try
@@ -237,11 +237,11 @@ namespace Server.UIHandler
             }
         }
 
-        public void DeleteProduct()
+        public async Task DeleteProduct()
         {
-            byte[] lengthBytes = networkDataHelper.Receive(Protocol.FixedDataSize);
+            byte[] lengthBytes = await networkDataHelper.ReceiveAsync(Protocol.FixedDataSize);
             int dataLength = conversionHandler.ConvertBytesToInt(lengthBytes);
-            byte[] dataBytes = networkDataHelper.Receive(dataLength);
+            byte[] dataBytes = await networkDataHelper.ReceiveAsync(dataLength);
             string data = conversionHandler.ConvertBytesToString(dataBytes);
 
             try
@@ -264,11 +264,11 @@ namespace Server.UIHandler
             }
         }
 
-        public void SearchProducts()
+        public async Task SearchProducts()
         {
-            byte[] lengthBytes = networkDataHelper.Receive(Protocol.FixedDataSize);
+            byte[] lengthBytes = await networkDataHelper.ReceiveAsync(Protocol.FixedDataSize);
             int dataLength = conversionHandler.ConvertBytesToInt(lengthBytes);
-            byte[] dataBytes = networkDataHelper.Receive(dataLength);
+            byte[] dataBytes = await networkDataHelper.ReceiveAsync(dataLength);
             string name = conversionHandler.ConvertBytesToString(dataBytes);
 
             try
@@ -298,11 +298,11 @@ namespace Server.UIHandler
             }
         }
 
-        public void BuyProduct()
+        public async Task BuyProduct()
         {
-            byte[] lengthBytes = networkDataHelper.Receive(Protocol.FixedDataSize);
+            byte[] lengthBytes = await networkDataHelper.ReceiveAsync(Protocol.FixedDataSize);
             int dataLength = conversionHandler.ConvertBytesToInt(lengthBytes);
-            byte[] dataBytes = networkDataHelper.Receive(dataLength);
+            byte[] dataBytes = await networkDataHelper.ReceiveAsync(dataLength);
             string data = conversionHandler.ConvertBytesToString(dataBytes);
 
             try
@@ -325,11 +325,11 @@ namespace Server.UIHandler
             }
         }
         
-        public void SendAllPurchases()
+        public async Task SendAllPurchases()
         {
-            byte[] lengthBytes = networkDataHelper.Receive(Protocol.FixedDataSize);
+            byte[] lengthBytes = await networkDataHelper.ReceiveAsync(Protocol.FixedDataSize);
             int dataLength = conversionHandler.ConvertBytesToInt(lengthBytes);
-            byte[] dataBytes = networkDataHelper.Receive(dataLength);
+            byte[] dataBytes = await networkDataHelper.ReceiveAsync(dataLength);
             string username = conversionHandler.ConvertBytesToString(dataBytes);
             try
             {
@@ -359,11 +359,11 @@ namespace Server.UIHandler
             }
         }
 
-        public void RateProduct()
+        public async Task RateProduct()
         {
-            byte[] lengthBytes = networkDataHelper.Receive(Protocol.FixedDataSize);
+            byte[] lengthBytes = await networkDataHelper.ReceiveAsync(Protocol.FixedDataSize);
             int dataLength = conversionHandler.ConvertBytesToInt(lengthBytes);
-            byte[] dataBytes = networkDataHelper.Receive(dataLength);
+            byte[] dataBytes = await networkDataHelper.ReceiveAsync(dataLength);
             string review = conversionHandler.ConvertBytesToString(dataBytes);
 
             try
@@ -394,11 +394,11 @@ namespace Server.UIHandler
             }
         }
 
-        public void SendAllProductReviews()
+        public async Task SendAllProductReviews()
         {
-            byte[] lengthBytes = networkDataHelper.Receive(Protocol.FixedDataSize);
+            byte[] lengthBytes = await networkDataHelper.ReceiveAsync(Protocol.FixedDataSize);
             int dataLength = conversionHandler.ConvertBytesToInt(lengthBytes);
-            byte[] dataBytes = networkDataHelper.Receive(dataLength);
+            byte[] dataBytes = await networkDataHelper.ReceiveAsync(dataLength);
             string data = conversionHandler.ConvertBytesToString(dataBytes);
 
             try
@@ -432,11 +432,11 @@ namespace Server.UIHandler
             }
         }
 
-        public void DownloadProductImage()
+        public async Task DownloadProductImage()
         {
-            byte[] lengthBytes = networkDataHelper.Receive(Protocol.FixedDataSize);
+            byte[] lengthBytes = await networkDataHelper.ReceiveAsync(Protocol.FixedDataSize);
             int dataLength = conversionHandler.ConvertBytesToInt(lengthBytes);
-            byte[] dataBytes = networkDataHelper.Receive(dataLength);
+            byte[] dataBytes = await networkDataHelper.ReceiveAsync(dataLength);
             string imagePath = conversionHandler.ConvertBytesToString(dataBytes);
 
             try
@@ -461,23 +461,23 @@ namespace Server.UIHandler
             }
         }
 
-        private void Send(string response)
+        private async Task Send(string response)
         {
             byte[] responseBytes = conversionHandler.ConvertStringToBytes(response);
             int responseLength = responseBytes.Length;
 
             byte[] lengthBytes = conversionHandler.ConvertIntToBytes(responseLength);
-            networkDataHelper.Send(lengthBytes);
-            networkDataHelper.Send(responseBytes);
+            await networkDataHelper.SendAsync(lengthBytes);
+            await networkDataHelper.SendAsync(responseBytes);
         }
 
-        private void SendResponse(byte[] responseBytes)
+        private async Task SendResponse(byte[] responseBytes)
         {
             int responseLength = responseBytes.Length;
 
             byte[] lengthBytes = conversionHandler.ConvertIntToBytes(responseLength);
-            networkDataHelper.Send(lengthBytes);
-            networkDataHelper.Send(responseBytes);
+            await networkDataHelper.SendAsync(lengthBytes);
+            await networkDataHelper.SendAsync(responseBytes);
         }
     }
 }

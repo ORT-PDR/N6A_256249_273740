@@ -17,17 +17,17 @@ namespace Communication
             _tcpClient = tcpClient;
         }
 
-        public void Send(byte[] data) 
+        public async Task SendAsync(byte[] data) 
         {
             int offset = 0;
             int size = data.Length;
 
             var networstream = _tcpClient.GetStream();
-            networstream.Write(data, offset, size);
+            await networstream.WriteAsync(data, offset, size);
         }
 
 
-        public byte[] Receive(int length)
+        public async Task<byte[]> ReceiveAsync(int length)
         {
             byte[] response = new byte[length];
             int offset = 0;
@@ -36,16 +36,16 @@ namespace Communication
 
             while (offset < length)
             {
-                int received = networkStream.Read(response, offset, length - offset);   
+                int received = await networkStream.ReadAsync(response, offset, length - offset);   
                 if (received == 0)
                 {
+                    Console.WriteLine("Error receiving data");
                     throw new SocketException();
                 }
                 offset += received;
 
             }
             return response;
-
         }
     }
 }

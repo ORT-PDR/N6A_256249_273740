@@ -16,11 +16,11 @@ namespace Server.UIHandler
             _userService = userService;
         }
 
-        public void Authenticate()
+        public async Task Authenticate()
         {
-            byte[] lengthBytes = networkDataHelper.Receive(Protocol.FixedDataSize);
+            byte[] lengthBytes = await networkDataHelper.ReceiveAsync(Protocol.FixedDataSize);
             int dataLength = conversionHandler.ConvertBytesToInt(lengthBytes);
-            byte[] credentialsBytes = networkDataHelper.Receive(dataLength);
+            byte[] credentialsBytes = await networkDataHelper.ReceiveAsync(dataLength);
             string credentials = conversionHandler.ConvertBytesToString(credentialsBytes);
             string[] credentialsParts = credentials.Split(':');
 
@@ -33,21 +33,21 @@ namespace Server.UIHandler
 
                 string response = authenticationResult ? "Authentication successful" : "Authentication failed";
                 byte[] responseBytes = conversionHandler.ConvertStringToBytes(response);
-                SendResponse(responseBytes);
+                await SendResponse(responseBytes);
             }
             else
             {
                 Console.WriteLine("Invalid credentials format.");
                 byte[] responseBytes = conversionHandler.ConvertStringToBytes("Invalid credentials format");
-                SendResponse(responseBytes);
+                await SendResponse(responseBytes);
             }
         }
 
-        public void CreateUser()
+        public async Task CreateUser()
         {
-            byte[] lengthBytes = networkDataHelper.Receive(Protocol.FixedDataSize);
+            byte[] lengthBytes = await networkDataHelper.ReceiveAsync(Protocol.FixedDataSize);
             int dataLength = conversionHandler.ConvertBytesToInt(lengthBytes);
-            byte[] credentialsBytes = networkDataHelper.Receive(dataLength);
+            byte[] credentialsBytes = await networkDataHelper.ReceiveAsync(dataLength);
             string credentials = conversionHandler.ConvertBytesToString(credentialsBytes);
             string[] credentialsParts = credentials.Split(':');
 
@@ -61,30 +61,30 @@ namespace Server.UIHandler
 
                     Console.WriteLine("User created successfully.");
                     byte[] responseBytes = conversionHandler.ConvertStringToBytes("success");
-                    SendResponse(responseBytes);
+                    await SendResponse(responseBytes);
                 }
                 catch(Exception e)
                 {
                     Console.WriteLine("New user credentials were not valid.");
                     byte[] responseBytes = conversionHandler.ConvertStringToBytes(e.Message);
-                    SendResponse(responseBytes);
+                    await SendResponse(responseBytes);
                 }
             }
             else
             {
                 Console.WriteLine("Invalid credentials format for new user.");
                 byte[] responseBytes = conversionHandler.ConvertStringToBytes("Invalid credentials format");
-                SendResponse(responseBytes);
+                await SendResponse(responseBytes);
             }
         }
 
-        private void SendResponse(byte[] responseBytes)
+        private async Task SendResponse(byte[] responseBytes)
         {
             int responseLength = responseBytes.Length;
 
             byte[] lengthBytes = conversionHandler.ConvertIntToBytes(responseLength);
-            networkDataHelper.Send(lengthBytes);
-            networkDataHelper.Send(responseBytes);
+            await networkDataHelper.SendAsync(lengthBytes);
+            await networkDataHelper.SendAsync(responseBytes);
         }
     }
 }

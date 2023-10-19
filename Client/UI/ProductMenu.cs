@@ -25,7 +25,7 @@ namespace Client.UI
             tcpClient = _tcpClient;
         }
 
-        public void ShowMainMenu(string _user)
+        public async Task ShowMainMenu(string _user)
         {
             Console.Clear();
             while (true)
@@ -72,7 +72,7 @@ namespace Client.UI
             }
         }
 
-        private void PublishProduct()
+        private async Task PublishProduct()
         {
             Console.Clear();
             Console.WriteLine("Enter product details:");
@@ -90,7 +90,7 @@ namespace Client.UI
 
             try
             {
-                networkDataHelper.Send(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.PublishProduct));
+                await networkDataHelper.SendAsync(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.PublishProduct));
 
                 if (imageAbsPath != null)
                 {
@@ -101,9 +101,9 @@ namespace Client.UI
                 string data = $"{name}:{description}:{price}:{stock}:{user}";
                 Send(data);
 
-                byte[] lBytes = networkDataHelper.Receive(Protocol.FixedDataSize);
+                byte[] lBytes = await networkDataHelper.ReceiveAsync(Protocol.FixedDataSize);
                 int dataLength = conversionHandler.ConvertBytesToInt(lBytes);
-                byte[] responseBytes = networkDataHelper.Receive(dataLength);
+                byte[] responseBytes = await networkDataHelper.ReceiveAsync(dataLength);
                 string response = conversionHandler.ConvertBytesToString(responseBytes);
 
                 if (response == "Success")
@@ -135,14 +135,14 @@ namespace Client.UI
             }
         }
 
-        private void UpdateProduct()
+        private async Task UpdateProduct()
         {
             Console.Clear();
-            var userProducts = RetrieveAllUserProducts();
+            var userProducts = await RetrieveAllUserProducts();
 
-            byte[] lBytes = networkDataHelper.Receive(Protocol.FixedDataSize);
+            byte[] lBytes = await networkDataHelper.ReceiveAsync(Protocol.FixedDataSize);
             int dataLength = conversionHandler.ConvertBytesToInt(lBytes);
-            byte[] listBytes = networkDataHelper.Receive(dataLength);
+            byte[] listBytes = await networkDataHelper.ReceiveAsync(dataLength);
             string response = conversionHandler.ConvertBytesToString(listBytes);
 
             if (response == "Success")
@@ -178,16 +178,16 @@ namespace Client.UI
             Console.ReadKey();
         }
 
-        private string[] RetrieveAllUserProducts()
+        private async Task<string[]> RetrieveAllUserProducts()
         {
             try
             {
-                networkDataHelper.Send(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.GetAllUserProducts));
+                await networkDataHelper.SendAsync(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.GetAllUserProducts));
                 Send(user);
 
-                byte[] lBytes = networkDataHelper.Receive(Protocol.FixedDataSize);
+                byte[] lBytes = await networkDataHelper.ReceiveAsync(Protocol.FixedDataSize);
                 int dataLength = conversionHandler.ConvertBytesToInt(lBytes);
-                byte[] listBytes = networkDataHelper.Receive(dataLength);
+                byte[] listBytes = await networkDataHelper.ReceiveAsync(dataLength);
                 string list = conversionHandler.ConvertBytesToString(listBytes);
                 string[] products = list.Split(";");
                 return products;
@@ -199,16 +199,16 @@ namespace Client.UI
             return new string[0];
         }
         
-        private string[] RetrieveAllProducts()
+        private async Task<string[]> RetrieveAllProducts()
         {
             try
             {
-                networkDataHelper.Send(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.GetAllProducts));
+                await networkDataHelper.SendAsync(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.GetAllProducts));
                 Send(user);
 
-                byte[] lBytes = networkDataHelper.Receive(Protocol.FixedDataSize);
+                byte[] lBytes = await networkDataHelper.ReceiveAsync(Protocol.FixedDataSize);
                 int dataLength = conversionHandler.ConvertBytesToInt(lBytes);
-                byte[] listBytes = networkDataHelper.Receive(dataLength);
+                byte[] listBytes = await networkDataHelper.ReceiveAsync(dataLength);
                 string list = conversionHandler.ConvertBytesToString(listBytes);
                 string[] products = list.Split(";");
                 return products;
@@ -300,7 +300,7 @@ namespace Client.UI
             }
         }
 
-        private void SendModifiedValue(string productName, string attribute, string newValue)
+        private async Task SendModifiedValue(string productName, string attribute, string newValue)
         {
             try
             {
@@ -311,16 +311,16 @@ namespace Client.UI
 
                 else
                 {
-                    networkDataHelper.Send(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.UpdateProduct));
+                    await networkDataHelper.SendAsync(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.UpdateProduct));
 
                     string data = $"{productName}:{attribute}:{newValue}:{user}";
 
                     Send(data);
                 }
 
-                byte[] lBytes = networkDataHelper.Receive(Protocol.FixedDataSize);
+                byte[] lBytes = await networkDataHelper.ReceiveAsync(Protocol.FixedDataSize);
                 int dataLength = conversionHandler.ConvertBytesToInt(lBytes);
-                byte[] responseBytes = networkDataHelper.Receive(dataLength);
+                byte[] responseBytes = await networkDataHelper.ReceiveAsync(dataLength);
                 string response = conversionHandler.ConvertBytesToString(responseBytes);
 
                 if (response == "Success")
@@ -351,11 +351,11 @@ namespace Client.UI
             }
         }
 
-        private void SendNewImage(string productName, string newImagePath)
+        private async Task SendNewImage(string productName, string newImagePath)
         {
             try
             {
-                networkDataHelper.Send(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.UpdateProductImage));
+                await networkDataHelper.SendAsync(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.UpdateProductImage));
                 var fileCommonHandler = new FileCommsHandler(networkDataHelper);
                 fileCommonHandler.SendFile(newImagePath);
                 Send($"{productName}:{user}");
@@ -377,16 +377,16 @@ namespace Client.UI
             }
         }
 
-        private void DeleteProduct()
+        private async Task DeleteProduct()
         {
             Console.Clear();
             try
             {
-                var userProducts = RetrieveAllUserProducts();
+                var userProducts = await RetrieveAllUserProducts();
                 
-                byte[] lenBytes = networkDataHelper.Receive(Protocol.FixedDataSize);
+                byte[] lenBytes = await networkDataHelper.ReceiveAsync(Protocol.FixedDataSize);
                 int responseLength = conversionHandler.ConvertBytesToInt(lenBytes);
-                byte[] resBytes = networkDataHelper.Receive(responseLength);
+                byte[] resBytes = await networkDataHelper.ReceiveAsync(responseLength);
                 string res = conversionHandler.ConvertBytesToString(resBytes);
 
                 if (res == "Success")
@@ -409,12 +409,12 @@ namespace Client.UI
                             string confirmation = Console.ReadLine();
                             if (confirmation.Equals("yes", StringComparison.OrdinalIgnoreCase))
                             {
-                                networkDataHelper.Send(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.DeleteProduct));
+                                await networkDataHelper.SendAsync(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.DeleteProduct));
                                 Send(userProducts[selectedIndex-1].Split(":")[0]+":"+user);
                             
-                                byte[] lBytes = networkDataHelper.Receive(Protocol.FixedDataSize);
+                                byte[] lBytes = await networkDataHelper.ReceiveAsync(Protocol.FixedDataSize);
                                 int dataLength = conversionHandler.ConvertBytesToInt(lBytes);
-                                byte[] responseBytes = networkDataHelper.Receive(dataLength);
+                                byte[] responseBytes = await networkDataHelper.ReceiveAsync(dataLength);
                                 string response = conversionHandler.ConvertBytesToString(responseBytes);
 
                                 if (response == "Success")
@@ -456,14 +456,14 @@ namespace Client.UI
             }
         }
 
-        private void ViewProductsMenu()
+        private async Task ViewProductsMenu()
         {
             Console.Clear();
-            var products = RetrieveAllProducts();
+            var products = await RetrieveAllProducts();
 
-            byte[] lBytes = networkDataHelper.Receive(Protocol.FixedDataSize);
+            byte[] lBytes = await networkDataHelper.ReceiveAsync(Protocol.FixedDataSize);
             int dataLength = conversionHandler.ConvertBytesToInt(lBytes);
-            byte[] responseBytes = networkDataHelper.Receive(dataLength);
+            byte[] responseBytes = await networkDataHelper.ReceiveAsync(dataLength);
             string response = conversionHandler.ConvertBytesToString(responseBytes);
 
             if (response == "Success")
@@ -555,7 +555,7 @@ namespace Client.UI
             }
         }
 
-        private void BuyProduct(string[] product)
+        private async Task BuyProduct(string[] product)
         {
             if (int.Parse(product[2]) <= 0)
             {
@@ -573,12 +573,12 @@ namespace Client.UI
             string confirmation = Console.ReadLine();
             if (confirmation.Equals("yes", StringComparison.OrdinalIgnoreCase))
             {
-                networkDataHelper.Send(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.BuyProduct));
+                await networkDataHelper.SendAsync(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.BuyProduct));
                 Send(product[0]+":"+product[5]+":"+user);
                             
-                byte[] lBytes = networkDataHelper.Receive(Protocol.FixedDataSize);
+                byte[] lBytes = await networkDataHelper.ReceiveAsync(Protocol.FixedDataSize);
                 int dataLength = conversionHandler.ConvertBytesToInt(lBytes);
-                byte[] responseBytes = networkDataHelper.Receive(dataLength);
+                byte[] responseBytes = await networkDataHelper.ReceiveAsync(dataLength);
                 string response = conversionHandler.ConvertBytesToString(responseBytes);
 
                 if (response == "Success")
@@ -598,15 +598,15 @@ namespace Client.UI
             }
         }
 
-        private void ViewPurchases()
+        private async Task ViewPurchases()
         {
             Console.Clear();
-            var products = RetrieveAllPurchases();
+            var products = await RetrieveAllPurchases();
 
 
-            byte[] lb = networkDataHelper.Receive(Protocol.FixedDataSize);
+            byte[] lb = await networkDataHelper.ReceiveAsync(Protocol.FixedDataSize);
             int dl = conversionHandler.ConvertBytesToInt(lb);
-            byte[] responseBytes = networkDataHelper.Receive(dl);
+            byte[] responseBytes = await networkDataHelper.ReceiveAsync(dl);
             string response = conversionHandler.ConvertBytesToString(responseBytes);
 
             if (response == "Success")
@@ -658,14 +658,14 @@ namespace Client.UI
             }
         }
 
-        private void DownloadImage(string[] product)
+        private async Task DownloadImage(string[] product)
         {
-            networkDataHelper.Send(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.DownloadProductImage));
+            await networkDataHelper.SendAsync(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.DownloadProductImage));
             Send(product[4]);
 
-            byte[] lBytes = networkDataHelper.Receive(Protocol.FixedDataSize);
+            byte[] lBytes = await networkDataHelper.ReceiveAsync(Protocol.FixedDataSize);
             int dataLength = conversionHandler.ConvertBytesToInt(lBytes);
-            byte[] responseBytes = networkDataHelper.Receive(dataLength);
+            byte[] responseBytes = await networkDataHelper.ReceiveAsync(dataLength);
             string response = conversionHandler.ConvertBytesToString(responseBytes);
 
             if (response == "Success")
@@ -679,16 +679,16 @@ namespace Client.UI
             Console.Clear();
         }
 
-        private string[] RetrieveAllPurchases()
+        private async Task<string[]> RetrieveAllPurchases()
         {
             try
             {
-                networkDataHelper.Send(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.GetAllPurchases));
+                await networkDataHelper.SendAsync(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.GetAllPurchases));
                 Send(user);
 
-                byte[] lBytes = networkDataHelper.Receive(Protocol.FixedDataSize);
+                byte[] lBytes = await networkDataHelper.ReceiveAsync(Protocol.FixedDataSize);
                 int dataLength = conversionHandler.ConvertBytesToInt(lBytes);
-                byte[] listBytes = networkDataHelper.Receive(dataLength);
+                byte[] listBytes = await networkDataHelper.ReceiveAsync(dataLength);
                 string list = conversionHandler.ConvertBytesToString(listBytes);
                 string[] products = list.Split(";");
                 return products;
@@ -702,7 +702,7 @@ namespace Client.UI
             return new string[0];
         }
         
-        private void ReviewProduct(string [] product)
+        private async Task ReviewProduct(string [] product)
         {
             Console.WriteLine("Enter your Score from 1 to 5:");
             string score = Console.ReadLine();
@@ -711,12 +711,12 @@ namespace Client.UI
 
             try
             {
-                networkDataHelper.Send(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.RateProduct));
+                await networkDataHelper.SendAsync(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.RateProduct));
                 Send(product[0]+":"+product[5]+":"+score+":"+review+":"+user);
             
-                byte[] lBytes = networkDataHelper.Receive(Protocol.FixedDataSize);
+                byte[] lBytes = await networkDataHelper.ReceiveAsync(Protocol.FixedDataSize);
                 int dataLength = conversionHandler.ConvertBytesToInt(lBytes);
-                byte[] responseBytes = networkDataHelper.Receive(dataLength);
+                byte[] responseBytes = await networkDataHelper.ReceiveAsync(dataLength);
                 string response = conversionHandler.ConvertBytesToString(responseBytes);
 
                 if (response == "Success")
@@ -744,13 +744,13 @@ namespace Client.UI
             }
         }
 
-        private void ExploreReviews(string[] product)
+        private async Task ExploreReviews(string[] product)
         {
-            var reviews = RetrieveProductReviews(product);
+            var reviews = await RetrieveProductReviews(product);
 
-            byte[] lBytes = networkDataHelper.Receive(Protocol.FixedDataSize);
+            byte[] lBytes = await networkDataHelper.ReceiveAsync(Protocol.FixedDataSize);
             int dataLength = conversionHandler.ConvertBytesToInt(lBytes);
-            byte[] responseBytes = networkDataHelper.Receive(dataLength);
+            byte[] responseBytes = await networkDataHelper.ReceiveAsync(dataLength);
             string response = conversionHandler.ConvertBytesToString(responseBytes);
 
             if (response == "Success")
@@ -779,16 +779,16 @@ namespace Client.UI
             }
         }
 
-        private string[] RetrieveProductReviews(string[] product)
+        private async Task<string[]> RetrieveProductReviews(string[] product)
         {
             try
             {
-                networkDataHelper.Send(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.GetAllProductReviews));
+                await networkDataHelper.SendAsync(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.GetAllProductReviews));
                 Send(product[0]+":"+product[5]);
 
-                byte[] lBytes = networkDataHelper.Receive(Protocol.FixedDataSize);
+                byte[] lBytes = await networkDataHelper.ReceiveAsync(Protocol.FixedDataSize);
                 int dataLength = conversionHandler.ConvertBytesToInt(lBytes);
-                byte[] listBytes = networkDataHelper.Receive(dataLength);
+                byte[] listBytes = await networkDataHelper.ReceiveAsync(dataLength);
                 string list = conversionHandler.ConvertBytesToString(listBytes);
                 string[] reviews = list.Split(";");
                 return reviews;
@@ -802,22 +802,22 @@ namespace Client.UI
             return new string[0];
         }
 
-        private void SearchProducts(string productName)
+        private async Task SearchProducts(string productName)
         {
             try
             {
                 Console.Clear();
-                networkDataHelper.Send(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.SearchProducts));
+                await networkDataHelper.SendAsync(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.SearchProducts));
                 Send(productName);
 
-                byte[] lBytes = networkDataHelper.Receive(Protocol.FixedDataSize);
+                byte[] lBytes = await networkDataHelper.ReceiveAsync(Protocol.FixedDataSize);
                 int dataLength = conversionHandler.ConvertBytesToInt(lBytes);
-                byte[] responseBytes = networkDataHelper.Receive(dataLength);
+                byte[] responseBytes = await networkDataHelper.ReceiveAsync(dataLength);
                 string response = conversionHandler.ConvertBytesToString(responseBytes);
 
-                byte[] lb = networkDataHelper.Receive(Protocol.FixedDataSize);
+                byte[] lb = await networkDataHelper.ReceiveAsync(Protocol.FixedDataSize);
                 int dl = conversionHandler.ConvertBytesToInt(lb);
-                byte[] rb = networkDataHelper.Receive(dl);
+                byte[] rb = await networkDataHelper.ReceiveAsync(dl);
                 string r = conversionHandler.ConvertBytesToString(rb);
 
                 if (r == "Success")
@@ -883,14 +883,14 @@ namespace Client.UI
             }
         }
 
-        private void Send(string response)
+        private async Task Send(string response)
         {
             byte[] responseBytes = conversionHandler.ConvertStringToBytes(response);
             int responseLength = responseBytes.Length;
 
             byte[] lengthBytes = conversionHandler.ConvertIntToBytes(responseLength);
-            networkDataHelper.Send(lengthBytes);
-            networkDataHelper.Send(responseBytes);
+            networkDataHelper.SendAsync(lengthBytes);
+            networkDataHelper.SendAsync(responseBytes);
         }
     }
 }
