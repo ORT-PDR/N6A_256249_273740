@@ -20,13 +20,13 @@ namespace Communication.FileHandlers
 
         public async Task SendFile(string path)
         {
-            if (_fileHandler.FileExists(path))
+            if (await _fileHandler.FileExists(path))
             {
                 var fileName = _fileHandler.GetFileName(path);
-                await _networkDataHelper.SendAsync(_conversionHandler.ConvertIntToBytes(fileName.Length));
-                await _networkDataHelper.SendAsync(_conversionHandler.ConvertStringToBytes(fileName));
+                await _networkDataHelper.SendAsync(_conversionHandler.ConvertIntToBytes((await fileName).Length));
+                await _networkDataHelper.SendAsync(_conversionHandler.ConvertIntToBytes(await fileName));
 
-                long fileSize = _fileHandler.GetFileSize(path);
+                long fileSize = await _fileHandler.GetFileSize(path);
                 var convertedFileSize = _conversionHandler.ConvertLongToBytes(fileSize);
                 await _networkDataHelper.SendAsync(convertedFileSize);
                 await SendFileWithStream(fileSize, path);
@@ -52,10 +52,10 @@ namespace Communication.FileHandlers
             {
                 long fileSize = _conversionHandler.ConvertBytesToLong(await _networkDataHelper.ReceiveAsync(Protocol.FixedFileSize));
 
-                string saveFolderPath = "../../Server/productImages";
+                string saveFolderPath = "../../../productImages";
 
                 fullSavePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, saveFolderPath, fileName);
-                ReceiveFileWithStreams(fileSize, fullSavePath);
+                await ReceiveFileWithStreams(fileSize, fullSavePath);
             }
             return fullSavePath;
         }
@@ -72,12 +72,12 @@ namespace Communication.FileHandlers
                 if (currentPart == fileParts)
                 {
                     var lastPartSize = (int)(fileSize - offset);
-                    data = _fileStreamHandler.Read(path, offset, lastPartSize); 
+                    data = await _fileStreamHandler.Read(path, offset, lastPartSize); 
                     offset += lastPartSize;
                 }
                 else
                 {
-                    data = _fileStreamHandler.Read(path, offset, Protocol.MaxPacketSize);
+                    data = await _fileStreamHandler.Read(path, offset, Protocol.MaxPacketSize);
                     offset += Protocol.MaxPacketSize;
                 }
 
@@ -106,7 +106,7 @@ namespace Communication.FileHandlers
                     data = await _networkDataHelper.ReceiveAsync(Protocol.MaxPacketSize);
                     offset += Protocol.MaxPacketSize;
                 }
-                _fileStreamHandler.Write(fileName, data);
+                await _fileStreamHandler.Write(fileName, data);
                 currentPart++;
             }
         }

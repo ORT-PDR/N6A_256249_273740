@@ -62,18 +62,18 @@ namespace Server.UIHandler
                 {
                     string resp = "All product fields must have a value!";
                     byte[] respBytes = conversionHandler.ConvertStringToBytes(resp);
-                    SendResponse(respBytes);
+                    await SendResponse(respBytes);
                 }
 
                 string response = "Success";
                 byte[] responseBytes = conversionHandler.ConvertStringToBytes(response);
-                SendResponse(responseBytes);
+                await SendResponse(responseBytes);
             }
             catch(Exception e)
             {
                 string resp = "There was an error: " + e.Message;
                 byte[] respBytes = conversionHandler.ConvertStringToBytes(resp);
-                SendResponse(respBytes);
+                await SendResponse(respBytes);
             }
         }
 
@@ -112,13 +112,13 @@ namespace Server.UIHandler
                 productService.UpdateProduct(p);
                 string response = "Success";
                 byte[] responseBytes = conversionHandler.ConvertStringToBytes(response);
-                SendResponse(responseBytes);
+                await SendResponse(responseBytes);
             }
             catch(Exception e)
             {
                 string response = e.Message;
                 byte[] responseBytes = conversionHandler.ConvertStringToBytes(response);
-                SendResponse(responseBytes);
+                await SendResponse(responseBytes);
             }
         }
 
@@ -157,13 +157,13 @@ namespace Server.UIHandler
 
                 string response = "Success";
                 byte[] responseBytes = conversionHandler.ConvertStringToBytes(response);
-                SendResponse(responseBytes);
+                await SendResponse(responseBytes);
             }
             catch (Exception e)
             {
                 string response = e.Message;
                 byte[] responseBytes = conversionHandler.ConvertStringToBytes(response);
-                SendResponse(responseBytes);
+                await SendResponse(responseBytes);
             }
         }
 
@@ -188,17 +188,17 @@ namespace Server.UIHandler
                     productNames = productNames.TrimEnd(';');
                 }
 
-                Send(productNames);
+                await Send(productNames);
 
                 string response = "Success";
                 byte[] responseBytes = conversionHandler.ConvertStringToBytes(response);
-                SendResponse(responseBytes);
+                await SendResponse(responseBytes);
             }
             catch(Exception e)
             {
                 string response = e.Message;
                 byte[] responseBytes = conversionHandler.ConvertStringToBytes(response);
-                SendResponse(responseBytes);
+                await SendResponse(responseBytes);
             }
         }
         
@@ -223,17 +223,17 @@ namespace Server.UIHandler
                     productNames = productNames.TrimEnd(';');
                 }
 
-                Send(productNames);
+                await Send(productNames);
 
                 string response = "Success";
                 byte[] responseBytes = conversionHandler.ConvertStringToBytes(response);
-                SendResponse(responseBytes);
+                await SendResponse(responseBytes);
             }
             catch (Exception e)
             {
                 string response = e.Message;
                 byte[] responseBytes = conversionHandler.ConvertStringToBytes(response);
-                SendResponse(responseBytes);
+                await SendResponse(responseBytes);
             }
         }
 
@@ -254,13 +254,13 @@ namespace Server.UIHandler
 
                 string response = "Success";
                 byte[] responseBytes = conversionHandler.ConvertStringToBytes(response);
-                SendResponse(responseBytes);
+                await SendResponse(responseBytes);
             }
             catch (Exception e)
             {
                 string response = e.Message;
                 byte[] responseBytes = conversionHandler.ConvertStringToBytes(response);
-                SendResponse(responseBytes);
+                await SendResponse(responseBytes);
             }
         }
 
@@ -284,17 +284,17 @@ namespace Server.UIHandler
                 {
                     productNames = productNames.TrimEnd(';');
                 }
-                Send(productNames);
+                await Send(productNames);
 
                 string response = "Success";
                 byte[] responseBytes = conversionHandler.ConvertStringToBytes(response);
-                SendResponse(responseBytes);
+                await SendResponse(responseBytes);
             }
             catch (Exception e)
             {
                 string response = e.Message;
                 byte[] responseBytes = conversionHandler.ConvertStringToBytes(response);
-                SendResponse(responseBytes);
+                await SendResponse(responseBytes);
             }
         }
 
@@ -315,13 +315,13 @@ namespace Server.UIHandler
 
                 string response = "Success";
                 byte[] responseBytes = conversionHandler.ConvertStringToBytes(response);
-                SendResponse(responseBytes);
+                await SendResponse(responseBytes);
             }
             catch (Exception e)
             {
                 string response = e.Message;
                 byte[] responseBytes = conversionHandler.ConvertStringToBytes(response);
-                SendResponse(responseBytes);
+                await SendResponse(responseBytes);
             }
         }
         
@@ -345,17 +345,17 @@ namespace Server.UIHandler
                     productNames = productNames.TrimEnd(';');
                 }
 
-                Send(productNames);
+                await Send(productNames);
 
                 string response = "Success";
                 byte[] responseBytes = conversionHandler.ConvertStringToBytes(response);
-                SendResponse(responseBytes);
+                await SendResponse(responseBytes);
             }
             catch (Exception e)
             {
                 string response = e.Message;
                 byte[] responseBytes = conversionHandler.ConvertStringToBytes(response);
-                SendResponse(responseBytes);
+                await SendResponse(responseBytes);
             }
         }
 
@@ -379,7 +379,7 @@ namespace Server.UIHandler
                     productService.AddReview(product, user, scoreInt, reviewText, creator);
                     string response = "Success";
                     byte[] responseBytes = conversionHandler.ConvertStringToBytes(response);
-                    SendResponse(responseBytes);
+                    await SendResponse(responseBytes);
                 }
                 else
                 {
@@ -390,7 +390,7 @@ namespace Server.UIHandler
             {
                 string response = e.Message;
                 byte[] responseBytes = conversionHandler.ConvertStringToBytes(response);
-                SendResponse(responseBytes);
+                await SendResponse(responseBytes);
             }
         }
 
@@ -418,17 +418,17 @@ namespace Server.UIHandler
                     reviewsString = reviewsString.TrimEnd(';');
                 }
 
-                Send(reviewsString);
+                await Send(reviewsString);
 
                 string response = "Success";
                 byte[] responseBytes = conversionHandler.ConvertStringToBytes(response);
-                SendResponse(responseBytes);
+                await SendResponse(responseBytes);
             }
             catch (Exception e)
             {
                 string response = e.Message;
                 byte[] responseBytes = conversionHandler.ConvertStringToBytes(response);
-                SendResponse(responseBytes);
+                await SendResponse(responseBytes);
             }
         }
 
@@ -451,13 +451,13 @@ namespace Server.UIHandler
                 }
                 
                 byte[] responseBytes = conversionHandler.ConvertStringToBytes("Success");
-                SendResponse(responseBytes);
+                await SendResponse(responseBytes);
                 Console.WriteLine("Image download was successful.");
             }
             catch(Exception e)
             {
                 byte[] responseBytes = conversionHandler.ConvertStringToBytes(e.Message);
-                SendResponse(responseBytes);
+                await SendResponse(responseBytes);
             }
         }
 

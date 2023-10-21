@@ -37,5 +37,10 @@ namespace Communication
         {
             return BitConverter.ToInt64(value);
         }
+
+        internal byte[] ConvertIntToBytes(object length)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

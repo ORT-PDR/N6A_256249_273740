@@ -62,7 +62,7 @@ namespace Client.UI
                                 Console.ReadKey();
 
                                 ProductMenu _productMenu = new ProductMenu(_tcpClient);
-                                _productMenu.ShowMainMenu(username);
+                                await _productMenu.ShowMainMenu(username);
                                 isAuthenticated = false;
                             }
                             else
@@ -105,7 +105,7 @@ namespace Client.UI
                                 Console.ReadKey();
 
                                 ProductMenu _productMenu = new ProductMenu(_tcpClient);
-                                _productMenu.ShowMainMenu(username);
+                                await _productMenu.ShowMainMenu(username);
                                 isAuthenticated = false;
                             }
                             else
