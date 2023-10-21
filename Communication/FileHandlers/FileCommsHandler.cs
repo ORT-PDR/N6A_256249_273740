@@ -24,7 +24,7 @@ namespace Communication.FileHandlers
             {
                 var fileName = _fileHandler.GetFileName(path);
                 await _networkDataHelper.SendAsync(_conversionHandler.ConvertIntToBytes((await fileName).Length));
-                await _networkDataHelper.SendAsync(_conversionHandler.ConvertIntToBytes(await fileName));
+                await _networkDataHelper.SendAsync(_conversionHandler.ConvertStringToBytes(await fileName));
 
                 long fileSize = await _fileHandler.GetFileSize(path);
                 var convertedFileSize = _conversionHandler.ConvertLongToBytes(fileSize);

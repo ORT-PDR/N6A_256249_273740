@@ -40,7 +40,7 @@ namespace Communication
                 if (received == 0)
                 {
                     Console.WriteLine("Error receiving data");
-                    throw new SocketException();
+                    throw new Exception();
                 }
                 offset += received;
 
