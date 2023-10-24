@@ -123,6 +123,7 @@ namespace Client.UI
             }
             catch (SocketException)
             {
+                Console.Clear();
                 Console.WriteLine("Server disconnected");
             }
             catch(FormatException formatEx)
@@ -336,6 +337,7 @@ namespace Client.UI
             }
             catch (SocketException)
             {
+                Console.Clear();
                 Console.WriteLine("Server disconnected");
                 Console.ReadKey();
             }
@@ -362,6 +364,7 @@ namespace Client.UI
             }
             catch (SocketException)
             {
+                Console.Clear();
                 Console.WriteLine("Server disconnected");
                 Console.ReadKey();
             }
@@ -380,79 +383,70 @@ namespace Client.UI
         private async Task DeleteProduct()
         {
             Console.Clear();
-            try
+            var userProducts = await RetrieveAllUserProducts();
+
+            byte[] lenBytes = await networkDataHelper.ReceiveAsync(Protocol.FixedDataSize);
+            int responseLength = conversionHandler.ConvertBytesToInt(lenBytes);
+            byte[] resBytes = await networkDataHelper.ReceiveAsync(responseLength);
+            string res = conversionHandler.ConvertBytesToString(resBytes);
+
+            if (res == "Success")
             {
-                var userProducts = await RetrieveAllUserProducts();
-                
-                byte[] lenBytes = await networkDataHelper.ReceiveAsync(Protocol.FixedDataSize);
-                int responseLength = conversionHandler.ConvertBytesToInt(lenBytes);
-                byte[] resBytes = await networkDataHelper.ReceiveAsync(responseLength);
-                string res = conversionHandler.ConvertBytesToString(resBytes);
-
-                if (res == "Success")
+                if (!userProducts.All(string.IsNullOrEmpty) && userProducts.Length > 0)
                 {
-                    if (!userProducts.All(string.IsNullOrEmpty) && userProducts.Length > 0)
+                    Console.WriteLine("Select a product to delete:");
+                    for (int i = 0; i < userProducts.Length; i++)
                     {
-                        Console.WriteLine("Select a product to delete:");
-                        for (int i = 0; i < userProducts.Length; i++)
-                        {
-                            string[] data = userProducts[i].Split(":");
-                            Console.WriteLine($"{i + 1}. Name: {data[0]} | Description: {data[1]} | Stock: {data[2]} | Price: {data[3]}");
-                        }
-                    
-                        var selectedProduct = Console.ReadLine();
+                        string[] data = userProducts[i].Split(":");
+                        Console.WriteLine(
+                            $"{i + 1}. Name: {data[0]} | Description: {data[1]} | Stock: {data[2]} | Price: {data[3]}");
+                    }
 
-                        if (int.TryParse(selectedProduct, out int selectedIndex) && selectedIndex >= 1 && selectedIndex <= userProducts.Length)
-                        {
-                            Console.WriteLine($"Are you sure you want to delete this product? (yes/no)");
+                    var selectedProduct = Console.ReadLine();
 
-                            string confirmation = Console.ReadLine();
-                            if (confirmation.Equals("yes", StringComparison.OrdinalIgnoreCase))
+                    if (int.TryParse(selectedProduct, out int selectedIndex) && selectedIndex >= 1 &&
+                        selectedIndex <= userProducts.Length)
+                    {
+                        Console.WriteLine($"Are you sure you want to delete this product? (yes/no)");
+
+                        string confirmation = Console.ReadLine();
+                        if (confirmation.Equals("yes", StringComparison.OrdinalIgnoreCase))
+                        {
+                            await networkDataHelper.SendAsync(
+                                conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.DeleteProduct));
+                            await Send(userProducts[selectedIndex - 1].Split(":")[0] + ":" + user);
+
+                            byte[] lBytes = await networkDataHelper.ReceiveAsync(Protocol.FixedDataSize);
+                            int dataLength = conversionHandler.ConvertBytesToInt(lBytes);
+                            byte[] responseBytes = await networkDataHelper.ReceiveAsync(dataLength);
+                            string response = conversionHandler.ConvertBytesToString(responseBytes);
+
+                            if (response == "Success")
                             {
-                                await networkDataHelper.SendAsync(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.DeleteProduct));
-                                await Send(userProducts[selectedIndex-1].Split(":")[0]+":"+user);
-                            
-                                byte[] lBytes = await networkDataHelper.ReceiveAsync(Protocol.FixedDataSize);
-                                int dataLength = conversionHandler.ConvertBytesToInt(lBytes);
-                                byte[] responseBytes = await networkDataHelper.ReceiveAsync(dataLength);
-                                string response = conversionHandler.ConvertBytesToString(responseBytes);
-
-                                if (response == "Success")
-                                {
-                                    Console.WriteLine("Product deleted successfully.");
-                                }
-                                else
-                                {
-                                    Console.WriteLine(response);
-                                    Console.WriteLine("Press any key to continue");
-                                    Console.ReadKey();
-                                }
+                                Console.WriteLine("Product deleted successfully.");
                             }
                             else
                             {
-                                Console.WriteLine("Product not deleted.");
+                                Console.WriteLine(response);
+                                Console.WriteLine("Press any key to continue");
+                                Console.ReadKey();
                             }
                         }
                         else
                         {
-                            Console.WriteLine("Invalid selection. Please select a valid product number or type 'back' to quit.");
+                            Console.WriteLine("Product not deleted.");
                         }
                     }
                     else
                     {
-                        Console.WriteLine("You have no products to delete.");
+                        Console.WriteLine(
+                            "Invalid selection. Please select a valid product number or type 'back' to quit.");
                     }
                 }
-            }
-            catch (SocketException)
-            {
-                Console.WriteLine("Server disconnected");
-                Console.ReadKey();
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("Unexpected Exception: " + ex.Message);
-                Console.ReadKey();
+                else
+                {
+                    Console.WriteLine("You have no products to delete.");
+                }
             }
         }
 
@@ -734,6 +728,7 @@ namespace Client.UI
             }
             catch (SocketException)
             {
+                Console.Clear();
                 Console.WriteLine("Server disconnected");
                 Console.ReadKey();
             }
@@ -873,6 +868,7 @@ namespace Client.UI
             }
             catch (SocketException)
             {
+                Console.Clear();
                 Console.WriteLine("Server disconnected");
                 Console.ReadKey();
             }

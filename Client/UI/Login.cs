@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Sockets;
 using Communication;
+using System;
 
 namespace Client.UI
 {
@@ -23,7 +24,6 @@ namespace Client.UI
             {
                 bool isAuthenticated = false;
                 NetworkDataHelper networkDataHelper;
-                await ConnectAsync();
 
                 while (!isAuthenticated)
                 {
@@ -31,10 +31,12 @@ namespace Client.UI
                     var text = Console.ReadLine();
                     if (text == "1")
                     {
+                        await ConnectAsync();
                         networkDataHelper = new NetworkDataHelper(_tcpClient);
                         _networkDataHelper = networkDataHelper;
-                        
-                        await networkDataHelper.SendAsync(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.Authenticate));
+
+                        await networkDataHelper.SendAsync(
+                            conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.Authenticate));
                         Console.WriteLine("Enter username: ");
                         string username = Console.ReadLine();
                         Console.WriteLine("Enter password: ");
@@ -46,10 +48,10 @@ namespace Client.UI
                         try
                         {
                             _tcpClient.ReceiveTimeout = 3000;
-                            
+
                             var receiveTask = networkDataHelper.ReceiveAsync(Protocol.FixedDataSize);
                             var delayTask = Task.Delay(3000);
-                            
+
                             var completedTask = await Task.WhenAny(receiveTask, delayTask);
 
                             if (completedTask == receiveTask)
@@ -84,14 +86,20 @@ namespace Client.UI
                         catch (SocketException ex)
                         {
                             Console.WriteLine("Unable to connect to server. Please try again.");
+                        }
+                        catch (IOException ex)
+                        {
+                            
                         }
                     }
                     else if (text == "2")
                     {
+                        await ConnectAsync();
                         networkDataHelper = new NetworkDataHelper(_tcpClient);
                         _networkDataHelper = networkDataHelper;
 
-                        await networkDataHelper.SendAsync(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.CreateUser));
+                        await networkDataHelper.SendAsync(
+                            conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.CreateUser));
                         Console.WriteLine("Enter username: ");
                         string username = Console.ReadLine();
                         Console.WriteLine("Enter password: ");
@@ -103,10 +111,10 @@ namespace Client.UI
                         try
                         {
                             _tcpClient.ReceiveTimeout = 3000;
-                            
+
                             var receiveTask = networkDataHelper.ReceiveAsync(Protocol.FixedDataSize);
                             var delayTask = Task.Delay(3000);
-                            
+
                             var completedTask = await Task.WhenAny(receiveTask, delayTask);
 
                             if (completedTask == receiveTask)
@@ -142,9 +150,13 @@ namespace Client.UI
                         {
                             Console.WriteLine("Unable to connect to server. Please try again.");
                         }
+                        catch (IOException ex)
+                        {
+                            
+                        }
                     }
                 }
-                
+
                 if (_tcpClient != null)
                 {
                     _tcpClient.Close();
@@ -152,10 +164,16 @@ namespace Client.UI
             }
             catch (SocketException)
             {
+                Console.Clear();
                 Console.WriteLine("Server disconnected");
+            }
+            catch (IOException)
+            {
+                
             }
             catch (Exception ex)
             {
+                Console.Clear();
                 Console.WriteLine("Server disconnected");
             }
         }
@@ -195,6 +213,7 @@ namespace Client.UI
             }
             catch (SocketException ex)
             {
+                Console.Clear();
                 Console.WriteLine("Server Disconnected");
             }
             catch (Exception ex)
