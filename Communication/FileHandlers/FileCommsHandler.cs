@@ -8,60 +8,59 @@ namespace Communication.FileHandlers
         private readonly ConversionHandler _conversionHandler;
         private readonly FileHandler _fileHandler;
         private readonly FileStreamHandler _fileStreamHandler;
-        private readonly SocketHelper _socketHelper;
+        private readonly NetworkDataHelper _networkDataHelper;
 
-        public FileCommsHandler(SocketHelper socketHelper)
+        public FileCommsHandler(NetworkDataHelper networkDataHelper)
         {
             _conversionHandler = new ConversionHandler();
             _fileHandler = new FileHandler();
             _fileStreamHandler = new FileStreamHandler();
-            _socketHelper = socketHelper;
+            _networkDataHelper = networkDataHelper;
         }
 
-        public void SendFile(string path)
+        public async Task SendFile(string path)
         {
-            if (_fileHandler.FileExists(path))
+            if (await _fileHandler.FileExists(path))
             {
                 var fileName = _fileHandler.GetFileName(path);
-                _socketHelper.Send(_conversionHandler.ConvertIntToBytes(fileName.Length));
-                _socketHelper.Send(_conversionHandler.ConvertStringToBytes(fileName));
+                await _networkDataHelper.SendAsync(_conversionHandler.ConvertIntToBytes((await fileName).Length));
+                await _networkDataHelper.SendAsync(_conversionHandler.ConvertStringToBytes(await fileName));
 
-                long fileSize = _fileHandler.GetFileSize(path);
+                long fileSize = await _fileHandler.GetFileSize(path);
                 var convertedFileSize = _conversionHandler.ConvertLongToBytes(fileSize);
-                _socketHelper.Send(convertedFileSize);
-                SendFileWithStream(fileSize, path);
+                await _networkDataHelper.SendAsync(convertedFileSize);
+                await SendFileWithStream(fileSize, path);
             }
             else
             {
                 byte[] responseBytes = _conversionHandler.ConvertStringToBytes("empty");
                 int responseLength = responseBytes.Length;
                 byte[] lengthBytes = _conversionHandler.ConvertIntToBytes(responseLength);
-                _socketHelper.Send(lengthBytes);
-                _socketHelper.Send(responseBytes);
+                await _networkDataHelper.SendAsync(lengthBytes);
+                await _networkDataHelper.SendAsync(responseBytes);
             }
         }
 
-        public string ReceiveFile()
+        public async Task<string> ReceiveFile()
         {
             string fullSavePath = "";
 
-            int fileNameSize = _conversionHandler.ConvertBytesToInt(
-                _socketHelper.Receive(Protocol.FixedDataSize));
-            string fileName = _conversionHandler.ConvertBytesToString(_socketHelper.Receive(fileNameSize));
+            int fileNameSize = _conversionHandler.ConvertBytesToInt(await _networkDataHelper.ReceiveAsync(Protocol.FixedDataSize));
+            string fileName = _conversionHandler.ConvertBytesToString(await _networkDataHelper.ReceiveAsync(fileNameSize));
 
             if (fileName != "empty")
             {
-                long fileSize = _conversionHandler.ConvertBytesToLong(_socketHelper.Receive(Protocol.FixedFileSize));
+                long fileSize = _conversionHandler.ConvertBytesToLong(await _networkDataHelper.ReceiveAsync(Protocol.FixedFileSize));
 
-                string saveFolderPath = "../../Server/productImages";
+                string saveFolderPath = "../../../productImages";
 
                 fullSavePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, saveFolderPath, fileName);
-                ReceiveFileWithStreams(fileSize, fullSavePath);
+                await ReceiveFileWithStreams(fileSize, fullSavePath);
             }
             return fullSavePath;
         }
 
-        private void SendFileWithStream(long fileSize, string path)
+        private async Task SendFileWithStream(long fileSize, string path)
         {
             long fileParts = Protocol.CalculateFileParts(fileSize);
             long offset = 0;
@@ -73,21 +72,21 @@ namespace Communication.FileHandlers
                 if (currentPart == fileParts)
                 {
                     var lastPartSize = (int)(fileSize - offset);
-                    data = _fileStreamHandler.Read(path, offset, lastPartSize); 
+                    data = await _fileStreamHandler.Read(path, offset, lastPartSize); 
                     offset += lastPartSize;
                 }
                 else
                 {
-                    data = _fileStreamHandler.Read(path, offset, Protocol.MaxPacketSize);
+                    data = await _fileStreamHandler.Read(path, offset, Protocol.MaxPacketSize);
                     offset += Protocol.MaxPacketSize;
                 }
 
-                _socketHelper.Send(data);
+                await _networkDataHelper.SendAsync(data);
                 currentPart++;
             }
         }
 
-        private void ReceiveFileWithStreams(long fileSize, string fileName)
+        private async Task ReceiveFileWithStreams(long fileSize, string fileName)
         {
             long fileParts = Protocol.CalculateFileParts(fileSize);
             long offset = 0;
@@ -99,15 +98,15 @@ namespace Communication.FileHandlers
                 if (currentPart == fileParts)
                 {
                     var lastPartSize = (int)(fileSize - offset);
-                    data = _socketHelper.Receive(lastPartSize);
+                    data = await _networkDataHelper.ReceiveAsync(lastPartSize);
                     offset += lastPartSize;
                 }
                 else
                 {
-                    data = _socketHelper.Receive(Protocol.MaxPacketSize);
+                    data = await _networkDataHelper.ReceiveAsync(Protocol.MaxPacketSize);
                     offset += Protocol.MaxPacketSize;
                 }
-                _fileStreamHandler.Write(fileName, data);
+                await _fileStreamHandler.Write(fileName, data);
                 currentPart++;
             }
         }

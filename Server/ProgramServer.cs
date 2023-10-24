@@ -17,39 +17,35 @@ namespace Server
         static readonly UserService userService = new UserService(storage);
         static readonly ProductService productService = new ProductService(storage);
         static readonly ConversionHandler conversionHandler = new ConversionHandler();
+        static TcpListener tcpListener;
         private static bool exit = false;
-        private static Socket socketServer;
-        private static List<Socket> clientSockets = new List<Socket>();
+        private static List<TcpClient> clients = new List<TcpClient>();
         
         
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
             Console.WriteLine("Starting server...");
 
             try
             {
-                 socketServer = new Socket(
-                    AddressFamily.InterNetwork,
-                    SocketType.Stream,
-                    ProtocolType.Tcp);
-
                 string ipServer = settingsMngr.ReadSettings(ServerConfig.serverIPconfigkey);
                 int ipPort = int.Parse(settingsMngr.ReadSettings(ServerConfig.serverPortconfigkey));
-
                 var localEndpoint = new IPEndPoint(IPAddress.Parse(ipServer), ipPort);
-                socketServer.Bind(localEndpoint);
-                socketServer.Listen(10);
                 
-                new Thread(HandleConsoleInput).Start();
+                tcpListener = new TcpListener(localEndpoint);
+                tcpListener.Start();
+                
+                
+                var exitTask = Task.Run(async () => await HandleConsoleInputAsync());
 
                 while (!exit)
                 {
                     try
                     {
-                        var socketClient = socketServer.Accept();
-                        clientSockets.Add(socketClient);
+                        TcpClient tcpClient = await tcpListener.AcceptTcpClientAsync();
+                        clients.Add(tcpClient);
                         Console.WriteLine("New connection!");
-                        new Thread(() => HandleClient(socketClient)).Start();
+                        var task = Task.Run(async () => await HandleClient(tcpClient));
                     }
                     catch (Exception ex)
                     {
@@ -72,102 +68,118 @@ namespace Server
             }
         }
 
-        static void HandleClient(Socket socketCliente)
+        static async Task HandleClient(TcpClient tcpClient)
         {
             try
             {
-                var socketHelper = new SocketHelper(socketCliente);
-                
-                UserAuthorization userAuthorization = new UserAuthorization(socketHelper, conversionHandler, userService);
-                ProductHandler productHandler = new ProductHandler(socketHelper, conversionHandler, productService);
+                NetworkDataHelper networkDataHelper = new NetworkDataHelper(tcpClient);
+
+                UserAuthorization userAuthorization =
+                    new UserAuthorization(networkDataHelper, conversionHandler, userService);
+                ProductHandler productHandler =
+                    new ProductHandler(networkDataHelper, conversionHandler, productService);
 
                 while (!exit)
                 {
-                    byte[] commandBytes = socketHelper.Receive(Protocol.FixedDataSize);
+                    byte[] commandBytes = await networkDataHelper.ReceiveAsync(Protocol.FixedDataSize);
                     string command = conversionHandler.ConvertBytesToString(commandBytes);
 
                     if (command == Protocol.ProtocolCommands.Authenticate)
                     {
                         Console.WriteLine("Authentication requested by client.");
-                        
-                        userAuthorization.Authenticate();
+
+                        await userAuthorization.Authenticate();
                     }
-                    if(command == Protocol.ProtocolCommands.PublishProduct)
+
+                    if (command == Protocol.ProtocolCommands.PublishProduct)
                     {
                         Console.WriteLine("Product publish requested by client.");
-                        productHandler.PublishProduct();
+                        await productHandler.PublishProduct();
                     }
-                    if(command == Protocol.ProtocolCommands.GetAllUserProducts)
+
+                    if (command == Protocol.ProtocolCommands.GetAllUserProducts)
                     {
                         Console.WriteLine("User products requested by client.");
-                        productHandler.SendAllUserProducts();
+                        await productHandler.SendAllUserProducts();
                     }
-                    if(command == Protocol.ProtocolCommands.GetAllProducts)
+
+                    if (command == Protocol.ProtocolCommands.GetAllProducts)
                     {
                         Console.WriteLine("All products requested by client.");
-                        productHandler.SendAllProducts();
+                        await productHandler.SendAllProducts();
                     }
+
                     if (command == Protocol.ProtocolCommands.UpdateProduct)
                     {
                         Console.WriteLine("Update product requested by client.");
-                        productHandler.UpdateProduct();
+                        await productHandler.UpdateProduct();
                     }
-                    if(command == Protocol.ProtocolCommands.UpdateProductImage)
+
+                    if (command == Protocol.ProtocolCommands.UpdateProductImage)
                     {
                         Console.WriteLine("Update product image requested by client.");
-                        productHandler.UpdateProductImage();
+                        await productHandler.UpdateProductImage();
                     }
-                    if(command == Protocol.ProtocolCommands.DeleteProduct)
+
+                    if (command == Protocol.ProtocolCommands.DeleteProduct)
                     {
                         Console.WriteLine("Delete product requested by client.");
-                        productHandler.DeleteProduct();
+                        await productHandler.DeleteProduct();
                     }
-                    if(command == Protocol.ProtocolCommands.SearchProducts)
+
+                    if (command == Protocol.ProtocolCommands.SearchProducts)
                     {
                         Console.WriteLine("Search products requested by client.");
-                        productHandler.SearchProducts();
+                        await productHandler.SearchProducts();
                     }
-                    if(command == Protocol.ProtocolCommands.CreateUser)
+
+                    if (command == Protocol.ProtocolCommands.CreateUser)
                     {
                         Console.WriteLine("Client creating a new user.");
-                        userAuthorization.CreateUser();
+                        await userAuthorization.CreateUser();
                     }
-                    if(command == Protocol.ProtocolCommands.BuyProduct)
+
+                    if (command == Protocol.ProtocolCommands.BuyProduct)
                     {
                         Console.WriteLine("Client buying a product.");
-                        productHandler.BuyProduct();
+                        await productHandler.BuyProduct();
                     }
-                    if(command == Protocol.ProtocolCommands.GetAllPurchases)
+
+                    if (command == Protocol.ProtocolCommands.GetAllPurchases)
                     {
                         Console.WriteLine("Client requesting all purchases.");
-                        productHandler.SendAllPurchases();
+                        await productHandler.SendAllPurchases();
                     }
-                    if(command == Protocol.ProtocolCommands.RateProduct)
+
+                    if (command == Protocol.ProtocolCommands.RateProduct)
                     {
                         Console.WriteLine("Client rating a product.");
-                        productHandler.RateProduct();
+                        await productHandler.RateProduct();
                     }
-                    if(command == Protocol.ProtocolCommands.DownloadProductImage)
+
+                    if (command == Protocol.ProtocolCommands.DownloadProductImage)
                     {
                         Console.WriteLine("Image download requested by client.");
-                        productHandler.DownloadProductImage();
+                        await productHandler.DownloadProductImage();
                     }
-                    if(command == Protocol.ProtocolCommands.GetAllProductReviews)
+
+                    if (command == Protocol.ProtocolCommands.GetAllProductReviews)
                     {
                         Console.WriteLine("Client requesting all product reviews.");
-                        productHandler.SendAllProductReviews();
+                        await productHandler.SendAllProductReviews();
                     }
-                    if(command == Protocol.ProtocolCommands.Exit)
+
+                    if (command == Protocol.ProtocolCommands.Exit)
                     {
                         Console.WriteLine("Exit requested by client.");
                         exit = true;
                     }
-                    
-                    if (socketCliente.Poll(0, SelectMode.SelectRead) && socketCliente.Available == 0)
+
+                    if (tcpClient.Client.Poll(0, SelectMode.SelectRead) && tcpClient.Available == 0)
                     {
                         Console.WriteLine("Client disconnected");
                         exit = true;
-                        socketCliente.Close(); 
+                        tcpClient.Close();
                         break;
                     }
                 }
@@ -190,7 +202,7 @@ namespace Server
             }
         }
         
-        private static void HandleConsoleInput()
+        private static async Task HandleConsoleInputAsync()
         {
             while (true)
             {
@@ -207,7 +219,7 @@ namespace Server
                     }
                 }
 
-                Thread.Sleep(100);
+                await Task.Delay(100);
             }
         }
         private static void CloseServer()
@@ -215,14 +227,14 @@ namespace Server
             try
             {
                 exit = true;
-                foreach (Socket client in clientSockets)
-                {
-                    client.Shutdown(SocketShutdown.Both);
-                }
-                if (socketServer != null)
+                if (tcpListener != null)
                 {
                     Console.WriteLine("Closing Server!");
-                    socketServer.Close();
+                    tcpListener.Stop();
+                }
+                foreach (TcpClient client in clients)
+                {
+                    client.Close();
                 }
             }
             catch (SocketException ex)
