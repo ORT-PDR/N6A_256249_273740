@@ -35,8 +35,8 @@ namespace Server
                 tcpListener = new TcpListener(localEndpoint);
                 tcpListener.Start();
                 
-                //wait HandleConsoleInputAsync();
-                //var exitTask = Task.Run(async () => HandleConsoleInputAsync());
+                
+                var exitTask = Task.Run(async () => await HandleConsoleInputAsync());
 
                 while (!exit)
                 {
@@ -53,10 +53,10 @@ namespace Server
                     }
                 }
 
-                // if (!exit)
-                // {
-                //     CloseServer();
-                // }
+                if (!exit)
+                {
+                    CloseServer();
+                }
             }
             catch (ServerException ex)
             {
@@ -196,10 +196,6 @@ namespace Server
             {
                 Console.WriteLine("ThreadInterruptedException during socket close: " + ex.Message);
             }
-            catch (IOException ex)
-            {
-                Console.WriteLine(ex);
-            }
             catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
@@ -231,14 +227,14 @@ namespace Server
             try
             {
                 exit = true;
-                foreach (TcpClient client in clients)
-                {
-                    client.Close();
-                }
                 if (tcpListener != null)
                 {
                     Console.WriteLine("Closing Server!");
                     tcpListener.Stop();
+                }
+                foreach (TcpClient client in clients)
+                {
+                    client.Close();
                 }
             }
             catch (SocketException ex)

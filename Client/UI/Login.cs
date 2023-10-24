@@ -45,29 +45,40 @@ namespace Client.UI
 
                         try
                         {
-                            _tcpClient.ReceiveTimeout = 5000;
-                            byte[] lBytes = await networkDataHelper.ReceiveAsync(Protocol.FixedDataSize);
-                            int dataLength = conversionHandler.ConvertBytesToInt(lBytes);
-                            byte[] responseBytes = await networkDataHelper.ReceiveAsync(dataLength);
-                            string response = conversionHandler.ConvertBytesToString(responseBytes);
+                            _tcpClient.ReceiveTimeout = 3000;
+                            
+                            var receiveTask = networkDataHelper.ReceiveAsync(Protocol.FixedDataSize);
+                            var delayTask = Task.Delay(3000);
+                            
+                            var completedTask = await Task.WhenAny(receiveTask, delayTask);
 
-                            Console.WriteLine($"Server Response: {response}");
-
-                            if (response == "Authentication successful")
+                            if (completedTask == receiveTask)
                             {
-                                isAuthenticated = true;
-                                Console.WriteLine("Login successful");
-                                Console.WriteLine("You're connected to the server!");
-                                Console.WriteLine("Press any key to continue");
-                                Console.ReadKey();
+                                byte[] lBytes = await receiveTask;
+                                int dataLength = conversionHandler.ConvertBytesToInt(lBytes);
+                                byte[] responseBytes = await networkDataHelper.ReceiveAsync(dataLength);
+                                string response = conversionHandler.ConvertBytesToString(responseBytes);
 
-                                ProductMenu _productMenu = new ProductMenu(_tcpClient);
-                                await _productMenu.ShowMainMenu(username);
-                                isAuthenticated = false;
+                                if (response == "success")
+                                {
+                                    Console.WriteLine("User created successfully!");
+                                    Console.WriteLine("You're connected to the server!");
+                                    Console.WriteLine("Press any key to continue");
+                                    Console.ReadKey();
+
+                                    ProductMenu _productMenu = new ProductMenu(_tcpClient);
+                                    await _productMenu.ShowMainMenu(username);
+                                    isAuthenticated = false;
+                                }
+                                else
+                                {
+                                    Console.WriteLine("Error creating new user:");
+                                    Console.WriteLine(response);
+                                }
                             }
                             else
                             {
-                                Console.WriteLine("Login failed. Please try again.");
+                                Console.WriteLine("Timeout waiting for server response.");
                             }
                         }
                         catch (SocketException ex)
@@ -91,27 +102,40 @@ namespace Client.UI
 
                         try
                         {
-                            _tcpClient.ReceiveTimeout = 5000;
-                            byte[] lBytes = await networkDataHelper.ReceiveAsync(Protocol.FixedDataSize);
-                            int dataLength = conversionHandler.ConvertBytesToInt(lBytes);
-                            byte[] responseBytes = await networkDataHelper.ReceiveAsync(dataLength);
-                            string response = conversionHandler.ConvertBytesToString(responseBytes);
+                            _tcpClient.ReceiveTimeout = 3000;
+                            
+                            var receiveTask = networkDataHelper.ReceiveAsync(Protocol.FixedDataSize);
+                            var delayTask = Task.Delay(3000);
+                            
+                            var completedTask = await Task.WhenAny(receiveTask, delayTask);
 
-                            if (response == "success")
+                            if (completedTask == receiveTask)
                             {
-                                Console.WriteLine("User created successfully!");
-                                Console.WriteLine("You're connected to the server!");
-                                Console.WriteLine("Press any key to continue");
-                                Console.ReadKey();
+                                byte[] lBytes = await receiveTask;
+                                int dataLength = conversionHandler.ConvertBytesToInt(lBytes);
+                                byte[] responseBytes = await networkDataHelper.ReceiveAsync(dataLength);
+                                string response = conversionHandler.ConvertBytesToString(responseBytes);
 
-                                ProductMenu _productMenu = new ProductMenu(_tcpClient);
-                                await _productMenu.ShowMainMenu(username);
-                                isAuthenticated = false;
+                                if (response == "success")
+                                {
+                                    Console.WriteLine("User created successfully!");
+                                    Console.WriteLine("You're connected to the server!");
+                                    Console.WriteLine("Press any key to continue");
+                                    Console.ReadKey();
+
+                                    ProductMenu _productMenu = new ProductMenu(_tcpClient);
+                                    await _productMenu.ShowMainMenu(username);
+                                    isAuthenticated = false;
+                                }
+                                else
+                                {
+                                    Console.WriteLine("Error creating new user:");
+                                    Console.WriteLine(response);
+                                }
                             }
                             else
                             {
-                                Console.WriteLine("Error creating new user:");
-                                Console.WriteLine(response);
+                                Console.WriteLine("Timeout waiting for server response.");
                             }
                         }
                         catch (SocketException ex)
