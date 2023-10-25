@@ -22,7 +22,7 @@ namespace Server.UIHandler
             int dataLength = conversionHandler.ConvertBytesToInt(lengthBytes);
             byte[] credentialsBytes = await networkDataHelper.ReceiveAsync(dataLength);
             string credentials = conversionHandler.ConvertBytesToString(credentialsBytes);
-            string[] credentialsParts = credentials.Split(':');
+            string[] credentialsParts = credentials.Split("#");
 
             if (credentialsParts.Length == 2)
             {
@@ -49,7 +49,7 @@ namespace Server.UIHandler
             int dataLength = conversionHandler.ConvertBytesToInt(lengthBytes);
             byte[] credentialsBytes = await networkDataHelper.ReceiveAsync(dataLength);
             string credentials = conversionHandler.ConvertBytesToString(credentialsBytes);
-            string[] credentialsParts = credentials.Split(':');
+            string[] credentialsParts = credentials.Split("#");
 
             if (credentialsParts.Length == 2)
             {
