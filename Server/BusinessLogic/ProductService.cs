@@ -128,7 +128,7 @@ namespace Server.BusinessLogic
                 return "Review is null";
             }
 
-            return $"{review.user.username}:{review.comment}:{review.score}";
+            return $"{review.user.username}#{review.comment}#{review.score}";
         }
         
         public List<Product> GetProductsByUser(string userName)
@@ -145,7 +145,7 @@ namespace Server.BusinessLogic
                 return "Product is null";
             }
 
-            return $"{product.name}:{product.description}:{product.stock}:{product.price}:{product.imagePath}:{product.creator}";
+            return $"{product.name}#{product.description}#{product.stock}#{product.price}#{product.imagePath}#{product.creator}";
         }
 
         private void ValidateProduct(Product product)

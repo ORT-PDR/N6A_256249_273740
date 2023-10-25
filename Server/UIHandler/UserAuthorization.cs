@@ -5,24 +5,24 @@ namespace Server.UIHandler
 {
     public class UserAuthorization
     {
-        private readonly SocketHelper socketHelper;
+        private readonly NetworkDataHelper networkDataHelper;
         private readonly ConversionHandler conversionHandler;
         private readonly UserService _userService;
 
-        public UserAuthorization(SocketHelper socketHelper, ConversionHandler conversionHandler, UserService userService)
+        public UserAuthorization(NetworkDataHelper networkDataHelper, ConversionHandler conversionHandler, UserService userService)
         {
-            this.socketHelper = socketHelper;
+            this.networkDataHelper = networkDataHelper;
             this.conversionHandler = conversionHandler;
             _userService = userService;
         }
 
-        public void Authenticate()
+        public async Task Authenticate()
         {
-            byte[] lengthBytes = socketHelper.Receive(Protocol.FixedDataSize);
+            byte[] lengthBytes = await networkDataHelper.ReceiveAsync(Protocol.FixedDataSize);
             int dataLength = conversionHandler.ConvertBytesToInt(lengthBytes);
-            byte[] credentialsBytes = socketHelper.Receive(dataLength);
+            byte[] credentialsBytes = await networkDataHelper.ReceiveAsync(dataLength);
             string credentials = conversionHandler.ConvertBytesToString(credentialsBytes);
-            string[] credentialsParts = credentials.Split(':');
+            string[] credentialsParts = credentials.Split("#");
 
             if (credentialsParts.Length == 2)
             {
@@ -33,23 +33,23 @@ namespace Server.UIHandler
 
                 string response = authenticationResult ? "Authentication successful" : "Authentication failed";
                 byte[] responseBytes = conversionHandler.ConvertStringToBytes(response);
-                SendResponse(responseBytes);
+                await SendResponse(responseBytes);
             }
             else
             {
                 Console.WriteLine("Invalid credentials format.");
                 byte[] responseBytes = conversionHandler.ConvertStringToBytes("Invalid credentials format");
-                SendResponse(responseBytes);
+                await SendResponse(responseBytes);
             }
         }
 
-        public void CreateUser()
+        public async Task CreateUser()
         {
-            byte[] lengthBytes = socketHelper.Receive(Protocol.FixedDataSize);
+            byte[] lengthBytes = await networkDataHelper.ReceiveAsync(Protocol.FixedDataSize);
             int dataLength = conversionHandler.ConvertBytesToInt(lengthBytes);
-            byte[] credentialsBytes = socketHelper.Receive(dataLength);
+            byte[] credentialsBytes = await networkDataHelper.ReceiveAsync(dataLength);
             string credentials = conversionHandler.ConvertBytesToString(credentialsBytes);
-            string[] credentialsParts = credentials.Split(':');
+            string[] credentialsParts = credentials.Split("#");
 
             if (credentialsParts.Length == 2)
             {
@@ -61,30 +61,30 @@ namespace Server.UIHandler
 
                     Console.WriteLine("User created successfully.");
                     byte[] responseBytes = conversionHandler.ConvertStringToBytes("success");
-                    SendResponse(responseBytes);
+                    await SendResponse(responseBytes);
                 }
                 catch(Exception e)
                 {
                     Console.WriteLine("New user credentials were not valid.");
                     byte[] responseBytes = conversionHandler.ConvertStringToBytes(e.Message);
-                    SendResponse(responseBytes);
+                    await SendResponse(responseBytes);
                 }
             }
             else
             {
                 Console.WriteLine("Invalid credentials format for new user.");
                 byte[] responseBytes = conversionHandler.ConvertStringToBytes("Invalid credentials format");
-                SendResponse(responseBytes);
+                await SendResponse(responseBytes);
             }
         }
 
-        private void SendResponse(byte[] responseBytes)
+        private async Task SendResponse(byte[] responseBytes)
         {
             int responseLength = responseBytes.Length;
 
             byte[] lengthBytes = conversionHandler.ConvertIntToBytes(responseLength);
-            socketHelper.Send(lengthBytes);
-            socketHelper.Send(responseBytes);
+            await networkDataHelper.SendAsync(lengthBytes);
+            await networkDataHelper.SendAsync(responseBytes);
         }
     }
 }

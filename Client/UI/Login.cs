@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Sockets;
 using Communication;
+using System;
 
 namespace Client.UI
 {
@@ -8,7 +9,8 @@ namespace Client.UI
     {
         private ConversionHandler conversionHandler;
         private SettingsManager settingsMngr;
-        private SocketHelper _socketHelper;
+        private NetworkDataHelper _networkDataHelper;
+        private static TcpClient _tcpClient;
 
         public Login(SettingsManager _settingsMngr)
         {
@@ -16,13 +18,12 @@ namespace Client.UI
             conversionHandler = new ConversionHandler();
         }
 
-        public Socket Log()
+        public async Task Log()
         {
-            Socket ret = null;
             try
             {
                 bool isAuthenticated = false;
-                SocketHelper socketHelper;
+                NetworkDataHelper networkDataHelper;
 
                 while (!isAuthenticated)
                 {
@@ -30,147 +31,195 @@ namespace Client.UI
                     var text = Console.ReadLine();
                     if (text == "1")
                     {
-                        ret = Connect();
-                        
-                        socketHelper = new SocketHelper(ret);
-                        _socketHelper = socketHelper;
-                        
-                        socketHelper.Send(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.Authenticate));
+                        await ConnectAsync();
+                        networkDataHelper = new NetworkDataHelper(_tcpClient);
+                        _networkDataHelper = networkDataHelper;
+
+                        await networkDataHelper.SendAsync(
+                            conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.Authenticate));
                         Console.WriteLine("Enter username: ");
                         string username = Console.ReadLine();
                         Console.WriteLine("Enter password: ");
                         string password = Console.ReadLine();
 
-                        string credentials = $"{username}:{password}";
-                        Send(credentials);
+                        string credentials = $"{username}#{password}";
+                        await SendAsync(credentials);
 
                         try
                         {
-                            ret.ReceiveTimeout = 5000;
-                            byte[] lBytes = socketHelper.Receive(Protocol.FixedDataSize);
-                            int dataLength = conversionHandler.ConvertBytesToInt(lBytes);
-                            byte[] responseBytes = socketHelper.Receive(dataLength);
-                            string response = conversionHandler.ConvertBytesToString(responseBytes);
+                            _tcpClient.ReceiveTimeout = 3000;
 
-                            Console.WriteLine($"Server Response: {response}");
+                            var receiveTask = networkDataHelper.ReceiveAsync(Protocol.FixedDataSize);
+                            var delayTask = Task.Delay(3000);
 
-                            if (response == "Authentication successful")
+                            var completedTask = await Task.WhenAny(receiveTask, delayTask);
+
+                            if (completedTask == receiveTask)
                             {
-                                isAuthenticated = true;
-                                Console.WriteLine("Login successful");
-                                Console.WriteLine("You're connected to the server!");
-                                Console.WriteLine("Press any key to continue");
-                                Console.ReadKey();
+                                byte[] lBytes = await receiveTask;
+                                int dataLength = conversionHandler.ConvertBytesToInt(lBytes);
+                                byte[] responseBytes = await networkDataHelper.ReceiveAsync(dataLength);
+                                string response = conversionHandler.ConvertBytesToString(responseBytes);
 
-                                ProductMenu _productMenu = new ProductMenu(ret);
-                                _productMenu.ShowMainMenu(username);
-                                isAuthenticated = false;
+                                if (response == "success" || response == "Authentication successful")
+                                {
+                                    Console.WriteLine("Login successful!");
+                                    Console.WriteLine("You're connected to the server!");
+                                    Console.WriteLine("Press any key to continue");
+                                    Console.ReadKey();
+
+                                    ProductMenu _productMenu = new ProductMenu(_tcpClient);
+                                    await _productMenu.ShowMainMenu(username);
+                                    isAuthenticated = false;
+                                }
+                                else
+                                {
+                                    Console.WriteLine("Error logging in:");
+                                    Console.WriteLine(response);
+                                }
                             }
                             else
                             {
-                                Console.WriteLine("Login failed. Please try again.");
+                                Console.WriteLine("Timeout waiting for server response.");
                             }
                         }
                         catch (SocketException ex)
                         {
                             Console.WriteLine("Unable to connect to server. Please try again.");
+                        }
+                        catch (IOException ex)
+                        {
+                            
                         }
                     }
                     else if (text == "2")
                     {
-                        ret = Connect();
+                        await ConnectAsync();
+                        networkDataHelper = new NetworkDataHelper(_tcpClient);
+                        _networkDataHelper = networkDataHelper;
 
-                        
-                        socketHelper = new SocketHelper(ret);
-                        _socketHelper = socketHelper;
-
-                        socketHelper.Send(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.CreateUser));
+                        await networkDataHelper.SendAsync(
+                            conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.CreateUser));
                         Console.WriteLine("Enter username: ");
                         string username = Console.ReadLine();
                         Console.WriteLine("Enter password: ");
                         string password = Console.ReadLine();
 
-                        string credentials = $"{username}:{password}";
-                        Send(credentials);
+                        string credentials = $"{username}#{password}";
+                        await SendAsync(credentials);
 
                         try
                         {
-                            ret.ReceiveTimeout = 5000;
-                            byte[] lBytes = socketHelper.Receive(Protocol.FixedDataSize);
-                            int dataLength = conversionHandler.ConvertBytesToInt(lBytes);
-                            byte[] responseBytes = socketHelper.Receive(dataLength);
-                            string response = conversionHandler.ConvertBytesToString(responseBytes);
+                            _tcpClient.ReceiveTimeout = 3000;
 
-                            if (response == "success")
+                            var receiveTask = networkDataHelper.ReceiveAsync(Protocol.FixedDataSize);
+                            var delayTask = Task.Delay(3000);
+
+                            var completedTask = await Task.WhenAny(receiveTask, delayTask);
+
+                            if (completedTask == receiveTask)
                             {
-                                Console.WriteLine("User created successfully!");
-                                Console.WriteLine("You're connected to the server!");
-                                Console.WriteLine("Press any key to continue");
-                                Console.ReadKey();
+                                byte[] lBytes = await receiveTask;
+                                int dataLength = conversionHandler.ConvertBytesToInt(lBytes);
+                                byte[] responseBytes = await networkDataHelper.ReceiveAsync(dataLength);
+                                string response = conversionHandler.ConvertBytesToString(responseBytes);
 
-                                ProductMenu _productMenu = new ProductMenu(ret);
-                                _productMenu.ShowMainMenu(username);
-                                isAuthenticated = false;
+                                if (response == "success" || response == "Authentication successful")
+                                {
+                                    Console.WriteLine("User created successfully!");
+                                    Console.WriteLine("You're connected to the server!");
+                                    Console.WriteLine("Press any key to continue");
+                                    Console.ReadKey();
+
+                                    ProductMenu _productMenu = new ProductMenu(_tcpClient);
+                                    await _productMenu.ShowMainMenu(username);
+                                    isAuthenticated = false;
+                                }
+                                else
+                                {
+                                    Console.WriteLine("Error creating new user:");
+                                    Console.WriteLine(response);
+                                }
                             }
                             else
                             {
-                                Console.WriteLine("Error creating new user:");
-                                Console.WriteLine(response);
+                                Console.WriteLine("Timeout waiting for server response.");
                             }
                         }
                         catch (SocketException ex)
                         {
                             Console.WriteLine("Unable to connect to server. Please try again.");
                         }
+                        catch (IOException ex)
+                        {
+                            
+                        }
                     }
+                }
+
+                if (_tcpClient != null)
+                {
+                    _tcpClient.Close();
                 }
             }
             catch (SocketException)
             {
+                Console.Clear();
                 Console.WriteLine("Server disconnected");
+            }
+            catch (IOException)
+            {
+                
+            }
+            catch (Exception ex)
+            {
+                Console.Clear();
+                Console.WriteLine("Server disconnected");
+            }
+        }
+
+        private async Task ConnectAsync()
+        {
+            try
+            {
+                string ipServer = settingsMngr.ReadSettings(ClientConfig.serverIPconfigkey);
+                string ipClient = settingsMngr.ReadSettings(ClientConfig.clientIPconfigkey);
+                int serverPort = int.Parse(settingsMngr.ReadSettings(ClientConfig.serverPortconfigkey));
+                
+                var localEndPoint = new IPEndPoint(IPAddress.Parse(ipClient), 0);
+                var serverEndpoint = new IPEndPoint(IPAddress.Parse(ipServer), serverPort);
+
+                var tcpClient = new TcpClient(localEndPoint);
+                _tcpClient = tcpClient;
+                
+                await _tcpClient.ConnectAsync(serverEndpoint);
+            }
+            catch(SocketException ex)
+            {
+                Console.WriteLine("Could not connect to server");
+            }
+        }
+
+        private async Task SendAsync(string response)
+        {
+            try
+            {
+                byte[] responseBytes = conversionHandler.ConvertStringToBytes(response);
+                int responseLength = responseBytes.Length;
+                
+                byte[] lengthBytes = conversionHandler.ConvertIntToBytes(responseLength);
+                await _networkDataHelper.SendAsync(lengthBytes);
+                await _networkDataHelper.SendAsync(responseBytes);
+            }
+            catch (SocketException ex)
+            {
+                Console.Clear();
+                Console.WriteLine("Server Disconnected");
             }
             catch (Exception ex)
             {
                 Console.WriteLine("Unexpected Exception: " + ex.Message);
             }
-            return ret;
-        }
-
-        public Socket Connect()
-        {
-            try
-            {
-                var socketClient = new Socket(
-                    AddressFamily.InterNetwork,
-                    SocketType.Stream,
-                    ProtocolType.Tcp);
-
-                string ipServer = settingsMngr.ReadSettings(ClientConfig.serverIPconfigkey);
-                string ipClient = settingsMngr.ReadSettings(ClientConfig.clientIPconfigkey);
-                int serverPort = int.Parse(settingsMngr.ReadSettings(ClientConfig.serverPortconfigkey));
-
-                var localEndPoint = new IPEndPoint(IPAddress.Parse(ipClient), 0);
-                socketClient.Bind(localEndPoint);
-                var serverEndpoint = new IPEndPoint(IPAddress.Parse(ipServer), serverPort);
-                socketClient.Connect(serverEndpoint);
-
-                return socketClient;
-            }
-            catch(SocketException ex)
-            {
-                Console.WriteLine("Could not connect to server");
-                return null;
-            }
-        }
-
-        private void Send(string response)
-        {
-            byte[] responseBytes = conversionHandler.ConvertStringToBytes(response);
-            int responseLength = responseBytes.Length;
-
-            byte[] lengthBytes = conversionHandler.ConvertIntToBytes(responseLength);
-            _socketHelper.Send(lengthBytes);
-            _socketHelper.Send(responseBytes);
         }
     }
 }

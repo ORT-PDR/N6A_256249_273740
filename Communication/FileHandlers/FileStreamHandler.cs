@@ -8,9 +8,9 @@ namespace Communication.FileHandlers
         {
             _fileHandler = new FileHandler();
         }
-        public byte[] Read(string path, long offset, int length)
+        public async Task<byte[]> Read(string path, long offset, int length)
         {
-            if (_fileHandler.FileExists(path))
+            if (await _fileHandler.FileExists(path))
             {
                 var data = new byte[length];
 
@@ -30,9 +30,9 @@ namespace Communication.FileHandlers
             throw new Exception("File does not exist");
         }
 
-        public void Write(string fileName, byte[] data)
+        public async Task Write(string fileName, byte[] data)
         {
-            var fileMode = _fileHandler.FileExists(fileName) ? FileMode.Append : FileMode.Create;
+            var fileMode = await _fileHandler.FileExists(fileName) ? FileMode.Append : FileMode.Create;
             using var fs = new FileStream(fileName, fileMode);
             fs.Write(data, 0, data.Length);
         }

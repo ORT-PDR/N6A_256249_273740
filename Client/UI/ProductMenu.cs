@@ -14,18 +14,18 @@ namespace Client.UI
     public class ProductMenu
     {
         private ConversionHandler conversionHandler;
-        private SocketHelper socketHelper;
+        private NetworkDataHelper networkDataHelper;
         private string user;
-        private Socket socketClient;
+        private TcpClient tcpClient;
 
-        public ProductMenu(Socket _socketClient)
+        public ProductMenu(TcpClient _tcpClient)
         {
             conversionHandler = new ConversionHandler();
-            socketHelper = new SocketHelper(_socketClient);
-            socketClient = _socketClient;
+            networkDataHelper = new NetworkDataHelper(_tcpClient);
+            tcpClient = _tcpClient;
         }
 
-        public void ShowMainMenu(string _user)
+        public async Task ShowMainMenu(string _user)
         {
             Console.Clear();
             while (true)
@@ -46,25 +46,24 @@ namespace Client.UI
                 switch (choice)
                 {
                     case "1":
-                        PublishProduct();
+                        await PublishProduct();
                         break;
                     case "2":
-                        UpdateProduct();
+                        await UpdateProduct();
                         break;
                     case "3":
-                        DeleteProduct();
+                        await DeleteProduct();
                         break;
                     case "4":
-                        ViewProductsMenu();
+                        await ViewProductsMenu();
                         break;
                     case "5":
-                        ViewPurchases();
+                        await ViewPurchases();
                         break;
                     case "6":
                         Console.WriteLine("Logging out...");
-
-                        socketClient.Shutdown(SocketShutdown.Both);
-                        socketClient.Close();
+                        await networkDataHelper.SendAsync(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.Logout));
+                        tcpClient.Close();
                         return;
                     default:
                         Console.WriteLine("Invalid choice. Please try again.");
@@ -73,7 +72,7 @@ namespace Client.UI
             }
         }
 
-        private void PublishProduct()
+        private async Task PublishProduct()
         {
             Console.Clear();
             Console.WriteLine("Enter product details:");
@@ -91,20 +90,20 @@ namespace Client.UI
 
             try
             {
-                socketHelper.Send(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.PublishProduct));
+                await networkDataHelper.SendAsync(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.PublishProduct));
 
                 if (imageAbsPath != null)
                 {
-                    var fileCommonHandler = new FileCommsHandler(socketHelper);
-                    fileCommonHandler.SendFile(imageAbsPath);
+                    var fileCommonHandler = new FileCommsHandler(networkDataHelper);
+                    await fileCommonHandler.SendFile(imageAbsPath);
                 }
 
-                string data = $"{name}:{description}:{price}:{stock}:{user}";
-                Send(data);
+                string data = $"{name}#{description}#{price}#{stock}#{user}";
+                await Send(data);
 
-                byte[] lBytes = socketHelper.Receive(Protocol.FixedDataSize);
+                byte[] lBytes = await networkDataHelper.ReceiveAsync(Protocol.FixedDataSize);
                 int dataLength = conversionHandler.ConvertBytesToInt(lBytes);
-                byte[] responseBytes = socketHelper.Receive(dataLength);
+                byte[] responseBytes = await networkDataHelper.ReceiveAsync(dataLength);
                 string response = conversionHandler.ConvertBytesToString(responseBytes);
 
                 if (response == "Success")
@@ -124,6 +123,7 @@ namespace Client.UI
             }
             catch (SocketException)
             {
+                Console.Clear();
                 Console.WriteLine("Server disconnected");
             }
             catch(FormatException formatEx)
@@ -136,14 +136,14 @@ namespace Client.UI
             }
         }
 
-        private void UpdateProduct()
+        private async Task UpdateProduct()
         {
             Console.Clear();
-            var userProducts = RetrieveAllUserProducts();
+            var userProducts = await RetrieveAllUserProducts();
 
-            byte[] lBytes = socketHelper.Receive(Protocol.FixedDataSize);
+            byte[] lBytes = await networkDataHelper.ReceiveAsync(Protocol.FixedDataSize);
             int dataLength = conversionHandler.ConvertBytesToInt(lBytes);
-            byte[] listBytes = socketHelper.Receive(dataLength);
+            byte[] listBytes = await networkDataHelper.ReceiveAsync(dataLength);
             string response = conversionHandler.ConvertBytesToString(listBytes);
 
             if (response == "Success")
@@ -153,13 +153,13 @@ namespace Client.UI
                     Console.WriteLine("Select a product to update:");
                     for (int i = 0; i < userProducts.Length; i++)
                     {
-                        string[] data = userProducts[i].Split(":");
+                        string[] data = userProducts[i].Split("#");
                         Console.WriteLine($"{i + 1}. Name: {data[0]} | Description: {data[1]} | Stock: {data[2]} | Price: {data[3]}");
                     }
 
                     if (int.TryParse(Console.ReadLine(), out int selectedIndex) && selectedIndex >= 1 && selectedIndex <= userProducts.Length)
                     {
-                        ModifyProductMenu(userProducts[selectedIndex - 1]);
+                        await ModifyProductMenu(userProducts[selectedIndex - 1]);
                     }
                     else
                     {
@@ -179,16 +179,16 @@ namespace Client.UI
             Console.ReadKey();
         }
 
-        private string[] RetrieveAllUserProducts()
+        private async Task<string[]> RetrieveAllUserProducts()
         {
             try
             {
-                socketHelper.Send(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.GetAllUserProducts));
-                Send(user);
+                await networkDataHelper.SendAsync(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.GetAllUserProducts));
+                await Send(user);
 
-                byte[] lBytes = socketHelper.Receive(Protocol.FixedDataSize);
+                byte[] lBytes = await networkDataHelper.ReceiveAsync(Protocol.FixedDataSize);
                 int dataLength = conversionHandler.ConvertBytesToInt(lBytes);
-                byte[] listBytes = socketHelper.Receive(dataLength);
+                byte[] listBytes = await networkDataHelper.ReceiveAsync(dataLength);
                 string list = conversionHandler.ConvertBytesToString(listBytes);
                 string[] products = list.Split(";");
                 return products;
@@ -200,16 +200,16 @@ namespace Client.UI
             return new string[0];
         }
         
-        private string[] RetrieveAllProducts()
+        private async Task<string[]> RetrieveAllProducts()
         {
             try
             {
-                socketHelper.Send(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.GetAllProducts));
-                Send(user);
+                await networkDataHelper.SendAsync(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.GetAllProducts));
+                await Send(user);
 
-                byte[] lBytes = socketHelper.Receive(Protocol.FixedDataSize);
+                byte[] lBytes = await networkDataHelper.ReceiveAsync(Protocol.FixedDataSize);
                 int dataLength = conversionHandler.ConvertBytesToInt(lBytes);
-                byte[] listBytes = socketHelper.Receive(dataLength);
+                byte[] listBytes = await networkDataHelper.ReceiveAsync(dataLength);
                 string list = conversionHandler.ConvertBytesToString(listBytes);
                 string[] products = list.Split(";");
                 return products;
@@ -221,12 +221,12 @@ namespace Client.UI
             return new string[0];
         }
 
-        private void ModifyProductMenu(string selectedProduct)
+        private async Task ModifyProductMenu(string selectedProduct)
         {
             Console.Clear();
             bool back = false;
             
-            string[] product = selectedProduct.Split(":");
+            string[] product = selectedProduct.Split("#");
 
             while (!back)
             {
@@ -256,14 +256,14 @@ namespace Client.UI
                             Console.WriteLine($"Description (current: {product[1]}): ");
                             Console.WriteLine("Enter new description or BACK to go back");
                             newValue = Console.ReadLine();
-                            SendModifiedValue(product[0], "description", newValue);
+                            await SendModifiedValue(product[0], "description", newValue);
                             break;
                         case 2:
                             Console.Clear();
                             Console.WriteLine($"Stock Available (current: {product[2]}): ");
                             if (int.TryParse(Console.ReadLine(), out int newStock) && newStock >= 0)
                             {
-                                SendModifiedValue(product[0], "stock", newStock.ToString());
+                                await SendModifiedValue(product[0], "stock", newStock.ToString());
                             }
                             else
                             {
@@ -275,7 +275,7 @@ namespace Client.UI
                             Console.WriteLine($"Price (current: {product[3]}): ");
                             if (double.TryParse(Console.ReadLine(), out double newPrice) && newPrice > 0)
                             {
-                                SendModifiedValue(product[0], "price", newPrice.ToString());
+                                await SendModifiedValue(product[0], "price", newPrice.ToString());
                             }
                             else
                             {
@@ -287,7 +287,7 @@ namespace Client.UI
                             Console.WriteLine($"Image Path (current: {product[4]}): ");
                             newValue = Console.ReadLine();
                             product[4] = !string.IsNullOrWhiteSpace(newValue) ? newValue : product[4];
-                            SendModifiedValue(product[0], "image", newValue);
+                            await SendModifiedValue(product[0], "image", newValue);
                             break;
                         case 5:
                             back = true;
@@ -301,27 +301,27 @@ namespace Client.UI
             }
         }
 
-        private void SendModifiedValue(string productName, string attribute, string newValue)
+        private async Task SendModifiedValue(string productName, string attribute, string newValue)
         {
             try
             {
                 if (attribute == "image")
                 {
-                    SendNewImage(productName, newValue);
+                    await SendNewImage(productName, newValue);
                 }
 
                 else
                 {
-                    socketHelper.Send(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.UpdateProduct));
+                    await networkDataHelper.SendAsync(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.UpdateProduct));
 
-                    string data = $"{productName}:{attribute}:{newValue}:{user}";
+                    string data = $"{productName}#{attribute}#{newValue}#{user}";
 
-                    Send(data);
+                    await Send(data);
                 }
 
-                byte[] lBytes = socketHelper.Receive(Protocol.FixedDataSize);
+                byte[] lBytes = await networkDataHelper.ReceiveAsync(Protocol.FixedDataSize);
                 int dataLength = conversionHandler.ConvertBytesToInt(lBytes);
-                byte[] responseBytes = socketHelper.Receive(dataLength);
+                byte[] responseBytes = await networkDataHelper.ReceiveAsync(dataLength);
                 string response = conversionHandler.ConvertBytesToString(responseBytes);
 
                 if (response == "Success")
@@ -337,6 +337,7 @@ namespace Client.UI
             }
             catch (SocketException)
             {
+                Console.Clear();
                 Console.WriteLine("Server disconnected");
                 Console.ReadKey();
             }
@@ -352,17 +353,18 @@ namespace Client.UI
             }
         }
 
-        private void SendNewImage(string productName, string newImagePath)
+        private async Task SendNewImage(string productName, string newImagePath)
         {
             try
             {
-                socketHelper.Send(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.UpdateProductImage));
-                var fileCommonHandler = new FileCommsHandler(socketHelper);
-                fileCommonHandler.SendFile(newImagePath);
-                Send($"{productName}:{user}");
+                await networkDataHelper.SendAsync(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.UpdateProductImage));
+                var fileCommonHandler = new FileCommsHandler(networkDataHelper);
+                await fileCommonHandler.SendFile(newImagePath);
+                await Send($"{productName}#{user}");
             }
             catch (SocketException)
             {
+                Console.Clear();
                 Console.WriteLine("Server disconnected");
                 Console.ReadKey();
             }
@@ -378,93 +380,84 @@ namespace Client.UI
             }
         }
 
-        private void DeleteProduct()
+        private async Task DeleteProduct()
         {
             Console.Clear();
-            try
+            var userProducts = await RetrieveAllUserProducts();
+
+            byte[] lenBytes = await networkDataHelper.ReceiveAsync(Protocol.FixedDataSize);
+            int responseLength = conversionHandler.ConvertBytesToInt(lenBytes);
+            byte[] resBytes = await networkDataHelper.ReceiveAsync(responseLength);
+            string res = conversionHandler.ConvertBytesToString(resBytes);
+
+            if (res == "Success")
             {
-                var userProducts = RetrieveAllUserProducts();
-                
-                byte[] lenBytes = socketHelper.Receive(Protocol.FixedDataSize);
-                int responseLength = conversionHandler.ConvertBytesToInt(lenBytes);
-                byte[] resBytes = socketHelper.Receive(responseLength);
-                string res = conversionHandler.ConvertBytesToString(resBytes);
-
-                if (res == "Success")
+                if (!userProducts.All(string.IsNullOrEmpty) && userProducts.Length > 0)
                 {
-                    if (!userProducts.All(string.IsNullOrEmpty) && userProducts.Length > 0)
+                    Console.WriteLine("Select a product to delete:");
+                    for (int i = 0; i < userProducts.Length; i++)
                     {
-                        Console.WriteLine("Select a product to delete:");
-                        for (int i = 0; i < userProducts.Length; i++)
-                        {
-                            string[] data = userProducts[i].Split(":");
-                            Console.WriteLine($"{i + 1}. Name: {data[0]} | Description: {data[1]} | Stock: {data[2]} | Price: {data[3]}");
-                        }
-                    
-                        var selectedProduct = Console.ReadLine();
+                        string[] data = userProducts[i].Split("#");
+                        Console.WriteLine(
+                            $"{i + 1}. Name: {data[0]} | Description: {data[1]} | Stock: {data[2]} | Price: {data[3]}");
+                    }
 
-                        if (int.TryParse(selectedProduct, out int selectedIndex) && selectedIndex >= 1 && selectedIndex <= userProducts.Length)
-                        {
-                            Console.WriteLine($"Are you sure you want to delete this product? (yes/no)");
+                    var selectedProduct = Console.ReadLine();
 
-                            string confirmation = Console.ReadLine();
-                            if (confirmation.Equals("yes", StringComparison.OrdinalIgnoreCase))
+                    if (int.TryParse(selectedProduct, out int selectedIndex) && selectedIndex >= 1 &&
+                        selectedIndex <= userProducts.Length)
+                    {
+                        Console.WriteLine($"Are you sure you want to delete this product? (yes/no)");
+
+                        string confirmation = Console.ReadLine();
+                        if (confirmation.Equals("yes", StringComparison.OrdinalIgnoreCase))
+                        {
+                            await networkDataHelper.SendAsync(
+                                conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.DeleteProduct));
+                            await Send(userProducts[selectedIndex - 1].Split("#")[0] + "#" + user);
+
+                            byte[] lBytes = await networkDataHelper.ReceiveAsync(Protocol.FixedDataSize);
+                            int dataLength = conversionHandler.ConvertBytesToInt(lBytes);
+                            byte[] responseBytes = await networkDataHelper.ReceiveAsync(dataLength);
+                            string response = conversionHandler.ConvertBytesToString(responseBytes);
+
+                            if (response == "Success")
                             {
-                                socketHelper.Send(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.DeleteProduct));
-                                Send(userProducts[selectedIndex-1].Split(":")[0]+":"+user);
-                            
-                                byte[] lBytes = socketHelper.Receive(Protocol.FixedDataSize);
-                                int dataLength = conversionHandler.ConvertBytesToInt(lBytes);
-                                byte[] responseBytes = socketHelper.Receive(dataLength);
-                                string response = conversionHandler.ConvertBytesToString(responseBytes);
-
-                                if (response == "Success")
-                                {
-                                    Console.WriteLine("Product deleted successfully.");
-                                }
-                                else
-                                {
-                                    Console.WriteLine(response);
-                                    Console.WriteLine("Press any key to continue");
-                                    Console.ReadKey();
-                                }
+                                Console.WriteLine("Product deleted successfully.");
                             }
                             else
                             {
-                                Console.WriteLine("Product not deleted.");
+                                Console.WriteLine(response);
+                                Console.WriteLine("Press any key to continue");
+                                Console.ReadKey();
                             }
                         }
                         else
                         {
-                            Console.WriteLine("Invalid selection. Please select a valid product number or type 'back' to quit.");
+                            Console.WriteLine("Product not deleted.");
                         }
                     }
                     else
                     {
-                        Console.WriteLine("You have no products to delete.");
+                        Console.WriteLine(
+                            "Invalid selection. Please select a valid product number or type 'back' to quit.");
                     }
                 }
-            }
-            catch (SocketException)
-            {
-                Console.WriteLine("Server disconnected");
-                Console.ReadKey();
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("Unexpected Exception: " + ex.Message);
-                Console.ReadKey();
+                else
+                {
+                    Console.WriteLine("You have no products to delete.");
+                }
             }
         }
 
-        private void ViewProductsMenu()
+        private async Task ViewProductsMenu()
         {
             Console.Clear();
-            var products = RetrieveAllProducts();
+            var products = await RetrieveAllProducts();
 
-            byte[] lBytes = socketHelper.Receive(Protocol.FixedDataSize);
+            byte[] lBytes = await networkDataHelper.ReceiveAsync(Protocol.FixedDataSize);
             int dataLength = conversionHandler.ConvertBytesToInt(lBytes);
-            byte[] responseBytes = socketHelper.Receive(dataLength);
+            byte[] responseBytes = await networkDataHelper.ReceiveAsync(dataLength);
             string response = conversionHandler.ConvertBytesToString(responseBytes);
 
             if (response == "Success")
@@ -474,7 +467,7 @@ namespace Client.UI
                     Console.WriteLine("If you want to search a product, type the name of the product, else select a product to expand");
                     for (int i = 0; i < products.Length; i++)
                     {
-                        string[] data = products[i].Split(":");
+                        string[] data = products[i].Split("#");
                         Console.WriteLine(
                             $"{i + 1}. Name: {data[0]} | Description: {data[1]} | Stock: {data[2]} | Price: {data[3]}");
                     }
@@ -483,12 +476,12 @@ namespace Client.UI
                     if (int.TryParse(option, out int selectedIndex) && selectedIndex >= 1 &&
                         selectedIndex <= products.Length)
                     {
-                        var product = products[selectedIndex - 1].Split(":");
-                        ViewProduct(product);
+                        var product = products[selectedIndex - 1].Split("#");
+                        await ViewProduct(product);
                     }
                     else
                     {
-                        SearchProducts(option);
+                        await SearchProducts(option);
                     }
                 }
                 else
@@ -504,7 +497,7 @@ namespace Client.UI
             }
         }
         
-        private void ViewProduct(string[] product)
+        private async Task ViewProduct(string[] product)
         {
             Console.Clear();
             Console.WriteLine($"Name: {product[0]}");
@@ -529,16 +522,16 @@ namespace Client.UI
                     switch (attributeChoice)
                     {
                         case 1:
-                            BuyProduct(product);
+                            await BuyProduct(product);
                             break;
                         case 2:
-                            ReviewProduct(product);
+                            await ReviewProduct(product);
                             break;
                         case 3:
-                            ExploreReviews(product);
+                            await ExploreReviews(product);
                             break;
                         case 4:
-                            DownloadImage(product);
+                            await DownloadImage(product);
                             break;
                         case 5:
                             return;
@@ -556,7 +549,7 @@ namespace Client.UI
             }
         }
 
-        private void BuyProduct(string[] product)
+        private async Task BuyProduct(string[] product)
         {
             if (int.Parse(product[2]) <= 0)
             {
@@ -574,12 +567,12 @@ namespace Client.UI
             string confirmation = Console.ReadLine();
             if (confirmation.Equals("yes", StringComparison.OrdinalIgnoreCase))
             {
-                socketHelper.Send(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.BuyProduct));
-                Send(product[0]+":"+product[5]+":"+user);
+                await networkDataHelper.SendAsync(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.BuyProduct));
+                await Send(product[0]+"#"+product[5]+"#"+user);
                             
-                byte[] lBytes = socketHelper.Receive(Protocol.FixedDataSize);
+                byte[] lBytes = await networkDataHelper.ReceiveAsync(Protocol.FixedDataSize);
                 int dataLength = conversionHandler.ConvertBytesToInt(lBytes);
-                byte[] responseBytes = socketHelper.Receive(dataLength);
+                byte[] responseBytes = await networkDataHelper.ReceiveAsync(dataLength);
                 string response = conversionHandler.ConvertBytesToString(responseBytes);
 
                 if (response == "Success")
@@ -599,15 +592,15 @@ namespace Client.UI
             }
         }
 
-        private void ViewPurchases()
+        private async Task ViewPurchases()
         {
             Console.Clear();
-            var products = RetrieveAllPurchases();
+            var products = await RetrieveAllPurchases();
 
 
-            byte[] lb = socketHelper.Receive(Protocol.FixedDataSize);
+            byte[] lb = await networkDataHelper.ReceiveAsync(Protocol.FixedDataSize);
             int dl = conversionHandler.ConvertBytesToInt(lb);
-            byte[] responseBytes = socketHelper.Receive(dl);
+            byte[] responseBytes = await networkDataHelper.ReceiveAsync(dl);
             string response = conversionHandler.ConvertBytesToString(responseBytes);
 
             if (response == "Success")
@@ -622,7 +615,7 @@ namespace Client.UI
                     {
                         for (int i = 0; i < products.Length; i++)
                         {
-                            string[] data = products[i].Split(":");
+                            string[] data = products[i].Split("#");
                             Console.WriteLine(
                                 $"{i + 1}. Name: {data[0]} | Bought for: {data[3]}");
                         }
@@ -632,8 +625,8 @@ namespace Client.UI
                         if (int.TryParse(option, out int selectedIndex) && selectedIndex >= 1 &&
                             selectedIndex <= products.Length)
                         {
-                            var product = products[selectedIndex - 1].Split(":");
-                            ViewProduct(product);
+                            var product = products[selectedIndex - 1].Split("#");
+                            await ViewProduct(product);
                             return;
                         }
                         else if (option == "exit")
@@ -659,14 +652,14 @@ namespace Client.UI
             }
         }
 
-        private void DownloadImage(string[] product)
+        private async Task DownloadImage(string[] product)
         {
-            socketHelper.Send(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.DownloadProductImage));
-            Send(product[4]);
+            await networkDataHelper.SendAsync(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.DownloadProductImage));
+            await Send(product[4]);
 
-            byte[] lBytes = socketHelper.Receive(Protocol.FixedDataSize);
+            byte[] lBytes = await networkDataHelper.ReceiveAsync(Protocol.FixedDataSize);
             int dataLength = conversionHandler.ConvertBytesToInt(lBytes);
-            byte[] responseBytes = socketHelper.Receive(dataLength);
+            byte[] responseBytes = await networkDataHelper.ReceiveAsync(dataLength);
             string response = conversionHandler.ConvertBytesToString(responseBytes);
 
             if (response == "Success")
@@ -677,19 +670,21 @@ namespace Client.UI
             {
                 Console.Write("There was an error downloading the image: " + response);
             }
+            Console.WriteLine("Press any key to continue");
+            Console.ReadKey();
             Console.Clear();
         }
 
-        private string[] RetrieveAllPurchases()
+        private async Task<string[]> RetrieveAllPurchases()
         {
             try
             {
-                socketHelper.Send(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.GetAllPurchases));
-                Send(user);
+                await networkDataHelper.SendAsync(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.GetAllPurchases));
+                await Send(user);
 
-                byte[] lBytes = socketHelper.Receive(Protocol.FixedDataSize);
+                byte[] lBytes = await networkDataHelper.ReceiveAsync(Protocol.FixedDataSize);
                 int dataLength = conversionHandler.ConvertBytesToInt(lBytes);
-                byte[] listBytes = socketHelper.Receive(dataLength);
+                byte[] listBytes = await networkDataHelper.ReceiveAsync(dataLength);
                 string list = conversionHandler.ConvertBytesToString(listBytes);
                 string[] products = list.Split(";");
                 return products;
@@ -703,7 +698,7 @@ namespace Client.UI
             return new string[0];
         }
         
-        private void ReviewProduct(string [] product)
+        private async Task ReviewProduct(string [] product)
         {
             Console.WriteLine("Enter your Score from 1 to 5:");
             string score = Console.ReadLine();
@@ -712,12 +707,12 @@ namespace Client.UI
 
             try
             {
-                socketHelper.Send(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.RateProduct));
-                Send(product[0]+":"+product[5]+":"+score+":"+review+":"+user);
+                await networkDataHelper.SendAsync(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.RateProduct));
+                await Send(product[0]+"#"+product[5]+"#"+score+"#"+review+"#"+user);
             
-                byte[] lBytes = socketHelper.Receive(Protocol.FixedDataSize);
+                byte[] lBytes = await networkDataHelper.ReceiveAsync(Protocol.FixedDataSize);
                 int dataLength = conversionHandler.ConvertBytesToInt(lBytes);
-                byte[] responseBytes = socketHelper.Receive(dataLength);
+                byte[] responseBytes = await networkDataHelper.ReceiveAsync(dataLength);
                 string response = conversionHandler.ConvertBytesToString(responseBytes);
 
                 if (response == "Success")
@@ -735,6 +730,7 @@ namespace Client.UI
             }
             catch (SocketException)
             {
+                Console.Clear();
                 Console.WriteLine("Server disconnected");
                 Console.ReadKey();
             }
@@ -745,13 +741,13 @@ namespace Client.UI
             }
         }
 
-        private void ExploreReviews(string[] product)
+        private async Task ExploreReviews(string[] product)
         {
-            var reviews = RetrieveProductReviews(product);
+            var reviews = await RetrieveProductReviews(product);
 
-            byte[] lBytes = socketHelper.Receive(Protocol.FixedDataSize);
+            byte[] lBytes = await networkDataHelper.ReceiveAsync(Protocol.FixedDataSize);
             int dataLength = conversionHandler.ConvertBytesToInt(lBytes);
-            byte[] responseBytes = socketHelper.Receive(dataLength);
+            byte[] responseBytes = await networkDataHelper.ReceiveAsync(dataLength);
             string response = conversionHandler.ConvertBytesToString(responseBytes);
 
             if (response == "Success")
@@ -760,7 +756,7 @@ namespace Client.UI
                 {
                     for (int i = 0; i < reviews.Length; i++)
                     {
-                        string[] data = reviews[i].Split(":");
+                        string[] data = reviews[i].Split("#");
                         Console.WriteLine(
                             $"-> Score: {data[2]} | Review: {data[1]} | User: {data[0]}");
                     }
@@ -780,16 +776,16 @@ namespace Client.UI
             }
         }
 
-        private string[] RetrieveProductReviews(string[] product)
+        private async Task<string[]> RetrieveProductReviews(string[] product)
         {
             try
             {
-                socketHelper.Send(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.GetAllProductReviews));
-                Send(product[0]+":"+product[5]);
+                await networkDataHelper.SendAsync(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.GetAllProductReviews));
+                await Send(product[0]+"#"+product[5]);
 
-                byte[] lBytes = socketHelper.Receive(Protocol.FixedDataSize);
+                byte[] lBytes = await networkDataHelper.ReceiveAsync(Protocol.FixedDataSize);
                 int dataLength = conversionHandler.ConvertBytesToInt(lBytes);
-                byte[] listBytes = socketHelper.Receive(dataLength);
+                byte[] listBytes = await networkDataHelper.ReceiveAsync(dataLength);
                 string list = conversionHandler.ConvertBytesToString(listBytes);
                 string[] reviews = list.Split(";");
                 return reviews;
@@ -803,22 +799,22 @@ namespace Client.UI
             return new string[0];
         }
 
-        private void SearchProducts(string productName)
+        private async Task SearchProducts(string productName)
         {
             try
             {
                 Console.Clear();
-                socketHelper.Send(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.SearchProducts));
-                Send(productName);
+                await networkDataHelper.SendAsync(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.SearchProducts));
+                await Send(productName);
 
-                byte[] lBytes = socketHelper.Receive(Protocol.FixedDataSize);
+                byte[] lBytes = await networkDataHelper.ReceiveAsync(Protocol.FixedDataSize);
                 int dataLength = conversionHandler.ConvertBytesToInt(lBytes);
-                byte[] responseBytes = socketHelper.Receive(dataLength);
+                byte[] responseBytes = await networkDataHelper.ReceiveAsync(dataLength);
                 string response = conversionHandler.ConvertBytesToString(responseBytes);
 
-                byte[] lb = socketHelper.Receive(Protocol.FixedDataSize);
+                byte[] lb = await networkDataHelper.ReceiveAsync(Protocol.FixedDataSize);
                 int dl = conversionHandler.ConvertBytesToInt(lb);
-                byte[] rb = socketHelper.Receive(dl);
+                byte[] rb = await networkDataHelper.ReceiveAsync(dl);
                 string r = conversionHandler.ConvertBytesToString(rb);
 
                 if (r == "Success")
@@ -830,7 +826,7 @@ namespace Client.UI
                         Console.WriteLine("Select a product to expand:");
                         for (int i = 0; i < products.Length; i++)
                         {
-                            string[] data = products[i].Split(":");
+                            string[] data = products[i].Split("#");
                             Console.WriteLine($"{i + 1}. Name: {data[0]} | Description: {data[1]} | Stock: {data[2]} | Price: {data[3]}");
                         }
 
@@ -848,9 +844,9 @@ namespace Client.UI
                             if (int.TryParse(option, out int selectedIndex) && selectedIndex >= 1 &&
                                 selectedIndex <= products.Length)
                             {
-                                var product = products[selectedIndex - 1].Split(":");
+                                var product = products[selectedIndex - 1].Split("#");
                                 exit = true;
-                                ViewProduct(product);
+                                await ViewProduct(product);
                             }
                             else
                             {
@@ -862,7 +858,7 @@ namespace Client.UI
                     {
                         Console.WriteLine("No products match your search");
                         Console.WriteLine("Returning to previous window");
-                        ViewProductsMenu();
+                        await ViewProductsMenu();
                     }
                 }
                 else
@@ -874,6 +870,7 @@ namespace Client.UI
             }
             catch (SocketException)
             {
+                Console.Clear();
                 Console.WriteLine("Server disconnected");
                 Console.ReadKey();
             }
@@ -884,14 +881,14 @@ namespace Client.UI
             }
         }
 
-        private void Send(string response)
+        private async Task Send(string response)
         {
             byte[] responseBytes = conversionHandler.ConvertStringToBytes(response);
             int responseLength = responseBytes.Length;
 
             byte[] lengthBytes = conversionHandler.ConvertIntToBytes(responseLength);
-            socketHelper.Send(lengthBytes);
-            socketHelper.Send(responseBytes);
+            await networkDataHelper.SendAsync(lengthBytes);
+            await networkDataHelper.SendAsync(responseBytes);
         }
     }
 }

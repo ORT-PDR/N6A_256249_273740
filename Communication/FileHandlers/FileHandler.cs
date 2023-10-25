@@ -1,16 +1,16 @@
 ﻿using System;
 namespace Communication.FileHandlers
 {
-	public class FileHandler
-	{
-        public bool FileExists(string path)
+    public class FileHandler
+    {
+        public async Task<bool> FileExists(string path)
         {
-            return File.Exists(path);
+            return await Task.Run(() => File.Exists(path));
         }
 
-        public string GetFileName(string path)
+        public async Task<string> GetFileName(string path)
         {
-            if (FileExists(path))
+            if (await FileExists(path))
             {
                 return new FileInfo(path).Name;
             }
@@ -18,9 +18,9 @@ namespace Communication.FileHandlers
             throw new Exception("File does not exist");
         }
 
-        public long GetFileSize(string path)
+        public async Task<long> GetFileSize(string path)
         {
-            if (FileExists(path))
+            if (await FileExists(path))
             {
                 return new FileInfo(path).Length;
             }
