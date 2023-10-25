@@ -61,9 +61,9 @@ namespace Client.UI
                                 byte[] responseBytes = await networkDataHelper.ReceiveAsync(dataLength);
                                 string response = conversionHandler.ConvertBytesToString(responseBytes);
 
-                                if (response == "success")
+                                if (response == "success" || response == "Authentication successful")
                                 {
-                                    Console.WriteLine("User created successfully!");
+                                    Console.WriteLine("Login successful!");
                                     Console.WriteLine("You're connected to the server!");
                                     Console.WriteLine("Press any key to continue");
                                     Console.ReadKey();
@@ -74,7 +74,7 @@ namespace Client.UI
                                 }
                                 else
                                 {
-                                    Console.WriteLine("Error creating new user:");
+                                    Console.WriteLine("Error logging in:");
                                     Console.WriteLine(response);
                                 }
                             }
@@ -124,7 +124,7 @@ namespace Client.UI
                                 byte[] responseBytes = await networkDataHelper.ReceiveAsync(dataLength);
                                 string response = conversionHandler.ConvertBytesToString(responseBytes);
 
-                                if (response == "success")
+                                if (response == "success" || response == "Authentication successful")
                                 {
                                     Console.WriteLine("User created successfully!");
                                     Console.WriteLine("You're connected to the server!");

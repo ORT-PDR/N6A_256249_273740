@@ -62,7 +62,7 @@ namespace Client.UI
                         break;
                     case "6":
                         Console.WriteLine("Logging out...");
-
+                        await networkDataHelper.SendAsync(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.Logout));
                         tcpClient.Close();
                         return;
                     default:

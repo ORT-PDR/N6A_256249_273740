@@ -178,7 +178,6 @@ namespace Server
                     if (tcpClient.Client.Poll(0, SelectMode.SelectRead) && tcpClient.Available == 0)
                     {
                         Console.WriteLine("Client disconnected");
-                        exit = true;
                         tcpClient.Close();
                         break;
                     }
