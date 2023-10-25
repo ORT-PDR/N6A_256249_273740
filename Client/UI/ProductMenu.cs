@@ -62,7 +62,7 @@ namespace Client.UI
                         break;
                     case "6":
                         Console.WriteLine("Logging out...");
-
+                        await networkDataHelper.SendAsync(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.Logout));
                         tcpClient.Close();
                         return;
                     default:
@@ -670,6 +670,8 @@ namespace Client.UI
             {
                 Console.Write("There was an error downloading the image: " + response);
             }
+            Console.WriteLine("Press any key to continue");
+            Console.ReadKey();
             Console.Clear();
         }
 

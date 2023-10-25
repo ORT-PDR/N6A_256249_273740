@@ -36,10 +36,10 @@ namespace Communication
 
             while (offset < length)
             {
-                int received = await networkStream.ReadAsync(response, offset, length - offset);   
+                int received = await networkStream.ReadAsync(response, offset, length - offset);
                 if (received == 0)
                 {
-                    Console.WriteLine("Error receiving data");
+                    Console.WriteLine("Client disconnected");
                     throw new Exception();
                 }
                 offset += received;

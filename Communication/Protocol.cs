@@ -27,6 +27,7 @@ namespace Communication
             public const string GetAllPurchases = "GPCH";
             public const string GetAllProductReviews = "GPRV";
             public const string Exit = "EXIT";
+            public const string Logout = "LOUT";
         }
         
         public static long CalculateFileParts(long fileSize)
