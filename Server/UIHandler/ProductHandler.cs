@@ -39,7 +39,7 @@ namespace Server.UIHandler
             int dataLength = conversionHandler.ConvertBytesToInt(lengthBytes);
             byte[] dataBytes = await networkDataHelper.ReceiveAsync(dataLength);
             string data = conversionHandler.ConvertBytesToString(dataBytes);
-            string[] dataParts = data.Split(':');
+            string[] dataParts = data.Split("#");
 
             try
             {
@@ -87,7 +87,7 @@ namespace Server.UIHandler
 
             try
             {
-                string[] dataArray = data.Split(":");
+                string[] dataArray = data.Split("#");
                 string productName = dataArray[0];
                 string attribute = dataArray[1];
                 string newValue = dataArray[2];
@@ -142,8 +142,8 @@ namespace Server.UIHandler
                 byte[] dataBytes = await networkDataHelper.ReceiveAsync(dataLength);
                 string data = conversionHandler.ConvertBytesToString(dataBytes);
 
-                string product = data.Split(":")[0];
-                string user = data.Split(":")[1];
+                string product = data.Split("#")[0];
+                string user = data.Split("#")[1];
 
                 Product p = productService.GetProductByName(product, user);
                 string aux = p.imagePath;
@@ -246,8 +246,8 @@ namespace Server.UIHandler
 
             try
             {
-                string product = data.Split(":")[0];
-                string user = data.Split(":")[1];
+                string product = data.Split("#")[0];
+                string user = data.Split("#")[1];
 
                 productService.DeleteProduct(product, user);
                 Console.WriteLine("Product deleted by client.");
@@ -307,9 +307,9 @@ namespace Server.UIHandler
 
             try
             {
-                string product = data.Split(":")[0];
-                string username = data.Split(":")[1];
-                string buyer = data.Split(":")[2];
+                string product = data.Split("#")[0];
+                string username = data.Split("#")[1];
+                string buyer = data.Split("#")[2];
 
                 productService.BuyProduct(product, username, buyer);
 
@@ -368,11 +368,11 @@ namespace Server.UIHandler
 
             try
             {
-                string product = review.Split(":")[0];
-                string user = review.Split(":")[1];
-                string score = review.Split(":")[2];
-                string reviewText = review.Split(":")[3];
-                string creator = review.Split(":")[4];
+                string product = review.Split("#")[0];
+                string user = review.Split("#")[1];
+                string score = review.Split("#")[2];
+                string reviewText = review.Split("#")[3];
+                string creator = review.Split("#")[4];
 
                 if (int.TryParse(score, out int scoreInt))
                 {
@@ -403,8 +403,8 @@ namespace Server.UIHandler
 
             try
             {
-                string product = data.Split(":")[0];
-                string creator = data.Split(":")[1];
+                string product = data.Split("#")[0];
+                string creator = data.Split("#")[1];
 
                 List<Review> reviews = productService.GetReviews(product, creator);
                 string reviewsString = "";

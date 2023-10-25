@@ -42,7 +42,7 @@ namespace Client.UI
                         Console.WriteLine("Enter password: ");
                         string password = Console.ReadLine();
 
-                        string credentials = $"{username}:{password}";
+                        string credentials = $"{username}#{password}";
                         await SendAsync(credentials);
 
                         try
@@ -105,7 +105,7 @@ namespace Client.UI
                         Console.WriteLine("Enter password: ");
                         string password = Console.ReadLine();
 
-                        string credentials = $"{username}:{password}";
+                        string credentials = $"{username}#{password}";
                         await SendAsync(credentials);
 
                         try

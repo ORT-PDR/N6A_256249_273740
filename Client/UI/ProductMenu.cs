@@ -98,7 +98,7 @@ namespace Client.UI
                     await fileCommonHandler.SendFile(imageAbsPath);
                 }
 
-                string data = $"{name}:{description}:{price}:{stock}:{user}";
+                string data = $"{name}#{description}#{price}#{stock}#{user}";
                 await Send(data);
 
                 byte[] lBytes = await networkDataHelper.ReceiveAsync(Protocol.FixedDataSize);
@@ -153,7 +153,7 @@ namespace Client.UI
                     Console.WriteLine("Select a product to update:");
                     for (int i = 0; i < userProducts.Length; i++)
                     {
-                        string[] data = userProducts[i].Split(":");
+                        string[] data = userProducts[i].Split("#");
                         Console.WriteLine($"{i + 1}. Name: {data[0]} | Description: {data[1]} | Stock: {data[2]} | Price: {data[3]}");
                     }
 
@@ -226,7 +226,7 @@ namespace Client.UI
             Console.Clear();
             bool back = false;
             
-            string[] product = selectedProduct.Split(":");
+            string[] product = selectedProduct.Split("#");
 
             while (!back)
             {
@@ -314,7 +314,7 @@ namespace Client.UI
                 {
                     await networkDataHelper.SendAsync(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.UpdateProduct));
 
-                    string data = $"{productName}:{attribute}:{newValue}:{user}";
+                    string data = $"{productName}#{attribute}#{newValue}#{user}";
 
                     await Send(data);
                 }
@@ -360,7 +360,7 @@ namespace Client.UI
                 await networkDataHelper.SendAsync(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.UpdateProductImage));
                 var fileCommonHandler = new FileCommsHandler(networkDataHelper);
                 await fileCommonHandler.SendFile(newImagePath);
-                await Send($"{productName}:{user}");
+                await Send($"{productName}#{user}");
             }
             catch (SocketException)
             {
@@ -397,7 +397,7 @@ namespace Client.UI
                     Console.WriteLine("Select a product to delete:");
                     for (int i = 0; i < userProducts.Length; i++)
                     {
-                        string[] data = userProducts[i].Split(":");
+                        string[] data = userProducts[i].Split("#");
                         Console.WriteLine(
                             $"{i + 1}. Name: {data[0]} | Description: {data[1]} | Stock: {data[2]} | Price: {data[3]}");
                     }
@@ -414,7 +414,7 @@ namespace Client.UI
                         {
                             await networkDataHelper.SendAsync(
                                 conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.DeleteProduct));
-                            await Send(userProducts[selectedIndex - 1].Split(":")[0] + ":" + user);
+                            await Send(userProducts[selectedIndex - 1].Split("#")[0] + "#" + user);
 
                             byte[] lBytes = await networkDataHelper.ReceiveAsync(Protocol.FixedDataSize);
                             int dataLength = conversionHandler.ConvertBytesToInt(lBytes);
@@ -467,7 +467,7 @@ namespace Client.UI
                     Console.WriteLine("If you want to search a product, type the name of the product, else select a product to expand");
                     for (int i = 0; i < products.Length; i++)
                     {
-                        string[] data = products[i].Split(":");
+                        string[] data = products[i].Split("#");
                         Console.WriteLine(
                             $"{i + 1}. Name: {data[0]} | Description: {data[1]} | Stock: {data[2]} | Price: {data[3]}");
                     }
@@ -476,7 +476,7 @@ namespace Client.UI
                     if (int.TryParse(option, out int selectedIndex) && selectedIndex >= 1 &&
                         selectedIndex <= products.Length)
                     {
-                        var product = products[selectedIndex - 1].Split(":");
+                        var product = products[selectedIndex - 1].Split("#");
                         await ViewProduct(product);
                     }
                     else
@@ -568,7 +568,7 @@ namespace Client.UI
             if (confirmation.Equals("yes", StringComparison.OrdinalIgnoreCase))
             {
                 await networkDataHelper.SendAsync(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.BuyProduct));
-                await Send(product[0]+":"+product[5]+":"+user);
+                await Send(product[0]+"#"+product[5]+"#"+user);
                             
                 byte[] lBytes = await networkDataHelper.ReceiveAsync(Protocol.FixedDataSize);
                 int dataLength = conversionHandler.ConvertBytesToInt(lBytes);
@@ -615,7 +615,7 @@ namespace Client.UI
                     {
                         for (int i = 0; i < products.Length; i++)
                         {
-                            string[] data = products[i].Split(":");
+                            string[] data = products[i].Split("#");
                             Console.WriteLine(
                                 $"{i + 1}. Name: {data[0]} | Bought for: {data[3]}");
                         }
@@ -625,7 +625,7 @@ namespace Client.UI
                         if (int.TryParse(option, out int selectedIndex) && selectedIndex >= 1 &&
                             selectedIndex <= products.Length)
                         {
-                            var product = products[selectedIndex - 1].Split(":");
+                            var product = products[selectedIndex - 1].Split("#");
                             await ViewProduct(product);
                             return;
                         }
@@ -706,7 +706,7 @@ namespace Client.UI
             try
             {
                 await networkDataHelper.SendAsync(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.RateProduct));
-                await Send(product[0]+":"+product[5]+":"+score+":"+review+":"+user);
+                await Send(product[0]+"#"+product[5]+"#"+score+"#"+review+"#"+user);
             
                 byte[] lBytes = await networkDataHelper.ReceiveAsync(Protocol.FixedDataSize);
                 int dataLength = conversionHandler.ConvertBytesToInt(lBytes);
@@ -754,7 +754,7 @@ namespace Client.UI
                 {
                     for (int i = 0; i < reviews.Length; i++)
                     {
-                        string[] data = reviews[i].Split(":");
+                        string[] data = reviews[i].Split("#");
                         Console.WriteLine(
                             $"-> Score: {data[2]} | Review: {data[1]} | User: {data[0]}");
                     }
@@ -779,7 +779,7 @@ namespace Client.UI
             try
             {
                 await networkDataHelper.SendAsync(conversionHandler.ConvertStringToBytes(Protocol.ProtocolCommands.GetAllProductReviews));
-                await Send(product[0]+":"+product[5]);
+                await Send(product[0]+"#"+product[5]);
 
                 byte[] lBytes = await networkDataHelper.ReceiveAsync(Protocol.FixedDataSize);
                 int dataLength = conversionHandler.ConvertBytesToInt(lBytes);
@@ -824,7 +824,7 @@ namespace Client.UI
                         Console.WriteLine("Select a product to expand:");
                         for (int i = 0; i < products.Length; i++)
                         {
-                            string[] data = products[i].Split(":");
+                            string[] data = products[i].Split("#");
                             Console.WriteLine($"{i + 1}. Name: {data[0]} | Description: {data[1]} | Stock: {data[2]} | Price: {data[3]}");
                         }
 
@@ -842,7 +842,7 @@ namespace Client.UI
                             if (int.TryParse(option, out int selectedIndex) && selectedIndex >= 1 &&
                                 selectedIndex <= products.Length)
                             {
-                                var product = products[selectedIndex - 1].Split(":");
+                                var product = products[selectedIndex - 1].Split("#");
                                 exit = true;
                                 await ViewProduct(product);
                             }
