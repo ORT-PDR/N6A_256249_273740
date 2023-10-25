@@ -670,6 +670,8 @@ namespace Client.UI
             {
                 Console.Write("There was an error downloading the image: " + response);
             }
+            Console.WriteLine("Press any key to continue");
+            Console.ReadKey();
             Console.Clear();
         }
 
