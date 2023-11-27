@@ -1,0 +1,49 @@
+syntax = "proto3";
+
+option csharp_namespace = "AdministrationServer";
+
+package models;
+
+message Review {
+  string id = 1;
+  string user = 2;
+  string comment = 3;
+  int32 score = 4;
+}
+
+message Product {
+  string id = 1;
+  string name = 2;
+  string description = 3;
+  int32 stock = 4;
+  double price = 5;
+  string imagePath = 6;
+  string creator = 7;
+  repeated Review reviews = 8;
+}
+
+message ProductList {
+  repeated Product products = 1;
+}
+
+message ReviewList {
+  repeated Review reviews = 1;
+}
+
+//DTOs para creacion 
+
+message ReviewCreationDTO {
+  string product = 1;
+  string user = 2;
+  int32 score = 3;
+  string comment = 4;
+  string creator = 5;
+}
+
+message ProductDTO{
+  string name = 1;
+  string description = 2;
+  int32 stock = 3;
+  double price = 4;
+  string imagePath = 5;
+}

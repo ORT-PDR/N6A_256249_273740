@@ -1,28 +1,54 @@
 syntax = "proto3";
+import "models.proto";
+import "google/protobuf/empty.proto";
 
 option csharp_namespace = "AdministrationServer";
 
 package admin;
 
-// The admin service definition.
+// Definicion del servicio
 service Admin {
 
-  // Functions availables
-  rpc PostUser(UserDTO) returns (MessageReply);
-  rpc DeleteUser(Id) returns (MessageReply);
-
-}
-
-message UserDTO{
-  int32 id = 1;
-  string name = 2;
+  // Funciones del servicio
+  rpc PostProduct(models.ProductDTO) returns (MessageReply);
+  rpc DeleteProduct(Id) returns (MessageReply);
+  rpc GetAllProducts(google.protobuf.Empty) returns (MessageReply);
+  rpc UpdateProduct(models.ProductDTO) returns (MessageReply);
+  rpc UpdateProductImage(ImageUrl) returns (MessageReply);
+  rpc GetAllUserProducts(Username) returns (MessageReply);
+  rpc SearchProduct(SearchString) returns (MessageReply);
+  rpc BuyProduct(PurchaseInfo) returns (MessageReply);
+  rpc GetAllPurchases(Username) returns (MessageReply);
+  rpc RateProduct(ReviewCreationDTO) returns (MessageReply);
+  rpc GetAllProductReviews(ProductName) returns (MessageReply);
 }
 
 message Id {
   int32 id = 1;
 }
 
-
 message MessageReply {
   string message = 1;
+}
+
+message ProductName {
+  string productName = 1;
+}
+
+message PurchaseInfo {
+  string product = 1;
+  string username = 2;
+  string creator = 3;
+}
+
+message Username {
+  string username = 1;
+}
+
+message ImageUrl {
+  string imagePath = 1;
+}
+
+message SearchString {
+  string searchString = 1;
 }
