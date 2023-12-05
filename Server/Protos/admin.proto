@@ -1,28 +1,99 @@
 syntax = "proto3";
+import "google/protobuf/empty.proto";
 
-option csharp_namespace = "Server";
+option csharp_namespace = "AdministrationServer";
 
 package admin;
 
-// The admin service definition.
+// Definicion del servicio
 service Admin {
 
-  // Functions availables
-  rpc PostUser(UserDTO) returns (MessageReply);
-  rpc DeleteUser(Id) returns (MessageReply);
-
+  // Funciones del servicio
+  rpc PostProduct(ProductDTO) returns (MessageReply);
+  rpc DeleteProduct(Id) returns (MessageReply);
+  rpc GetAllProducts(EmptyMessage) returns (ProductList);
+  rpc UpdateProduct(ProductDTO) returns (MessageReply);
+  rpc UpdateProductImage(ImageUrl) returns (MessageReply);
+  rpc GetAllUserProducts(Username) returns (MessageReply);
+  rpc SearchProduct(SearchString) returns (MessageReply);
+  rpc BuyProduct(PurchaseInfo) returns (MessageReply);
+  rpc GetAllPurchases(Username) returns (MessageReply);
+  rpc RateProduct(Review) returns (MessageReply);
+  rpc GetAllProductReviews(ProductName) returns (MessageReply);
 }
 
-message UserDTO{
-  int32 id = 1;
-  string name = 2;
-}
+message EmptyMessage{}
 
 message Id {
   int32 id = 1;
 }
 
-
 message MessageReply {
   string message = 1;
+}
+
+message ProductName {
+  string productName = 1;
+}
+
+message PurchaseInfo {
+  string product = 1;
+  string username = 2;
+  string creator = 3;
+}
+
+message Username {
+  string username = 1;
+}
+
+message ImageUrl {
+  string imagePath = 1;
+}
+
+message SearchString {
+  string searchString = 1;
+}
+
+message Review {
+  string id = 1;
+  string user = 2;
+  string comment = 3;
+  int32 score = 4;
+}
+
+message Product {
+  string id = 1;
+  string name = 2;
+  string description = 3;
+  int32 stock = 4;
+  double price = 5;
+  string imagePath = 6;
+  string creator = 7;
+  repeated Review reviews = 8;
+}
+
+message ProductList {
+  repeated Product products = 1;
+}
+
+message ReviewList {
+  repeated Review reviews = 1;
+}
+
+//DTOs para creacion 
+
+message ReviewCreationDTO {
+  string product = 1;
+  string user = 2;
+  int32 score = 3;
+  string comment = 4;
+  string creator = 5;
+}
+
+message ProductDTO{
+  string name = 1;
+  string description = 2;
+  int32 stock = 3;
+  double price = 4;
+  string imagePath = 5;
 }
