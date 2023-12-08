@@ -69,7 +69,7 @@ message Product {
   double price = 5;
   string imagePath = 6;
   string creator = 7;
-  repeated Review reviews = 8;
+  ReviewList reviews = 8;
 }
 
 message ProductList {

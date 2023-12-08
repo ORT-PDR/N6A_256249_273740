@@ -1,7 +1,8 @@
 using System;
 using System.Linq;
 using System.Collections.Generic;
-using Models;
+using AdministrationServer;
+using Server.Models;
 
 namespace Server.BusinessLogic
 {
@@ -28,7 +29,7 @@ namespace Server.BusinessLogic
                 id = Guid.NewGuid(),
                 username = username,
                 password = password,
-                purchases = new List<Product>()
+                purchases = new ProductList()
             };
             
             storage.AddUser(newUser);

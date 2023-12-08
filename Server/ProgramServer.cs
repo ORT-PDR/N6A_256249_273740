@@ -4,7 +4,6 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using Communication;
-using Models;
 using Server.BusinessLogic;
 using Server.UIHandler;
 

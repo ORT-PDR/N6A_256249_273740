@@ -1,5 +1,6 @@
 ﻿using System;
-using Models;
+using AdministrationServer;
+using Server.Models;
 
 namespace Server
 {
@@ -9,8 +10,8 @@ namespace Server
 		private static readonly object lockObject = new object();
 		private static readonly TestData testData = new TestData();
 
-		public List<User> users = testData.GetUsers();
-		public List<Product> products = testData.GetProducts();
+		public List<User> users = new List<User>();
+		public ProductList products = new ProductList();
 		
 		public static Storage Instance
 		{
@@ -42,20 +43,20 @@ namespace Server
 			lock (lockObject)
 			{
                 ValidateProduct(product);
-                products.Add(product);
+                products.Products.Add(product);
 			}
 		}
 
         public void AddReview(Product product, Review review)
         {
-            if (review.score < 1 || review.score > 5)
+            if (review.Score < 1 || review.Score > 5)
             {
 				throw new ServerException("Score must be between 1 and 5");
             }
 
             lock (lockObject)
             {
-	            product.reviews.Add(review);
+	            product.Reviews.Reviews.Add(review);
             }
         }
 
@@ -77,13 +78,13 @@ namespace Server
 
         private void ValidateProduct(Product p)
         {
-            if (products.Any(u => u.name == p.name && u.creator == p.creator))
+            if (products.Products.Any(u => u.Name == p.Name && u.Creator == p.Creator))
             {
                 throw new ServerException("Product name must be unique");
             }
         }
 
-        public List<Product> GetAllProducts()
+        public ProductList GetAllProducts()
 		{
 			lock (lockObject)
 			{
@@ -91,11 +92,11 @@ namespace Server
 			}
 		}
 
-		public Product GetProductById(Guid productId)
+		public Product GetProductById(string productId)
 		{
 			lock (lockObject)
 			{
-				return products.FirstOrDefault(p => p.id == productId);
+				return products.Products.FirstOrDefault(p => p.Id == productId);
 			}
 		}
 
@@ -103,7 +104,7 @@ namespace Server
         {
             lock (lockObject)
             {
-                return products.FirstOrDefault(p => p.name == productName);
+                return products.Products.FirstOrDefault(p => p.Name == productName);
             }
         }
         
@@ -111,7 +112,7 @@ namespace Server
         {
 	        lock (lockObject)
 	        {
-		        return products.FirstOrDefault(p => p.name == productName && p.creator == user);
+		        return products.Products.FirstOrDefault(p => p.Name == productName && p.Creator == user);
 	        }
         }
 
@@ -120,19 +121,19 @@ namespace Server
 	        return users.FirstOrDefault(u => u.username == username);
         }
 
-        public void DeleteProduct(Guid id)
+        public void DeleteProduct(string id)
 		{
 			lock (lockObject)
 			{
-				Product productToRemove = products.FirstOrDefault(p => p.id == id);
+				Product productToRemove = products.Products.FirstOrDefault(p => p.Id == id);
 
 				if (productToRemove != null)
 				{
-					if (!string.IsNullOrWhiteSpace(productToRemove.imagePath))
+					if (!string.IsNullOrWhiteSpace(productToRemove.ImagePath))
 					{
-						File.Delete(productToRemove.imagePath);
+						File.Delete(productToRemove.ImagePath);
 					}
-					products.Remove(productToRemove);
+					products.Products.Remove(productToRemove);
 				}
 				else
 				{
@@ -141,28 +142,28 @@ namespace Server
 			}
 		}
         
-        public void BuyProduct(Guid productId, string buyer)
+        public void BuyProduct(string productId, string buyer)
         {
 	        lock (lockObject)
 	        {
-		        Product productToBuy = products.FirstOrDefault(p => p.id == productId);
+		        Product productToBuy = products.Products.FirstOrDefault(p => p.Id == productId);
 
 		        if (productToBuy == null)
 		        {
 			        throw new ServerException("Product not found.");
 		        }
 
-		        if (productToBuy.stock <= 0)
+		        if (productToBuy.Stock <= 0)
 		        {
 			        throw new ServerException("Product out of stock.");
 		        }
                 
-		        productToBuy.stock--;
+		        productToBuy.Stock--;
 		        
 		        User user = users.FirstOrDefault(u => u.username == buyer);
 		        if (user != null)
 		        {
-			        user.purchases.Add(productToBuy);
+			        user.purchases.Products.Add(productToBuy);
 		        }
 	        }
         }

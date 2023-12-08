@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
-using Models;
+using AdministrationServer;
+using Server.Models;
 
 namespace Server.BusinessLogic
 {
@@ -16,25 +17,33 @@ namespace Server.BusinessLogic
         public void PublishProduct(Product product)
         {
             ValidateProduct(product);
-            product.id = Guid.NewGuid();
-            product.reviews = new List<Review>();
+            product.Id = Guid.NewGuid().ToString();
 
             storage.AddProduct(product);
         }
 
-        public List<Product> GetProducts(string productNameFilter = null)
+        public ProductList GetProducts(string productNameFilter = null)
         {
-            var query = storage.GetAllProducts().AsQueryable();
+            var allProducts = storage.GetAllProducts();
 
-            if (!string.IsNullOrWhiteSpace(productNameFilter))
+            if (string.IsNullOrWhiteSpace(productNameFilter))
             {
-                query = query.Where(product => product.name.Contains(productNameFilter, StringComparison.OrdinalIgnoreCase));
+                return allProducts;
             }
 
-            return query.ToList();
+            var filteredProducts = new ProductList();
+            foreach (var product in allProducts.Products)
+            {
+                if (product.Name.Contains(productNameFilter, StringComparison.OrdinalIgnoreCase))
+                {
+                    filteredProducts.Products.Add(product);
+                }
+            }
+
+            return filteredProducts;
         }
 
-        public Product GetProductById(Guid productId)
+        public Product GetProductById(string productId)
         {
             return storage.GetProductById(productId);
         }
@@ -46,7 +55,7 @@ namespace Server.BusinessLogic
 
         public Product UpdateProduct(Product updatedProduct)
         {
-            Product existingProduct = storage.GetProductByName(updatedProduct.name);
+            Product existingProduct = storage.GetProductByName(updatedProduct.Name);
     
             if (existingProduct == null)
             {
@@ -55,10 +64,10 @@ namespace Server.BusinessLogic
 
             lock (new object())
             {
-                existingProduct.description = updatedProduct.description;
-                existingProduct.stock = updatedProduct.stock;
-                existingProduct.price = updatedProduct.price;
-                existingProduct.imagePath = updatedProduct.imagePath;
+                existingProduct.Description = updatedProduct.Description;
+                existingProduct.Stock = updatedProduct.Stock;
+                existingProduct.Price = updatedProduct.Price;
+                existingProduct.ImagePath = updatedProduct.ImagePath;
 
                 ValidateProduct(existingProduct);
             }
@@ -73,7 +82,7 @@ namespace Server.BusinessLogic
             {
                 throw new ServerException("Product not found.");
             }
-            storage.DeleteProduct(existingProduct.id);
+            storage.DeleteProduct(existingProduct.Id);
         }
 
         public void BuyProduct(string product, string creator, string buyer)
@@ -83,10 +92,10 @@ namespace Server.BusinessLogic
             {
                 throw new ServerException("Product not found.");
             }
-            storage.BuyProduct(existingProduct.id, buyer);
+            storage.BuyProduct(existingProduct.Id, buyer);
         }
         
-        public List<Product> GetPurchases(string username)
+        public ProductList GetPurchases(string username)
         {
             User user = storage.GetUser(username);
 
@@ -103,14 +112,14 @@ namespace Server.BusinessLogic
 
             Review review = new Review()
             {
-                score = score,
-                comment = comment,
-                user = storage.GetUser(creator)
+                Score = score,
+                Comment = comment,
+                User = storage.GetUser(creator).ToString()
             };
             storage.AddReview(existingProduct, review);
         }
 
-        public List<Review> GetReviews(string product, string user)
+        public ReviewList GetReviews(string product, string user)
         {
             Product existingProduct = storage.GetUserProductByName(product, user);
             if (existingProduct == null)
@@ -118,7 +127,7 @@ namespace Server.BusinessLogic
                 throw new ServerException("Product not found.");
             }
 
-            return existingProduct.reviews;
+            return existingProduct.Reviews;
         }
         
         public string ReviewToString(Review review)
@@ -128,14 +137,23 @@ namespace Server.BusinessLogic
                 return "Review is null";
             }
 
-            return $"{review.user.username}#{review.comment}#{review.score}";
+            return $"{review.User}#{review.Comment}#{review.Score}";
         }
         
-        public List<Product> GetProductsByUser(string userName)
+        public ProductList GetProductsByUser(string userName)
         {
-            return storage.GetAllProducts()
-                .Where(product => product.creator.Equals(userName, StringComparison.OrdinalIgnoreCase))
-                .ToList();
+            var allProducts = storage.GetAllProducts();
+            var productsByUser = new ProductList();
+
+            foreach (var product in allProducts.Products)
+            {
+                if (product.Creator.Equals(userName, StringComparison.OrdinalIgnoreCase))
+                {
+                    productsByUser.Products.Add(product);
+                }
+            }
+
+            return productsByUser;
         }
         
         public string ProductToString(Product product)
@@ -145,7 +163,7 @@ namespace Server.BusinessLogic
                 return "Product is null";
             }
 
-            return $"{product.name}#{product.description}#{product.stock}#{product.price}#{product.imagePath}#{product.creator}";
+            return $"{product.Name}#{product.Description}#{product.Stock}#{product.Price}#{product.ImagePath}#{product.Creator}";
         }
 
         private void ValidateProduct(Product product)
@@ -155,17 +173,17 @@ namespace Server.BusinessLogic
                 throw new ServerException("Product cannot be null.");
             }
 
-            if (string.IsNullOrWhiteSpace(product.name))
+            if (string.IsNullOrWhiteSpace(product.Name))
             {
                 throw new ServerException("Product name cannot be empty or whitespace.");
             }
 
-            if (product.stock < 0)
+            if (product.Stock < 0)
             {
                 throw new ServerException("Stock must be a non-negative number.");
             }
 
-            if (product.price <= 0)
+            if (product.Price <= 0)
             {
                 throw new ServerException("Price must be a positive number.");
             }
