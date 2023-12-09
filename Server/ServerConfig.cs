@@ -5,6 +5,7 @@ namespace Server
 	{
         public static string serverIPconfigkey = "ServerIpAddress";
         public static string serverPortconfigkey = "ServerPort";
-    }
+        public static string grpcPort = "grpcPort";
+	}
 }
 

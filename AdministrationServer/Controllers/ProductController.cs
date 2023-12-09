@@ -12,7 +12,7 @@ namespace AdministrationServer.Controllers
     [TypeFilter(typeof(ExceptionFilter))]
     public class ProductController : ControllerBase
     {
-        private string grpcURL = "http://localhost:5240";
+        private string grpcURL = "http://localhost:50051";
         private Admin.AdminClient client;
 
         static readonly SettingsManager SettingsMgr = new SettingsManager();

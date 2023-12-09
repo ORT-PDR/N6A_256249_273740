@@ -1,8 +1,9 @@
-namespace AdministrationServer.Filters;
-
+using Server;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using System;
+
+namespace AdministrationServer.Filters;
 
 public class ExceptionFilter : IExceptionFilter
 {

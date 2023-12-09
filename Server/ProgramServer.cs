@@ -4,6 +4,9 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using Communication;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.DependencyInjection;
+using Server.AdministrationServices;
 using Server.BusinessLogic;
 using Server.UIHandler;
 
@@ -33,6 +36,20 @@ namespace Server
                 
                 tcpListener = new TcpListener(localEndpoint);
                 tcpListener.Start();
+                
+                
+                var builder = WebApplication.CreateBuilder(args);
+                builder.Services.AddGrpc();
+
+                var app = builder.Build();
+                
+                var grpcPort = int.Parse(settingsMngr.ReadSettings(ServerConfig.grpcPort));
+                //todavia no se en que usar esa variable
+
+                app.MapGrpcService<AdminService>();
+                app.MapGet("/", () => "Communication with gRPC endpoints must be made through a gRPC client. To learn how to create a client, visit: https://go.microsoft.com/fwlink/?linkid=2086909");
+
+                app.Run();
                 
                 
                 var exitTask = Task.Run(async () => await HandleConsoleInputAsync());
