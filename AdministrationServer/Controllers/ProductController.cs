@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using AdministrationServer.Filters;
 using Communication;
 using Grpc.Net.Client;
 using Microsoft.AspNetCore.Mvc;
@@ -8,6 +9,7 @@ namespace AdministrationServer.Controllers
 {
     [Route("admin")]
     [ApiController]
+    [TypeFilter(typeof(ExceptionFilter))]
     public class ProductController : ControllerBase
     {
 
@@ -21,7 +23,7 @@ namespace AdministrationServer.Controllers
             
         }
 
-        [HttpGet("users")]
+        [HttpGet("products")]
         public async Task<ActionResult> GetAllProducts()
         {
             using var channel = GrpcChannel.ForAddress("http://localhost:5240");
@@ -31,24 +33,24 @@ namespace AdministrationServer.Controllers
             return Ok(reply);
         }
 
-        [HttpPost("users")]
-        public async Task<ActionResult> PostUser([FromBody] ProductDTO user)
-        {
-            //using var channel = GrpcChannel.ForAddress(grpcURL);
-            using var channel = GrpcChannel.ForAddress("http://localhost:5240");
-            client = new Admin.AdminClient(channel);
-            var reply = await client.PostProductAsync(user);
-            return Ok(reply.Message);
-        }
-
-        [HttpDelete("users/{id}")]
-        public async Task<ActionResult> DeleteUser([FromRoute] int id)
-        {
-            using var channel = GrpcChannel.ForAddress("http://localhost:5240");
-            client = new Admin.AdminClient(channel);
-            var reply = await client.DeleteProductAsync(new Id { Id_ = id });
-            return Ok(reply.Message);
-        }
+        // [HttpPost("users")]
+        // public async Task<ActionResult> PostUser([FromBody] ProductDTO user)
+        // {
+        //     //using var channel = GrpcChannel.ForAddress(grpcURL);
+        //     using var channel = GrpcChannel.ForAddress("http://localhost:5240");
+        //     client = new Admin.AdminClient(channel);
+        //     var reply = await client.PostProductAsync(user);
+        //     return Ok(reply.Message);
+        // }
+        //
+        // [HttpDelete("users/{id}")]
+        // public async Task<ActionResult> DeleteUser([FromRoute] int id)
+        // {
+        //     using var channel = GrpcChannel.ForAddress("http://localhost:5240");
+        //     client = new Admin.AdminClient(channel);
+        //     var reply = await client.DeleteProductAsync(new Id { Id_ = id });
+        //     return Ok(reply.Message);
+        // }
 
 
     }
