@@ -96,4 +96,5 @@ message ProductDTO{
   int32 stock = 3;
   double price = 4;
   string imagePath = 5;
+  string creator = 6;
 }

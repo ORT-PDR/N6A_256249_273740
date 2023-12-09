@@ -12,7 +12,7 @@ public class ExceptionFilter : IExceptionFilter
         {
             context.Result = new ObjectResult($"Server error: {context.Exception.Message}")
             {
-                StatusCode = 500 
+                StatusCode = 400 
             };
         }
         else if (context.Exception is Exception)

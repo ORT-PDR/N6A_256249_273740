@@ -12,7 +12,7 @@ namespace AdministrationServer.Controllers
     [TypeFilter(typeof(ExceptionFilter))]
     public class ProductController : ControllerBase
     {
-
+        private string grpcURL = "http://localhost:5240";
         private Admin.AdminClient client;
 
         static readonly SettingsManager SettingsMgr = new SettingsManager();
@@ -26,22 +26,21 @@ namespace AdministrationServer.Controllers
         [HttpGet("products")]
         public async Task<ActionResult> GetAllProducts()
         {
-            using var channel = GrpcChannel.ForAddress("http://localhost:5240");
+            using var channel = GrpcChannel.ForAddress(grpcURL);
             client = new Admin.AdminClient(channel);
             var emptyMessage = new EmptyMessage();
             var reply = await client.GetAllProductsAsync(emptyMessage);
             return Ok(reply);
         }
 
-        // [HttpPost("users")]
-        // public async Task<ActionResult> PostUser([FromBody] ProductDTO user)
-        // {
-        //     //using var channel = GrpcChannel.ForAddress(grpcURL);
-        //     using var channel = GrpcChannel.ForAddress("http://localhost:5240");
-        //     client = new Admin.AdminClient(channel);
-        //     var reply = await client.PostProductAsync(user);
-        //     return Ok(reply.Message);
-        // }
+        [HttpPost("product")]
+        public async Task<ActionResult> PostProduct([FromBody] ProductDTO product)
+        {
+            using var channel = GrpcChannel.ForAddress(grpcURL);
+            client = new Admin.AdminClient(channel);
+            var reply = await client.PostProductAsync(product);
+            return Ok(reply.Message);
+        }
         //
         // [HttpDelete("users/{id}")]
         // public async Task<ActionResult> DeleteUser([FromRoute] int id)
