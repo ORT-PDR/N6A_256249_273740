@@ -14,8 +14,7 @@ namespace PurchasesServer
         
             var connection = factory.CreateConnection();
             var channel = connection.CreateModel();
-
-            channel.ExchangeDeclare(exchange: "purchase_events_exchange", type: ExchangeType.Fanout);
+            
             channel.QueueDeclare(queue: "purchase_events_queue", durable: true, exclusive: false, autoDelete: false, arguments: null);
             channel.QueueBind(queue: "purchase_events_queue", exchange: "purchase_events_exchange", routingKey: "");
 
