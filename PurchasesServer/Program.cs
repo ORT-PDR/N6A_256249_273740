@@ -22,7 +22,7 @@ namespace PurchasesServer
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
                     webBuilder.UseStartup<Startup>()
-                        .UseUrls("http://localhost:5001");
+                        .UseUrls("http://localhost:5031");
                 });
     }
 }

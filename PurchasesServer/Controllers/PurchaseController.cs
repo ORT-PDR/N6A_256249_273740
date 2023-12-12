@@ -5,7 +5,7 @@ using System.Collections.Generic;
 namespace PurchasesServer.Controllers
 {
     [ApiController]
-    [Route("api/purchases")]
+    [Route("purchases")]
     [ServiceFilter(typeof(CustomExceptionFilter))]
     public class PurchaseController : ControllerBase
     {
