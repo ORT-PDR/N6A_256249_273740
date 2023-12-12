@@ -716,7 +716,7 @@ namespace Client.UI
 
                 if (response == "Success")
                 {
-                    Console.WriteLine("Product published successfully.");
+                    Console.WriteLine("Product review published successfully.");
                     Console.WriteLine("Press any key to continue");
                     Console.ReadKey();
                 }

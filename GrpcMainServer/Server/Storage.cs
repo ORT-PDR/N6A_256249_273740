@@ -19,7 +19,7 @@ public class Storage
 				{
 					instance = new Storage();
 					instance.users = new List<User>();
-					instance.products = new ProductList();
+					instance.products = instance.LoadTestData();
 				}	
 			}
 			return instance;
@@ -163,5 +163,71 @@ public class Storage
 			        user.purchases.Products.Add(productToBuy);
 		        }
 	        }
+        }
+
+        public ProductList LoadTestData()
+        {
+	        Product p1 = new Product
+	        {
+		        Id = Guid.NewGuid().ToString(),
+		        Name = "Soccer Ball",
+		        Description = "Official Balon D'or for matches BOBO",
+		        Stock = 100,
+		        Price = 29.99,
+		        ImagePath = "soccer_ball.jpg",
+		        Creator = "Lionel Messi",
+		        Reviews = new ReviewList()
+		        {
+			        Reviews =
+			        {
+				        new Review
+				        {
+					        Id = Guid.NewGuid().ToString(),
+					        User = "Cristiano Ronaldo",
+					        Comment = "Great quality and durability",
+					        Score = 5
+				        },
+
+				        new Review
+				        {
+					        Id = Guid.NewGuid().ToString(),
+					        User = "Neymar Jr",
+					        Comment = "A bit expensive, but worth it",
+					        Score = 4
+				        }
+			        }
+		        }
+	        };
+	        Product p2 = new Product
+	        {
+		        Id = Guid.NewGuid().ToString(),
+		        Name = "Soccer Jersey",
+		        Description = "Special edition soccer jersey muito bonito SIUUU",
+		        Stock = 50,
+		        Price = 49.99,
+		        ImagePath = "soccer_jersey.jpg",
+		        Creator = "Cristiano Ronaldo",
+		        Reviews = new ReviewList
+		        {
+			        Reviews = 
+			        {
+				        new Review
+				        {
+					        Id = Guid.NewGuid().ToString(),
+					        User = "Kylian Mbappé",
+					        Comment = "I love the fabric quality",
+					        Score = 5
+				        },
+				        new Review
+				        {
+					        Id = Guid.NewGuid().ToString(),
+					        User = "Sergio Ramos",
+					        Comment = "Spectacular design",
+					        Score = 4
+				        }
+			        }
+		        }
+	        };
+	        return new ProductList() { Products = { p1, p2 } };
         }
     }
