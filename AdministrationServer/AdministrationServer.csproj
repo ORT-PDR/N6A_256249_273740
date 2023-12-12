@@ -20,6 +20,7 @@
     <ItemGroup>
       <ProjectReference Include="..\Client\Client.csproj" />
       <ProjectReference Include="..\Communication\Communication.csproj" />
+      <ProjectReference Include="..\GrpcMainServer\GrpcMainServer.csproj" />
     </ItemGroup>
 
     <ItemGroup>
