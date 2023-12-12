@@ -11,15 +11,13 @@ namespace PurchasesServer
         public MQService()
         {
             var factory = new ConnectionFactory() { HostName = "localhost" };
-            
+        
             var connection = factory.CreateConnection();
             var channel = connection.CreateModel();
 
-            channel.QueueDeclare(queue: "purchase_events_queue", 
-                durable: true, 
-                exclusive: false, 
-                autoDelete: false, 
-                arguments: null);
+            channel.ExchangeDeclare(exchange: "purchase_events_exchange", type: ExchangeType.Fanout);
+            channel.QueueDeclare(queue: "purchase_events_queue", durable: true, exclusive: false, autoDelete: false, arguments: null);
+            channel.QueueBind(queue: "purchase_events_queue", exchange: "purchase_events_exchange", routingKey: "");
 
             var consumer = new EventingBasicConsumer(channel);
             consumer.Received += (model, ea) =>
@@ -35,7 +33,7 @@ namespace PurchasesServer
                     Product = p[1],
                     Date = DateTime.Parse(p[2])
                 };
-                
+            
                 var purchaseDataAccess = PurchaseDataAccess.GetInstance();
                 purchaseDataAccess.AddPurchase(purchase);
             };

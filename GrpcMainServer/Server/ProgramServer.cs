@@ -21,7 +21,7 @@ public class ProgramServer
         public async Task RunConsole()
         {
             var serverIpAddress = settingsMngr.ReadSettings(ServerConfig.serverIPconfigkey);
-            var serverPort = settingsMngr.ReadSettings(ServerConfig.grpcPortconfigkey);
+            var serverPort = settingsMngr.ReadSettings(ServerConfig.serverPortconfigkey);
             Console.WriteLine($"TCP server is starting in address {serverIpAddress} and port {serverPort}");
 
             try

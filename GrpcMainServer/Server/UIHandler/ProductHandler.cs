@@ -317,7 +317,7 @@ public class ProductHandler
                 productService.BuyProduct(product, username, buyer);
                 
                 string purchaseEventData = buyer +  "," + product + "," + DateTime.Now.ToString();
-                SendPurchaseEventToPurchaseServer(purchaseEventData);
+                SendPurchaseEventToExchange(purchaseEventData);
 
                 
                 string response = "Success";
@@ -487,20 +487,22 @@ public class ProductHandler
             await networkDataHelper.SendAsync(responseBytes);
         }
         
-        public void SendPurchaseEventToPurchaseServer(string purchaseEventData)
+        public void SendPurchaseEventToExchange(string purchaseEventData)
         {
-            var factory = new ConnectionFactory() { HostName = "localhost" }; // Ajusta esto según la configuración de RabbitMQ
+            var factory = new ConnectionFactory() { HostName = "localhost" };
 
             using (var connection = factory.CreateConnection())
             using (var channel = connection.CreateModel())
             {
-                channel.QueueDeclare(queue: "purchase_events_queue", durable: true, exclusive: false, autoDelete: false, arguments: null);
+                // Declara un intercambio de tipo "fanout"
+                channel.ExchangeDeclare(exchange: "purchase_events_exchange", type: ExchangeType.Fanout);
 
+                // Publica el mensaje en el intercambio "purchase_events_exchange"
                 var body = Encoding.UTF8.GetBytes(purchaseEventData);
+                channel.BasicPublish(exchange: "purchase_events_exchange", routingKey: "", basicProperties: null, body: body);
 
-                channel.BasicPublish(exchange: "", routingKey: "purchase_events_queue", basicProperties: null, body: body);
-
-                Console.WriteLine("Sent purchase event to Purchase Server: {0}", purchaseEventData);
+                Console.WriteLine("Sent purchase event to Exchange: {0}", purchaseEventData);
             }
         }
+
     }

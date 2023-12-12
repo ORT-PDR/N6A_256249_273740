@@ -22,6 +22,7 @@ namespace PurchasesServer
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllers();
+            services.AddScoped<CustomExceptionFilter>();
             
             services.AddSwaggerGen(c =>
             {
