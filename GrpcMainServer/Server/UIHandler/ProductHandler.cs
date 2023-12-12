@@ -1,13 +1,13 @@
-﻿using System;
-using System.Net;
 using AdministrationServer;
 using Communication;
+using System.Text;
 using Communication.FileHandlers;
-using Server.BusinessLogic;
+using GrpcMainServer.Server.BusinessLogic;
+//using RabbitMQ.Client;
 
-namespace Server.UIHandler
-{
-	public class ProductHandler
+namespace GrpcMainServer.Server.UIHandler;
+
+public class ProductHandler
 	{
         private readonly NetworkDataHelper networkDataHelper;
         private readonly ConversionHandler conversionHandler;
@@ -313,6 +313,9 @@ namespace Server.UIHandler
 
                 productService.BuyProduct(product, username, buyer);
 
+                string purchaseEventData = "Compra realizada: " + buyer +  ", " + product ;
+                SendPurchaseEventToPurchaseServer(purchaseEventData);
+                
                 string response = "Success";
                 byte[] responseBytes = conversionHandler.ConvertStringToBytes(response);
                 await SendResponse(responseBytes);
@@ -479,6 +482,21 @@ namespace Server.UIHandler
             await networkDataHelper.SendAsync(lengthBytes);
             await networkDataHelper.SendAsync(responseBytes);
         }
+        
+        public void SendPurchaseEventToPurchaseServer(string purchaseEventData)
+        {
+            // var factory = new ConnectionFactory() { HostName = "localhost" }; // Ajusta esto según la configuración de RabbitMQ
+            //
+            // using (var connection = factory.CreateConnection())
+            // using (var channel = connection.CreateModel())
+            // {
+            //     channel.QueueDeclare(queue: "purchase_events_queue", durable: true, exclusive: false, autoDelete: false, arguments: null);
+            //
+            //     var body = Encoding.UTF8.GetBytes(purchaseEventData);
+            //
+            //     channel.BasicPublish(exchange: "", routingKey: "purchase_events_queue", basicProperties: null, body: body);
+            //
+            //     Console.WriteLine("Sent purchase event to Purchase Server: {0}", purchaseEventData);
+            // }
+        }
     }
-}
-

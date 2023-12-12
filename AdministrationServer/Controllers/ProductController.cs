@@ -12,7 +12,6 @@ namespace AdministrationServer.Controllers
     [TypeFilter(typeof(ExceptionFilter))]
     public class ProductController : ControllerBase
     {
-        private string grpcURL = "http://localhost:50051";
         private Admin.AdminClient client;
 
         static readonly SettingsManager SettingsMgr = new SettingsManager();
@@ -20,13 +19,12 @@ namespace AdministrationServer.Controllers
         {
             AppContext.SetSwitch(
                   "System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
-            
         }
 
         [HttpGet("products")]
         public async Task<ActionResult> GetAllProducts()
         {
-            using var channel = GrpcChannel.ForAddress(grpcURL);
+            using var channel = GrpcChannel.ForAddress("http://localhost:5257");
             client = new Admin.AdminClient(channel);
             var emptyMessage = new EmptyMessage();
             var reply = await client.GetAllProductsAsync(emptyMessage);
@@ -36,7 +34,7 @@ namespace AdministrationServer.Controllers
         [HttpPost("product")]
         public async Task<ActionResult> PostProduct([FromBody] ProductDTO product)
         {
-            using var channel = GrpcChannel.ForAddress(grpcURL);
+            using var channel = GrpcChannel.ForAddress("http://localhost:5257");
             client = new Admin.AdminClient(channel);
             var reply = await client.PostProductAsync(product);
             return Ok(reply.Message);

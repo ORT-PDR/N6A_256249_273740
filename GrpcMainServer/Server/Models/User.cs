@@ -1,6 +1,6 @@
 using AdministrationServer;
 
-namespace Server.Models;
+namespace GrpcMainServer.Server.Models;
 
 public class User
 {

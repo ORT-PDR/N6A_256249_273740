@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Server.Kestrel.Core;
+
 namespace AdminServer
 {
     public class Program
@@ -23,7 +25,7 @@ namespace AdminServer
                         .AllowAnyHeader();
                     });
             });
-
+            
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
@@ -32,8 +34,6 @@ namespace AdminServer
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }
-
-            app.UseHttpsRedirection();
 
             app.UseAuthorization();
 

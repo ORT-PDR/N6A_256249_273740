@@ -1,7 +1,7 @@
-using Server;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using System;
+using GrpcMainServer.Server;
 
 namespace AdministrationServer.Filters;
 

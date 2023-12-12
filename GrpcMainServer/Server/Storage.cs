@@ -1,32 +1,28 @@
-﻿using System;
 using AdministrationServer;
-using Server.Models;
+using GrpcMainServer.Server.Models;
 
-namespace Server
-{
-	public class Storage
+namespace GrpcMainServer.Server;
+
+public class Storage
 	{
 		private static Storage instance = null;
 		private static readonly object lockObject = new object();
-		private static readonly TestData testData = new TestData();
 
 		public List<User> users = new List<User>();
 		public ProductList products = new ProductList();
 		
-		public static Storage Instance
+		public static Storage GetInstance()
 		{
-			get
+			lock (lockObject)
 			{
-				lock (lockObject)
-				{
-					if (instance == null)
-					{
-						instance = new Storage();
-					}
-				}
-				return instance;
+
+				if (instance == null)
+					instance = new Storage();
+				instance.users = new List<User>();
+				instance.products = new ProductList();
 			}
-		}
+			return instance;
+		} 
 
 		public void AddUser(User user)
 		{
@@ -168,5 +164,3 @@ namespace Server
 	        }
         }
     }
-}
-
