@@ -25,7 +25,7 @@ service Admin {
 message EmptyMessage{}
 
 message Id {
-  int32 id = 1;
+  string id = 1;
 }
 
 message MessageReply {

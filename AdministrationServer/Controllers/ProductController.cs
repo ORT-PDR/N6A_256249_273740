@@ -39,16 +39,15 @@ namespace AdministrationServer.Controllers
             var reply = await client.PostProductAsync(product);
             return Ok(reply.Message);
         }
-        //
-        // [HttpDelete("users/{id}")]
-        // public async Task<ActionResult> DeleteUser([FromRoute] int id)
-        // {
-        //     using var channel = GrpcChannel.ForAddress("http://localhost:5240");
-        //     client = new Admin.AdminClient(channel);
-        //     var reply = await client.DeleteProductAsync(new Id { Id_ = id });
-        //     return Ok(reply.Message);
-        // }
 
-
+        [HttpDelete("product/{id}")]
+        public async Task<ActionResult> DeleteProduct([FromRoute] string id)
+        {
+            using var channel = GrpcChannel.ForAddress("http://localhost:5257");
+            client = new Admin.AdminClient(channel);
+            Id _id = new Id() { Id_ = id};
+            var reply = await client.DeleteProductAsync(_id);
+            return Ok(reply.Message);
+        }
     }
 }

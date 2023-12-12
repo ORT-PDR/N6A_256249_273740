@@ -6,9 +6,9 @@ namespace GrpcMainServer.Services;
 
 public class AdminService: Admin.AdminBase
 {
-    ProductService productService = ProductService.GetInstance();
     public override Task<ProductList> GetAllProducts(EmptyMessage emptyMessage, ServerCallContext context)
     {
+        ProductService productService = ProductService.GetInstance();
         Console.WriteLine("Client requested all products");
         ProductList products = productService.GetProducts(null);
         return Task.FromResult(products);
@@ -16,6 +16,7 @@ public class AdminService: Admin.AdminBase
 
     public override Task<MessageReply> PostProduct(ProductDTO productDto, ServerCallContext context)
     {
+        ProductService productService = ProductService.GetInstance();
         Console.WriteLine("Client requested to post a product");
         Product p = new Product()
         {
