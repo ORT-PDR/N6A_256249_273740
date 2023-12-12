@@ -23,7 +23,12 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n  \"name\": \"arbolito\",\n  \"description\": \"arbol navideno con luces\",\n  \"stock\": 50,\n  \"price\": 100,\n  \"imagePath\": \"\",\n  \"creator\": \"mimi\"\n}"
+					"raw": "{\n  \"name\": \"arbolito\",\n  \"description\": \"arbol navideno con luces\",\n  \"stock\": 50,\n  \"price\": 100,\n  \"imagePath\": \"\",\n  \"creator\": \"mimi\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
 				},
 				"url": "http://localhost:{{apiPort}}/admin/product"
 			},
@@ -36,7 +41,12 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n  \"id\": \"00\",\n  \"name\": \"arbolito\",\n  \"description\": \"jingle bells jingle bells\",\n  \"stock\": 50,\n  \"price\": 100,\n  \"imagePath\": \"\",\n  \"creator\": \"mimi\",\n  \"reviews\": {}\n}"
+					"raw": "{\n  \"id\": \"00\",\n  \"name\": \"arbolito\",\n  \"description\": \"jingle bells jingle bells\",\n  \"stock\": 50,\n  \"price\": 100,\n  \"imagePath\": \"\",\n  \"creator\": \"mimi\",\n  \"reviews\": {}\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
 				},
 				"url": "http://localhost:{{apiPort}}/admin/product"
 			},

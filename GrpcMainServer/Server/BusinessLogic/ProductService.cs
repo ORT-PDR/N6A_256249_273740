@@ -120,9 +120,10 @@ public class ProductService
 
         Review review = new Review()
         {
+            Id = Guid.NewGuid().ToString(),
             Score = score,
             Comment = comment,
-            User = storage.GetUser(creator).ToString()
+            User = creator
         };
         storage.AddReview(existingProduct, review);
     }
