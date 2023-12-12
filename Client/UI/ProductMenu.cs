@@ -1,6 +1,5 @@
 using System;
 using System.Linq;
-using Server.BusinessLogic;
 using Communication;
 using System.Net;
 using System.Net.Sockets;
@@ -717,7 +716,7 @@ namespace Client.UI
 
                 if (response == "Success")
                 {
-                    Console.WriteLine("Product published successfully.");
+                    Console.WriteLine("Product review published successfully.");
                     Console.WriteLine("Press any key to continue");
                     Console.ReadKey();
                 }

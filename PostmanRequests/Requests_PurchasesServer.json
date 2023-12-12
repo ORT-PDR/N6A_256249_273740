@@ -1,0 +1,25 @@
+{
+	"info": {
+		"_postman_id": "df98d71d-9d98-4f4c-93f3-b256f0626bd2",
+		"name": "Servidor de Compras",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json",
+		"_exporter_id": "27180039",
+		"_collection_link": "https://winter-robot-546662.postman.co/workspace/Free-Market~3fc96116-b11c-4352-9f23-7bd0ae253805/collection/31743464-df98d71d-9d98-4f4c-93f3-b256f0626bd2?action=share&creator=27180039&source=collection_link"
+	},
+	"item": [
+		{
+			"name": "Compras",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		}
+	],
+	"variable": [
+		{
+			"key": "apiPort",
+			"value": "5159"
+		}
+	]
+}
