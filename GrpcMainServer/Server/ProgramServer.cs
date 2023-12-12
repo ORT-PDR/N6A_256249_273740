@@ -10,7 +10,7 @@ public class ProgramServer
     {
         static readonly SettingsManager settingsMngr = new SettingsManager();
         static readonly Storage storage = Storage.GetInstance();
-        static readonly UserService userService = new UserService(storage);
+        static readonly UserService userService = UserService.GetInstance();
         static readonly ProductService productService = ProductService.GetInstance();
         static readonly ConversionHandler conversionHandler = new ConversionHandler();
         static TcpListener tcpListener;

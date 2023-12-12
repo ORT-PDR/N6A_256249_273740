@@ -40,14 +40,52 @@ namespace AdministrationServer.Controllers
             return Ok(reply.Message);
         }
 
-        [HttpDelete("product/{id}")]
-        public async Task<ActionResult> DeleteProduct([FromRoute] string id)
+        [HttpDelete("product")]
+        public async Task<ActionResult> DeleteProduct([FromQuery] string productName, [FromQuery] string user)
         {
             using var channel = GrpcChannel.ForAddress("http://localhost:5257");
             client = new Admin.AdminClient(channel);
-            Id _id = new Id() { Id_ = id};
-            var reply = await client.DeleteProductAsync(_id);
+            ProductIdUser deleteProductRequest = new ProductIdUser() { Id = productName, Username = user};
+            var reply = await client.DeleteProductAsync(deleteProductRequest);
             return Ok(reply.Message);
+        }
+
+        [HttpPut("product")]
+        public async Task<ActionResult> ModifyProduct([FromBody] Product product)
+        {
+            using var channel = GrpcChannel.ForAddress("http://localhost:5257");
+            client = new Admin.AdminClient(channel);
+            var reply = await client.UpdateProductAsync(product);
+            return Ok(reply);
+        }
+
+        [HttpPost("purchase")]
+        public async Task<ActionResult> BuyProduct([FromQuery] string productName, [FromQuery] string creator, [FromQuery] string buyer)
+        {
+            using var channel = GrpcChannel.ForAddress("http://localhost:5257");
+            client = new Admin.AdminClient(channel);
+            PurchaseInfo purchase = new PurchaseInfo()
+            {
+                Product = productName,
+                Creator = creator,
+                Username = buyer
+            };
+            var reply = await client.BuyProductAsync(purchase);
+            return Ok(reply.Message);
+        }
+        
+        [HttpGet("reviews")]
+        public async Task<ActionResult> GetAllProductReviews([FromQuery] string productName, [FromQuery] string creator)
+        {
+            using var channel = GrpcChannel.ForAddress("http://localhost:5257");
+            client = new Admin.AdminClient(channel);
+            var p = new ProductInfo()
+            {
+                ProductName = productName,
+                Creator = creator
+            };
+            var reply = await client.GetAllProductReviewsAsync(p);
+            return Ok(reply);
         }
     }
 }
