@@ -1,5 +1,7 @@
+using System.Text;
 using AdministrationServer;
 using GrpcMainServer.Server.Models;
+using RabbitMQ.Client;
 
 namespace GrpcMainServer.Server.BusinessLogic;
 
@@ -100,6 +102,10 @@ public class ProductService
         {
             throw new ServerException("Product not found.");
         }
+        
+        string purchaseEventData = buyer + "," + product + "," + DateTime.Now.ToString();
+        SendPurchaseEventToExchange(purchaseEventData);
+        
         storage.BuyProduct(existingProduct.Id, buyer);
     }
     
@@ -195,6 +201,25 @@ public class ProductService
         if (product.Price <= 0)
         {
             throw new ServerException("Price must be a positive number.");
+        }
+    }
+    
+    public void SendPurchaseEventToExchange(string purchaseEventData)
+    {
+        var factory = new ConnectionFactory() { HostName = "localhost" };
+
+        using (var connection = factory.CreateConnection())
+        using (var channel = connection.CreateModel())
+        {
+            // Declara un intercambio de tipo "fanout"
+            channel.ExchangeDeclare(exchange: "purchase_events_exchange", type: ExchangeType.Fanout);
+
+            // Publica el mensaje en el intercambio "purchase_events_exchange"
+            var body = Encoding.UTF8.GetBytes(purchaseEventData);
+            channel.BasicPublish(exchange: "purchase_events_exchange", routingKey: "", basicProperties: null,
+                body: body);
+
+            Console.WriteLine("Sent purchase event to Exchange: {0}", purchaseEventData);
         }
     }
 }

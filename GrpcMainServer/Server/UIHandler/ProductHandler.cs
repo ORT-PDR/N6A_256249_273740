@@ -321,10 +321,6 @@ public class ProductHandler
 
             productService.BuyProduct(product, username, buyer);
 
-            string purchaseEventData = buyer + "," + product + "," + DateTime.Now.ToString();
-            SendPurchaseEventToExchange(purchaseEventData);
-
-
             string response = "Success";
             byte[] responseBytes = conversionHandler.ConvertStringToBytes(response);
             await SendResponse(responseBytes);
@@ -493,24 +489,5 @@ public class ProductHandler
         byte[] lengthBytes = conversionHandler.ConvertIntToBytes(responseLength);
         await networkDataHelper.SendAsync(lengthBytes);
         await networkDataHelper.SendAsync(responseBytes);
-    }
-
-    public void SendPurchaseEventToExchange(string purchaseEventData)
-    {
-        var factory = new ConnectionFactory() { HostName = "localhost" };
-
-        using (var connection = factory.CreateConnection())
-        using (var channel = connection.CreateModel())
-        {
-            // Declara un intercambio de tipo "fanout"
-            channel.ExchangeDeclare(exchange: "purchase_events_exchange", type: ExchangeType.Fanout);
-
-            // Publica el mensaje en el intercambio "purchase_events_exchange"
-            var body = Encoding.UTF8.GetBytes(purchaseEventData);
-            channel.BasicPublish(exchange: "purchase_events_exchange", routingKey: "", basicProperties: null,
-                body: body);
-
-            Console.WriteLine("Sent purchase event to Exchange: {0}", purchaseEventData);
-        }
     }
 }
