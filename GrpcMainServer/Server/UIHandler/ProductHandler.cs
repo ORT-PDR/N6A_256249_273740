@@ -1,13 +1,13 @@
-﻿using System;
-using System.Net;
+using AdministrationServer;
 using Communication;
+using System.Text;
 using Communication.FileHandlers;
-using Models;
-using Server.BusinessLogic;
+using GrpcMainServer.Server.BusinessLogic;
+using RabbitMQ.Client;
 
-namespace Server.UIHandler
-{
-	public class ProductHandler
+namespace GrpcMainServer.Server.UIHandler;
+
+public class ProductHandler
 	{
         private readonly NetworkDataHelper networkDataHelper;
         private readonly ConversionHandler conversionHandler;
@@ -47,12 +47,12 @@ namespace Server.UIHandler
                 {
                     Product product = new Product()
                     {
-                        name = dataParts[0],
-                        description = dataParts[1],
-                        price = double.Parse(dataParts[2]),
-                        stock = int.Parse(dataParts[3]),
-                        creator = dataParts[4],
-                        imagePath = path
+                        Name = dataParts[0],
+                        Description = dataParts[1],
+                        Price = double.Parse(dataParts[2]),
+                        Stock = int.Parse(dataParts[3]),
+                        Creator = dataParts[4],
+                        ImagePath = path
                     };
 
                     productService.PublishProduct(product);
@@ -97,15 +97,15 @@ namespace Server.UIHandler
                 switch (attribute)
                 {
                     case "description":
-                        p.description = newValue;
+                        p.Description = newValue;
                         break;
 
                     case "stock":
-                        p.stock = int.Parse(newValue);
+                        p.Stock = int.Parse(newValue);
                         break;
 
                     case "price":
-                        p.price = int.Parse(newValue);
+                        p.Price = int.Parse(newValue);
                         break;
                 }
 
@@ -146,8 +146,8 @@ namespace Server.UIHandler
                 string user = data.Split("#")[1];
 
                 Product p = productService.GetProductByName(product, user);
-                string aux = p.imagePath;
-                p.imagePath = path;
+                string aux = p.ImagePath;
+                p.ImagePath = path;
 
                 productService.UpdateProduct(p);
                 if (aux != "")
@@ -176,12 +176,12 @@ namespace Server.UIHandler
 
             try
             {
-                List<Product> products = productService.GetProductsByUser(username);
+                ProductList products = productService.GetProductsByUser(username);
                 string productNames = "";
 
-                for (int i = 0; i < products.Count; i++)
+                for (int i = 0; i < products.Products.Count; i++)
                 {
-                    productNames += productService.ProductToString(products[i]) + ";";
+                    productNames += productService.ProductToString(products.Products[i]) + ";";
                 }
                 if (!string.IsNullOrEmpty(productNames))
                 {
@@ -211,12 +211,12 @@ namespace Server.UIHandler
 
             try
             {
-                List<Product> products = productService.GetProducts();
+                ProductList products = productService.GetProducts();
                 string productNames = "";
 
-                for (int i = 0; i < products.Count; i++)
+                for (int i = 0; i < products.Products.Count; i++)
                 {
-                    productNames += productService.ProductToString(products[i]) + ";";
+                    productNames += productService.ProductToString(products.Products[i]) + ";";
                 }
                 if (!string.IsNullOrEmpty(productNames))
                 {
@@ -273,12 +273,12 @@ namespace Server.UIHandler
 
             try
             {
-                List<Product> products = productService.GetProducts(name);
+                ProductList products = productService.GetProducts(name);
                 string productNames = "";
 
-                for (int i = 0; i < products.Count; i++)
+                for (int i = 0; i < products.Products.Count; i++)
                 {
-                    productNames += productService.ProductToString(products[i]) + ";";
+                    productNames += productService.ProductToString(products.Products[i]) + ";";
                 }
                 if (!string.IsNullOrEmpty(productNames))
                 {
@@ -312,7 +312,10 @@ namespace Server.UIHandler
                 string buyer = data.Split("#")[2];
 
                 productService.BuyProduct(product, username, buyer);
-
+                
+                string purchaseEventData = buyer +  "," + product + "," + DateTime.Now.ToString();
+                SendPurchaseEventToPurchaseServer(purchaseEventData);
+                
                 string response = "Success";
                 byte[] responseBytes = conversionHandler.ConvertStringToBytes(response);
                 await SendResponse(responseBytes);
@@ -333,12 +336,12 @@ namespace Server.UIHandler
             string username = conversionHandler.ConvertBytesToString(dataBytes);
             try
             {
-                List<Product> products = productService.GetPurchases(username);
+                ProductList products = productService.GetPurchases(username);
                 string productNames = "";
 
-                for (int i = 0; i < products.Count; i++)
+                for (int i = 0; i < products.Products.Count; i++)
                 {
-                    productNames += productService.ProductToString(products[i]) + ";";
+                    productNames += productService.ProductToString(products.Products[i]) + ";";
                 }
                 if (!string.IsNullOrEmpty(productNames))
                 {
@@ -406,12 +409,12 @@ namespace Server.UIHandler
                 string product = data.Split("#")[0];
                 string creator = data.Split("#")[1];
 
-                List<Review> reviews = productService.GetReviews(product, creator);
+                ReviewList reviews = productService.GetReviews(product, creator);
                 string reviewsString = "";
 
-                for (int i = 0; i < reviews.Count; i++)
+                for (int i = 0; i < reviews.Reviews.Count; i++)
                 {
-                    reviewsString += productService.ReviewToString(reviews[i]) + ";";
+                    reviewsString += productService.ReviewToString(reviews.Reviews[i]) + ";";
                 }
                 if (!string.IsNullOrEmpty(reviewsString))
                 {
@@ -479,6 +482,21 @@ namespace Server.UIHandler
             await networkDataHelper.SendAsync(lengthBytes);
             await networkDataHelper.SendAsync(responseBytes);
         }
-    }
-}
+        
+        public void SendPurchaseEventToPurchaseServer(string purchaseEventData)
+        {
+            var factory = new ConnectionFactory() { HostName = "localhost" }; // Ajusta esto según la configuración de RabbitMQ
 
+            using (var connection = factory.CreateConnection())
+            using (var channel = connection.CreateModel())
+            {
+                channel.QueueDeclare(queue: "purchase_events_queue", durable: true, exclusive: false, autoDelete: false, arguments: null);
+
+                var body = Encoding.UTF8.GetBytes(purchaseEventData);
+
+                channel.BasicPublish(exchange: "", routingKey: "purchase_events_queue", basicProperties: null, body: body);
+
+                Console.WriteLine("Sent purchase event to Purchase Server: {0}", purchaseEventData);
+            }
+        }
+    }

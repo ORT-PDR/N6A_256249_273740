@@ -9,7 +9,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Communication\Communication.csproj" />
-    <ProjectReference Include="..\Models\Models.csproj" />
-    <ProjectReference Include="..\Server\Server.csproj" />
+    <ProjectReference Include="..\GrpcMainServer\GrpcMainServer.csproj" />
   </ItemGroup>
 </Project>

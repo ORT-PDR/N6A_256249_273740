@@ -1,9 +1,9 @@
 using Communication;
-using Server.BusinessLogic;
+using GrpcMainServer.Server.BusinessLogic;
 
-namespace Server.UIHandler
-{
-    public class UserAuthorization
+namespace GrpcMainServer.Server.UIHandler;
+
+public class UserAuthorization
     {
         private readonly NetworkDataHelper networkDataHelper;
         private readonly ConversionHandler conversionHandler;
@@ -87,4 +87,3 @@ namespace Server.UIHandler
             await networkDataHelper.SendAsync(responseBytes);
         }
     }
-}
