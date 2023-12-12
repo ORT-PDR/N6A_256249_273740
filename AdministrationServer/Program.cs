@@ -1,6 +1,6 @@
-using AdministrationServer.Filters;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
 
-namespace AdministrationServer
+namespace AdminServer
 {
     public class Program
     {
@@ -14,7 +14,17 @@ namespace AdministrationServer
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
-            builder.Services.AddScoped<ExceptionFilter>();
+
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy(name: "MyPolicy",
+                    builder =>
+                    {
+                        builder.AllowAnyOrigin()
+                        .AllowAnyMethod()
+                        .AllowAnyHeader();
+                    });
+            });
             
             var app = builder.Build();
 
@@ -24,8 +34,6 @@ namespace AdministrationServer
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }
-
-            app.UseHttpsRedirection();
 
             app.UseAuthorization();
 

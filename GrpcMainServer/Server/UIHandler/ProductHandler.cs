@@ -3,13 +3,15 @@ using System.Net;
 using System.Text;
 using AdministrationServer;
 using Communication;
+using System.Text;
 using Communication.FileHandlers;
 using Server.BusinessLogic;
+using GrpcMainServer.Server.BusinessLogic;
 using RabbitMQ.Client;
 
-namespace Server.UIHandler
-{
-	public class ProductHandler
+namespace GrpcMainServer.Server.UIHandler;
+
+public class ProductHandler
 	{
         private readonly NetworkDataHelper networkDataHelper;
         private readonly ConversionHandler conversionHandler;
@@ -318,6 +320,7 @@ namespace Server.UIHandler
                 string purchaseEventData = buyer +  "," + product + "," + DateTime.Now.ToString();
                 SendPurchaseEventToPurchaseServer(purchaseEventData);
 
+                
                 string response = "Success";
                 byte[] responseBytes = conversionHandler.ConvertStringToBytes(response);
                 await SendResponse(responseBytes);
@@ -493,7 +496,7 @@ namespace Server.UIHandler
             using (var channel = connection.CreateModel())
             {
                 channel.QueueDeclare(queue: "purchase_events_queue", durable: true, exclusive: false, autoDelete: false, arguments: null);
-                
+
                 var body = Encoding.UTF8.GetBytes(purchaseEventData);
 
                 channel.BasicPublish(exchange: "", routingKey: "purchase_events_queue", basicProperties: null, body: body);
@@ -502,5 +505,3 @@ namespace Server.UIHandler
             }
         }
     }
-}
-

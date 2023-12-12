@@ -1,17 +1,12 @@
 using AdministrationServer;
 using Grpc.Core;
-using Microsoft.Extensions.DependencyInjection;
-using Server.BusinessLogic;
+using GrpcMainServer.Server.BusinessLogic;
 
-namespace Server.AdministrationServices;
+namespace GrpcMainServer.Services;
 
-public class AdminService : Admin.AdminBase
+public class AdminService: Admin.AdminBase
 {
-    private readonly ProductService productService;
-    public AdminService(ProductService _productService)
-    {
-        this.productService = _productService;
-    }
+    ProductService productService = ProductService.GetInstance();
     public override Task<ProductList> GetAllProducts(EmptyMessage emptyMessage, ServerCallContext context)
     {
         Console.WriteLine("Client requested all products");
