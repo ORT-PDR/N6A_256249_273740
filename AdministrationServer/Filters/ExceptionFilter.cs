@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using System;
-using GrpcMainServer.Server;
 
 namespace AdministrationServer.Filters;
 
@@ -9,14 +8,7 @@ public class ExceptionFilter : IExceptionFilter
 {
     public void OnException(ExceptionContext context)
     {
-        if (context.Exception is ServerException)
-        {
-            context.Result = new ObjectResult($"Server error: {context.Exception.Message}")
-            {
-                StatusCode = 400 
-            };
-        }
-        else if (context.Exception is Exception)
+        if (context.Exception is Exception)
         {
             context.Result = new ObjectResult($"Server error: {context.Exception.Message}")
             {
