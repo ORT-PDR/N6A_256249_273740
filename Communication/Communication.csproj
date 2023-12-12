@@ -10,10 +10,6 @@
     <PackageReference Include="System.Configuration.ConfigurationManager" Version="7.0.0" />
     <PackageReference Include="System.Threading" Version="4.3.0" />
   </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\Models\Models.csproj" />
-  </ItemGroup>
   <ItemGroup>
     <None Remove="FileHandlers\" />
   </ItemGroup>

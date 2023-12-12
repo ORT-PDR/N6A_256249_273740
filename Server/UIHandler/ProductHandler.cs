@@ -315,7 +315,7 @@ namespace Server.UIHandler
 
                 productService.BuyProduct(product, username, buyer);
                 
-                string purchaseEventData = "Compra realizada: " + buyer +  ", " + product ;
+                string purchaseEventData = buyer +  "," + product + "," + DateTime.Now.ToString();
                 SendPurchaseEventToPurchaseServer(purchaseEventData);
 
                 string response = "Success";

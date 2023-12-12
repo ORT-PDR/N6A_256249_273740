@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
 
-namespace PurchaseServer
+namespace PurchasesServer
 {
     public class PurchaseDataAccess
     {
-        private List<string> purchases;
+        private List<Purchase> purchases;
         private object padlock;
         private static PurchaseDataAccess instance;
 
@@ -25,34 +25,21 @@ namespace PurchaseServer
 
         private PurchaseDataAccess()
         {
-            purchases = new List<string>();
+            purchases = new List<Purchase>();
             padlock = new object();
         }
 
-        public void AddPurchase(string purchaseEvent)
+        public void AddPurchase(Purchase purchase)
         {
             lock (padlock)
             {
-                purchases.Add(purchaseEvent);
+                purchases.Add(purchase);
             }
         }
-
-        public List<string> FilterPurchasesByCriteria(string criteria)
+        
+        public List<Purchase> GetPurchases()
         {
-            List<string> filteredPurchases = new List<string>();
-
-            lock (padlock)
-            {
-                foreach (var purchase in purchases)
-                {
-                    if (purchase.Contains(criteria))
-                    {
-                        filteredPurchases.Add(purchase);
-                    }
-                }
-            }
-
-            return filteredPurchases;
+            return purchases;
         }
     }
 }
