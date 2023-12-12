@@ -1,3 +1,6 @@
+﻿using System;
+using System.Net;
+using System.Text;
 using AdministrationServer;
 using Communication;
 using System.Text;
@@ -315,6 +318,7 @@ public class ProductHandler
                 
                 string purchaseEventData = buyer +  "," + product + "," + DateTime.Now.ToString();
                 SendPurchaseEventToPurchaseServer(purchaseEventData);
+
                 
                 string response = "Success";
                 byte[] responseBytes = conversionHandler.ConvertStringToBytes(response);

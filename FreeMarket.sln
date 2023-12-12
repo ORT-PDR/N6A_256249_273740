@@ -9,6 +9,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Communication", "Communicat
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AdministrationServer", "AdministrationServer\AdministrationServer.csproj", "{DED721F8-BD4C-4108-8FC2-9493294E1773}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PurchasesServer", "PurchasesServer\PurchasesServer.csproj", "{59246615-F040-42D2-9DAC-5D5923C9F1BC}"
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GrpcMainServer", "GrpcMainServer\GrpcMainServer.csproj", "{7AF54D28-90D3-467E-947D-CCEC401716B0}"
 EndProject
 Global
@@ -29,6 +30,10 @@ Global
 		{DED721F8-BD4C-4108-8FC2-9493294E1773}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DED721F8-BD4C-4108-8FC2-9493294E1773}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DED721F8-BD4C-4108-8FC2-9493294E1773}.Release|Any CPU.Build.0 = Release|Any CPU
+		{59246615-F040-42D2-9DAC-5D5923C9F1BC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{59246615-F040-42D2-9DAC-5D5923C9F1BC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{59246615-F040-42D2-9DAC-5D5923C9F1BC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{59246615-F040-42D2-9DAC-5D5923C9F1BC}.Release|Any CPU.Build.0 = Release|Any CPU
 		{7AF54D28-90D3-467E-947D-CCEC401716B0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{7AF54D28-90D3-467E-947D-CCEC401716B0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7AF54D28-90D3-467E-947D-CCEC401716B0}.Release|Any CPU.ActiveCfg = Release|Any CPU
