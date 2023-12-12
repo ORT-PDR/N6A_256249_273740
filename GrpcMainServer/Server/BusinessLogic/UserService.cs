@@ -5,11 +5,20 @@ namespace GrpcMainServer.Server.BusinessLogic;
 
 public class UserService
 {
-    private readonly Storage storage;
+    private Storage storage;
+    private static UserService instance;
 
-    public UserService(Storage storage)
+    private static readonly object singletonlock = new object();
+
+    public static UserService GetInstance()
     {
-        this.storage = storage;
+        lock (singletonlock)
+        {
+            if (instance == null)
+                instance = new UserService();
+            instance.storage = Storage.GetInstance();
+        }
+        return instance;
     }
 
     public void CreateUser(string username, string password)

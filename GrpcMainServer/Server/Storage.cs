@@ -15,11 +15,12 @@ public class Storage
 		{
 			lock (lockObject)
 			{
-
 				if (instance == null)
+				{
 					instance = new Storage();
-				instance.users = new List<User>();
-				instance.products = new ProductList();
+					instance.users = new List<User>();
+					instance.products = new ProductList();
+				}	
 			}
 			return instance;
 		} 

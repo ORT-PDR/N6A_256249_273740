@@ -10,30 +10,31 @@ service Admin {
 
   // Funciones del servicio
   rpc PostProduct(ProductDTO) returns (MessageReply);
-  rpc DeleteProduct(Id) returns (MessageReply);
+  rpc DeleteProduct(ProductIdUser) returns (MessageReply);
   rpc GetAllProducts(EmptyMessage) returns (ProductList);
-  rpc UpdateProduct(ProductDTO) returns (MessageReply);
-  rpc UpdateProductImage(ImageUrl) returns (MessageReply);
-  rpc GetAllUserProducts(Username) returns (MessageReply);
-  rpc SearchProduct(SearchString) returns (MessageReply);
+  rpc UpdateProduct(Product) returns (Product);
   rpc BuyProduct(PurchaseInfo) returns (MessageReply);
-  rpc GetAllPurchases(Username) returns (MessageReply);
-  rpc RateProduct(Review) returns (MessageReply);
-  rpc GetAllProductReviews(ProductName) returns (MessageReply);
+  rpc GetAllProductReviews(ProductInfo) returns (ReviewList);
 }
 
 message EmptyMessage{}
 
+message ProductIdUser{
+  string id = 1;
+  string username = 2;
+}
+
 message Id {
-  int32 id = 1;
+  string id = 1;
 }
 
 message MessageReply {
   string message = 1;
 }
 
-message ProductName {
+message ProductInfo {
   string productName = 1;
+  string creator= 2;
 }
 
 message PurchaseInfo {
